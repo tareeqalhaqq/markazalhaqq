@@ -1,59 +1,81 @@
-import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import Link from "next/link";
 
-const instructors = [
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users2, BookOpenCheck, GraduationCap } from "lucide-react";
+
+const instructorHighlights = [
   {
-    name: 'Dr. Ahmad Salah',
-    title: 'Senior Instructor, Aqeedah & Fiqh',
-    bio: 'Dr. Ahmad Salah holds a PhD in Islamic Theology and has been teaching for over 15 years. He specializes in creed and jurisprudence.',
-    image: PlaceHolderImages.find(img => img.id === 'instructor-1'),
+    title: "Connected to Tareeq Al-Haqq",
+    description:
+      "Our teaching team consists of scholars and students of knowledge who contribute directly to Tareeq Al-Haqq programs, events, and publications.",
+    icon: Users2,
   },
   {
-    name: 'Ustadha Fatima Ali',
-    title: 'Instructor, Seerah & Tafsir',
-    bio: 'Ustadha Fatima Ali is a graduate of Al-Azhar University and a specialist in Quranic Exegesis and Prophetic History. She is known for her engaging teaching style.',
-    image: PlaceHolderImages.find(img => img.id === 'instructor-2'),
+    title: "Verified credentials",
+    description:
+      "Each instructor is vetted for their ijazaat, methodology, and ability to communicate clearly while remaining rooted in the Quran and Sunnah.",
+    icon: GraduationCap,
   },
   {
-    name: 'Qari Yusuf Ahmed',
-    title: 'Instructor, Quranic Sciences',
-    bio: 'Qari Yusuf Ahmed has memorized the Quran with multiple ijazahs in recitation. He is passionate about helping students beautify their recitation.',
-    image: PlaceHolderImages.find(img => img.id === 'instructor-3'),
+    title: "Mentorship-first teaching",
+    description:
+      "Expect live review sessions, feedback opportunities, and community engagement that keeps you supported between lessons.",
+    icon: BookOpenCheck,
   },
 ];
 
 export default function InstructorsPage() {
   return (
-    <div className="container py-12 md:py-16">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl font-headline">Meet Our Instructors</h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Learn from qualified scholars and teachers dedicated to authentic knowledge.
-        </p>
-      </div>
+    <div className="bg-background">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-sky-100 via-white to-sky-200" />
+        <div className="container mx-auto px-6 py-16 sm:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <Badge className="bg-primary/10 text-primary">Teaching team</Badge>
+            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+              Guided by trusted instructors
+            </h1>
+            <p className="mt-4 text-lg text-muted-foreground">
+              The detailed roster will be released as we launch each course. Every teacher is part of the Tareeq Al-Haqq network, ensuring consistency in creed, methodology, and character.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {instructors.map((instructor) => (
-          <Card key={instructor.name} className="text-center overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardContent className="p-8">
-              {instructor.image && (
-                <Image
-                  src={instructor.image.imageUrl}
-                  alt={instructor.image.description}
-                  data-ai-hint={instructor.image.imageHint}
-                  width={128}
-                  height={128}
-                  className="rounded-full mx-auto mb-4 border-4 border-primary/10"
-                />
-              )}
-              <CardTitle className="text-xl mb-1 font-headline">{instructor.name}</CardTitle>
-              <CardDescription className="text-primary font-semibold mb-4">{instructor.title}</CardDescription>
-              <p className="text-muted-foreground text-sm">{instructor.bio}</p>
+      <section className="container mx-auto grid gap-8 px-6 pb-16 md:grid-cols-3">
+        {instructorHighlights.map((highlight) => (
+          <Card
+            key={highlight.title}
+            className="h-full border-none bg-gradient-to-br from-white via-sky-50 to-white shadow-lg shadow-primary/10"
+          >
+            <CardHeader className="space-y-4 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <highlight.icon className="h-7 w-7" />
+              </div>
+              <CardTitle className="font-headline text-xl text-foreground">{highlight.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-base leading-relaxed text-muted-foreground">
+                {highlight.description}
+              </CardDescription>
             </CardContent>
           </Card>
         ))}
-      </div>
+      </section>
+
+      <section className="container mx-auto px-6 pb-20">
+        <div className="rounded-3xl bg-white/80 p-10 text-center shadow-xl shadow-primary/15 backdrop-blur">
+          <h2 className="font-headline text-3xl font-bold text-foreground">Instructor roster coming soon</h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            We will publish instructor bios and teaching schedules as we release each module of the Student of Knowledge Program. Join the waitlist to receive updates first.
+          </p>
+          <Button asChild size="lg" className="mt-6 rounded-full px-8">
+            <Link href="/signup">Join the waitlist</Link>
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

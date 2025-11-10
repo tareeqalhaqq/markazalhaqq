@@ -31,18 +31,20 @@ function TareeqAlhaqqIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export default function SignupPage() {
   return (
-    <div className="flex-1 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight font-headline">Create an Account</CardTitle>
-          <CardDescription>Start your journey of knowledge with us today</CardDescription>
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-sky-100 via-white to-sky-200 px-4 py-16">
+      <Card className="w-full max-w-md border border-primary/10 bg-white/80 shadow-xl shadow-primary/20 backdrop-blur">
+        <CardHeader className="space-y-3 text-center">
+          <CardTitle className="font-headline text-3xl font-bold tracking-tight text-foreground">Create an account</CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
+            Join MarkazalHaqq to access the official Tareeq Al-Haqq learning experience.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
             <form className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="full-name">Full Name</Label>
-                <Input id="full-name" placeholder="Your Name" required />
+                <Label htmlFor="full-name">Full name</Label>
+                <Input id="full-name" placeholder="Your name" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
@@ -53,7 +55,7 @@ export default function SignupPage() {
                 <Input id="password" type="password" required />
               </div>
               <Button type="submit" className="w-full">
-                Create Account
+                Create account
               </Button>
             </form>
             <div className="relative">
@@ -61,25 +63,23 @@ export default function SignupPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Or sign up with
-                </span>
+                <span className="bg-card px-2 text-muted-foreground">Or sign up with</span>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-4">
-                <Button variant="outline" className="w-full">
-                    <GoogleIcon className="mr-2 h-5 w-5" /> Sign up with Google
-                </Button>
-                <Button variant="outline" className="w-full bg-black text-white hover:bg-black/80 hover:text-white">
-                    <AppleIcon className="mr-2 h-5 w-5" /> Sign up with Apple
-                </Button>
-                <Button variant="outline" className="w-full">
-                    <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Sign up with Tareeqalhaqq
-                </Button>
+            <div className="grid grid-cols-1 gap-3">
+              <Button variant="outline" className="w-full">
+                <GoogleIcon className="mr-2 h-5 w-5" /> Sign up with Google
+              </Button>
+              <Button variant="outline" className="w-full bg-black text-white hover:bg-black/80 hover:text-white">
+                <AppleIcon className="mr-2 h-5 w-5" /> Sign up with Apple
+              </Button>
+              <Button variant="outline" className="w-full">
+                <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Sign up with Tareeqalhaqq
+              </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="text-center text-sm">
               Already have an account?{" "}
-              <Link href="/login" className="underline font-medium text-primary">
+              <Link href="/login" className="font-medium text-primary underline">
                 Login
               </Link>
             </div>
@@ -87,5 +87,5 @@ export default function SignupPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

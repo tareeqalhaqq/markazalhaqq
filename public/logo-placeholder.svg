@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" role="img" aria-labelledby="title desc">
+  <title id="title">Markaz al-Haqq Placeholder Logo</title>
+  <desc id="desc">Rounded rectangle with stylized Arabic-inspired monogram for placeholder use.</desc>
+  <defs>
+    <linearGradient id="grad" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#4f9df3" />
+      <stop offset="100%" stop-color="#1c64f2" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="312" height="88" rx="24" fill="url(#grad)" opacity="0.12" stroke="#60a5fa" stroke-width="4" />
+  <g fill="#1d4ed8" font-family="'Poppins', 'Segoe UI', sans-serif" font-weight="600" text-anchor="middle">
+    <text x="80" y="64" font-size="56">مـح</text>
+    <text x="210" y="60" font-size="40">Markaz al-Haqq</text>
+  </g>
+</svg>

@@ -32,11 +32,13 @@ function TareeqAlhaqqIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export default function LoginPage() {
   return (
-    <div className="flex-1 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight font-headline">Welcome Back</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-sky-100 via-white to-sky-200 px-4 py-16">
+      <Card className="w-full max-w-md border border-primary/10 bg-white/80 shadow-xl shadow-primary/20 backdrop-blur">
+        <CardHeader className="space-y-3 text-center">
+          <CardTitle className="font-headline text-3xl font-bold tracking-tight text-foreground">Welcome back</CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
+            Sign in to continue your journey with the official Tareeq Al-Haqq academy.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
@@ -48,8 +50,8 @@ export default function LoginPage() {
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="ml-auto inline-block text-sm underline">
-                    Forgot your password?
+                  <Link href="#" className="ml-auto inline-block text-sm text-primary underline">
+                    Forgot password?
                   </Link>
                 </div>
                 <Input id="password" type="password" required />
@@ -63,25 +65,23 @@ export default function LoginPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with
-                </span>
+                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-4">
-                <Button variant="outline" className="w-full">
-                    <GoogleIcon className="mr-2 h-5 w-5" /> Login with Google
-                </Button>
-                <Button variant="outline" className="w-full bg-black text-white hover:bg-black/80 hover:text-white">
-                    <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
-                </Button>
-                <Button variant="outline" className="w-full">
-                    <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
-                </Button>
+            <div className="grid grid-cols-1 gap-3">
+              <Button variant="outline" className="w-full">
+                <GoogleIcon className="mr-2 h-5 w-5" /> Login with Google
+              </Button>
+              <Button variant="outline" className="w-full bg-black text-white hover:bg-black/80 hover:text-white">
+                <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
+              </Button>
+              <Button variant="outline" className="w-full">
+                <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
+              </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="text-center text-sm">
               Don&apos;t have an account?{" "}
-              <Link href="/signup" className="underline font-medium text-primary">
+              <Link href="/signup" className="font-medium text-primary underline">
                 Sign up
               </Link>
             </div>
@@ -89,5 +89,5 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
