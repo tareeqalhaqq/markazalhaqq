@@ -1,27 +1,19 @@
-import type { SVGProps } from "react";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
 
-export function Logo(props: SVGProps<SVGSVGElement>) {
+type LogoProps = {
+  className?: string;
+};
+
+export function Logo({ className }: LogoProps) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 100 20"
-      width="150"
-      height="30"
-      {...props}
-    >
-      <text
-        x="50"
-        y="15"
-        fontFamily="'PT Sans', sans-serif"
-        fontSize="16"
-        fontWeight="bold"
-        fill="hsl(var(--primary))"
-        textAnchor="middle"
-        dominantBaseline="middle"
-      >
-        MarkazalHaqq
-      </text>
-    </svg>
+    <Image
+      src="/logo-placeholder.svg"
+      alt="Markaz al-Haqq logo placeholder"
+      width={160}
+      height={48}
+      sizes="160px"
+      className={className}
+      priority
+    />
   );
 }
