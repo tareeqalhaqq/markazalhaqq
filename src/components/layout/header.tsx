@@ -26,11 +26,11 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
     <Link
       href={href}
       className={cn(
-        'transition-colors font-medium',
+        'font-medium transition-colors',
         mobile
-          ? 'flex items-center text-lg p-2 rounded-md hover:bg-accent/10'
-          : 'px-3 py-2 text-sm hover:text-primary',
-        isActive ? 'text-primary' : 'text-foreground/70'
+          ? 'flex items-center rounded-md p-2 text-lg hover:bg-accent/40'
+          : 'rounded-full px-4 py-2 text-[0.7rem] uppercase tracking-[0.32em] hover:bg-accent/40',
+        isActive ? 'text-primary' : 'text-foreground/70 hover:text-primary'
       )}
     >
       {children}
@@ -42,57 +42,68 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-screen-2xl items-center">
-        {/* Left Section */}
-        <div className="flex flex-1 justify-start">
-          <div className="mr-4 flex items-center md:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left">
-                <div className="p-4">
-                  <SheetClose asChild>
-                    <Link href="/" className="mb-8 flex items-center">
-                      <Logo className="h-6 w-auto" />
-                    </Link>
-                  </SheetClose>
-                  <nav className="flex flex-col gap-3">
-                    {navLinks.map((link) => (
-                      <NavLink key={link.href} href={link.href} mobile>
-                        <link.icon className="mr-3 h-5 w-5 text-primary/80" />
-                        {link.label}
-                      </NavLink>
-                    ))}
-                  </nav>
+    <header className="sticky top-0 z-50 w-full">
+      <div className="absolute inset-x-0 top-0 -z-10 h-full bg-gradient-to-b from-white/90 via-white/70 to-white/20" aria-hidden />
+      <div className="container mx-auto flex max-w-screen-xl items-center justify-between px-6 py-5 md:py-7">
+        <div className="flex flex-1 items-center gap-4">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] bg-white/95">
+              <div className="flex h-full flex-col gap-8 p-4">
+                <SheetClose asChild>
+                  <Link href="/" className="flex items-center">
+                    <Logo className="h-6 w-auto" />
+                  </Link>
+                </SheetClose>
+                <div className="rounded-2xl bg-accent/40 p-4 text-sm font-medium uppercase tracking-[0.3em] text-primary/80">
+                  Admissions open
                 </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-          <Link href="/" className="flex items-center space-x-2">
-            <Logo className="h-6 w-auto" />
+                <nav className="flex flex-col gap-3">
+                  {navLinks.map((link) => (
+                    <NavLink key={link.href} href={link.href} mobile>
+                      <link.icon className="mr-3 h-5 w-5 text-primary/80" />
+                      {link.label}
+                    </NavLink>
+                  ))}
+                </nav>
+                <div className="mt-auto space-y-3">
+                  <Button asChild variant="ghost" className="w-full">
+                    <Link href="/login">Login</Link>
+                  </Button>
+                  <Button asChild className="w-full">
+                    <Link href="/signup">Join now</Link>
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <Link href="/" className="flex items-center space-x-3">
+            <Logo className="h-7 w-auto" />
           </Link>
         </div>
 
-        {/* Center Section (Desktop) */}
-        <nav className="hidden flex-none justify-center md:flex md:gap-2">
+        <nav className="hidden flex-none items-center gap-3 rounded-full border border-border/80 bg-white/70 px-5 py-3 shadow-[0_18px_40px_-28px] shadow-primary/30 backdrop-blur md:flex">
           {navLinks.map((link) => (
             <NavLink key={link.href} href={link.href}>
               {link.label}
-            </NavLink>))}
+            </NavLink>
+          ))}
         </nav>
 
-        {/* Right Section */}
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <Button asChild variant="ghost" className="hidden sm:inline-flex">
+        <div className="flex flex-1 items-center justify-end gap-2">
+          <div className="hidden rounded-full border border-transparent bg-accent/60 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-primary md:inline-flex">
+            Admissions open
+          </div>
+          <Button asChild variant="ghost" className="hidden rounded-full border border-transparent px-5 md:inline-flex">
             <Link href="/login">Login</Link>
           </Button>
-          <Button asChild>
-            <Link href="/signup">Sign Up</Link>
+          <Button asChild className="rounded-full px-5">
+            <Link href="/signup">Join now</Link>
           </Button>
         </div>
       </div>
