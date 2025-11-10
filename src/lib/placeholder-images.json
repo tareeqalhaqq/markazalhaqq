@@ -1,3 +1,70 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-section",
+      "description": "Students studying together in a modern library",
+      "imageUrl": "https://images.unsplash.com/photo-1752747115265-1e4cfb2c1212?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzdHVkZW50cyUyMGxpYnJhcnl8ZW58MHx8fHwxNzYyNjQ0MTAyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "students library"
+    },
+    {
+      "id": "course-1",
+      "description": "An open book on a wooden table",
+      "imageUrl": "https://images.unsplash.com/photo-1683636800655-1d1031735a52?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxib29rJTIwdGFibGV8ZW58MHx8fHwxNzYyNzQ1MzU5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "book table"
+    },
+    {
+      "id": "course-2",
+      "description": "Person writing arabic calligraphy",
+      "imageUrl": "https://images.unsplash.com/photo-1720701574998-d68020bce2bd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxhcmFiaWMlMjBjYWxsaWdyYXBoeXxlbnwwfHx8fDE3NjI3NDUzNTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "arabic calligraphy"
+    },
+    {
+      "id": "course-3",
+      "description": "Inside of a grand mosque",
+      "imageUrl": "https://images.unsplash.com/photo-1720173438331-f2ff521886f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bW9zcXVlJTIwaW50ZXJpb3J8ZW58MHx8fHwxNzYyNzA2NjI3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mosque interior"
+    },
+    {
+      "id": "course-4",
+      "description": "Prayer beads on an open Quran",
+      "imageUrl": "https://images.unsplash.com/photo-1762328490563-9b9c300fba3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwcmF5ZXIlMjBiZWFkc3xlbnwwfHx8fDE3NjI2NzEzOTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "prayer beads"
+    },
+    {
+      "id": "course-5",
+      "description": "A stack of old, leather-bound books",
+      "imageUrl": "https://images.unsplash.com/photo-1595123550441-d377e017de6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxvbGQlMjBib29rc3xlbnwwfHx8fDE3NjI3MTk3MTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "old books"
+    },
+    {
+      "id": "course-6",
+      "description": "An ancient Arabic manuscript with intricate script",
+      "imageUrl": "https://images.unsplash.com/photo-1720700955600-a21cd215d1a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhcmFiaWMlMjBtYW51c2NyaXB0fGVufDB8fHx8MTc2Mjc0NTM1OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "arabic manuscript"
+    },
+    {
+      "id": "instructor-1",
+      "description": "Portrait of a smiling man with glasses",
+      "imageUrl": "https://images.unsplash.com/photo-1594672830234-ba4cfe1202dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bWFuJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzYyNzM4OTc0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "instructor-2",
+      "description": "Portrait of a woman wearing a colorful headscarf, smiling",
+      "imageUrl": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc2MjcwMjE5MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "instructor-3",
+      "description": "Portrait of an older scholarly man with a white beard",
+      "imageUrl": "https://images.unsplash.com/photo-1653071163015-11cbda52d897?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYW4lMjBiZWFyZHxlbnwwfHx8fDE3NjI2OTc1MDZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man beard"
+    },
+    {
+      "id": "about-us-image",
+      "description": "A diverse group of people collaborating around a sunlit table",
+      "imageUrl": "https://images.unsplash.com/photo-1543269865-cbf427effbad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZW9wbGUlMjBtZWV0aW5nfGVufDB8fHx8MTc2Mjc0NTM1OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "people meeting"
+    }
+  ]
 }
