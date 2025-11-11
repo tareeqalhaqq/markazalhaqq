@@ -28,8 +28,8 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
       className={cn(
         'font-medium transition-colors',
         mobile
-          ? 'flex items-center rounded-md p-2 text-lg hover:bg-accent/40'
-          : 'rounded-full px-4 py-2 text-[0.7rem] uppercase tracking-[0.32em] hover:bg-accent/40',
+          ? 'flex items-center rounded-md p-2 text-lg hover:bg-secondary/30'
+          : 'rounded-full px-4 py-2 text-[0.7rem] uppercase tracking-[0.32em] hover:bg-secondary/30 backdrop-blur',
         isActive ? 'text-primary' : 'text-foreground/70 hover:text-primary'
       )}
     >
@@ -42,8 +42,9 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full">
-      <div className="absolute inset-x-0 top-0 -z-10 h-full bg-gradient-to-b from-white/90 via-white/70 to-white/20" aria-hidden />
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur">
+      <div className="absolute inset-x-0 top-0 -z-10 h-full bg-gradient-to-b from-background/95 via-background/85 to-background/30" aria-hidden />
+      <div className="absolute inset-0 -z-20 calligraphy-overlay" aria-hidden />
       <div className="container mx-auto flex max-w-screen-xl items-center justify-between px-6 py-5 md:py-7">
         <div className="flex flex-1 items-center gap-4">
           <Sheet>
@@ -53,15 +54,15 @@ export function Header() {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] bg-white/95">
+            <SheetContent side="left" className="w-[300px] bg-background/95 text-foreground">
               <div className="flex h-full flex-col gap-8 p-4">
                 <SheetClose asChild>
                   <Link href="/" className="flex items-center">
                     <Logo className="h-6 w-auto" />
                   </Link>
                 </SheetClose>
-                <div className="rounded-2xl bg-accent/40 p-4 text-sm font-medium uppercase tracking-[0.3em] text-primary/80">
-                  Admissions open
+                <div className="rounded-2xl border border-border/50 bg-card/80 p-4 text-sm font-medium uppercase tracking-[0.3em] text-primary">
+                  Admissions Open
                 </div>
                 <nav className="flex flex-col gap-3">
                   {navLinks.map((link) => (
@@ -87,7 +88,7 @@ export function Header() {
           </Link>
         </div>
 
-        <nav className="hidden flex-none items-center gap-3 rounded-full border border-border/80 bg-white/70 px-5 py-3 shadow-[0_18px_40px_-28px] shadow-primary/30 backdrop-blur md:flex">
+        <nav className="hidden flex-none items-center gap-3 rounded-full border border-border/70 bg-card/70 px-5 py-3 shadow-[0_18px_40px_-28px] shadow-black/40 backdrop-blur md:flex">
           {navLinks.map((link) => (
             <NavLink key={link.href} href={link.href}>
               {link.label}
@@ -96,10 +97,10 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          <div className="hidden rounded-full border border-transparent bg-accent/60 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-primary md:inline-flex">
-            Admissions open
+          <div className="hidden rounded-full border border-primary/40 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-primary md:inline-flex">
+            Admissions Open
           </div>
-          <Button asChild variant="ghost" className="hidden rounded-full border border-transparent px-5 md:inline-flex">
+          <Button asChild variant="ghost" className="hidden rounded-full border border-transparent px-5 text-foreground md:inline-flex">
             <Link href="/login">Login</Link>
           </Button>
           <Button asChild className="rounded-full px-5">
