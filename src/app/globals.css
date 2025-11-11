@@ -4,29 +4,29 @@
 
 @layer base {
   :root {
-    --background: 204 42% 97%;
-    --foreground: 215 28% 16%;
-    --card: 0 0% 100%;
-    --card-foreground: 215 28% 16%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 28% 16%;
-    --primary: 196 64% 24%;
-    --primary-foreground: 187 59% 94%;
-    --secondary: 203 32% 92%;
-    --secondary-foreground: 215 28% 20%;
-    --muted: 205 25% 88%;
-    --muted-foreground: 210 15% 40%;
-    --accent: 187 66% 70%;
-    --accent-foreground: 215 28% 16%;
+    --background: 220 45% 6%;
+    --foreground: 38 40% 92%;
+    --card: 224 32% 12%;
+    --card-foreground: 38 45% 94%;
+    --popover: 224 32% 12%;
+    --popover-foreground: 38 45% 94%;
+    --primary: 37 78% 56%;
+    --primary-foreground: 220 47% 10%;
+    --secondary: 198 46% 22%;
+    --secondary-foreground: 36 72% 88%;
+    --muted: 215 24% 24%;
+    --muted-foreground: 36 32% 78%;
+    --accent: 197 52% 32%;
+    --accent-foreground: 37 78% 88%;
     --destructive: 0 68% 46%;
     --destructive-foreground: 36 43% 96%;
-    --border: 202 24% 86%;
-    --input: 202 24% 86%;
-    --ring: 187 66% 70%;
-    --chart-1: 196 64% 37%;
-    --chart-2: 188 72% 45%;
-    --chart-3: 222 42% 55%;
-    --chart-4: 161 43% 45%;
+    --border: 215 24% 26%;
+    --input: 215 24% 26%;
+    --ring: 37 78% 56%;
+    --chart-1: 37 78% 56%;
+    --chart-2: 197 60% 40%;
+    --chart-3: 210 46% 38%;
+    --chart-4: 180 52% 36%;
     --chart-5: 28 74% 56%;
     --radius: 0.5rem;
     --sidebar-background: 0 0% 98%;
@@ -39,38 +39,38 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 208 42% 8%;
-    --foreground: 187 59% 94%;
-    --card: 202 48% 14%;
-    --card-foreground: 187 59% 94%;
-    --popover: 202 48% 14%;
-    --popover-foreground: 187 59% 94%;
-    --primary: 187 66% 70%;
-    --primary-foreground: 215 28% 12%;
-    --secondary: 204 38% 18%;
-    --secondary-foreground: 187 59% 94%;
-    --muted: 205 28% 24%;
-    --muted-foreground: 187 42% 78%;
-    --accent: 187 66% 70%;
-    --accent-foreground: 215 28% 12%;
+    --background: 224 52% 4%;
+    --foreground: 38 45% 90%;
+    --card: 226 42% 10%;
+    --card-foreground: 38 45% 94%;
+    --popover: 226 42% 10%;
+    --popover-foreground: 38 45% 94%;
+    --primary: 37 78% 56%;
+    --primary-foreground: 224 52% 6%;
+    --secondary: 200 44% 20%;
+    --secondary-foreground: 36 72% 88%;
+    --muted: 216 30% 20%;
+    --muted-foreground: 36 32% 76%;
+    --accent: 196 48% 28%;
+    --accent-foreground: 37 78% 88%;
     --destructive: 0 62% 44%;
     --destructive-foreground: 36 43% 96%;
-    --border: 205 28% 24%;
-    --input: 205 28% 24%;
-    --ring: 187 66% 70%;
-    --chart-1: 197 82% 75%;
-    --chart-2: 188 68% 62%;
-    --chart-3: 162 56% 58%;
-    --chart-4: 220 47% 68%;
+    --border: 220 32% 22%;
+    --input: 220 32% 22%;
+    --ring: 37 78% 56%;
+    --chart-1: 37 78% 56%;
+    --chart-2: 197 60% 40%;
+    --chart-3: 210 46% 38%;
+    --chart-4: 180 52% 36%;
     --chart-5: 28 74% 56%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 224 52% 4%;
+    --sidebar-foreground: 38 45% 92%;
+    --sidebar-primary: 37 78% 56%;
+    --sidebar-primary-foreground: 224 47% 8%;
+    --sidebar-accent: 196 44% 22%;
+    --sidebar-accent-foreground: 38 45% 92%;
+    --sidebar-border: 220 32% 22%;
+    --sidebar-ring: 37 78% 56%;
   }
 }
 
@@ -81,9 +81,22 @@
   body {
     @apply bg-background text-foreground;
     background-image:
-      radial-gradient(60% 60% at 10% 20%, hsl(187 66% 88% / 0.65) 0%, transparent 60%),
-      radial-gradient(45% 45% at 80% 0%, hsl(196 64% 28% / 0.18) 0%, transparent 55%),
-      linear-gradient(180deg, hsl(204 42% 98%) 0%, hsl(201 33% 95%) 100%);
+      url('/calligraphy-pattern.svg'),
+      radial-gradient(60% 60% at 8% 18%, hsl(35 70% 18% / 0.55) 0%, transparent 65%),
+      radial-gradient(55% 55% at 84% 6%, hsl(197 52% 28% / 0.45) 0%, transparent 60%),
+      linear-gradient(180deg, hsl(220 45% 6%) 0%, hsl(222 40% 10%) 45%, hsl(215 38% 12%) 100%);
+    background-blend-mode: overlay, screen, screen, normal;
     background-attachment: fixed;
+    background-size: 360px 360px, auto, auto, auto;
+  }
+}
+
+@layer utilities {
+  .calligraphy-overlay {
+    background-image: url('/calligraphy-pattern.svg');
+    background-size: 280px 280px;
+    background-repeat: repeat;
+    mix-blend-mode: soft-light;
+    opacity: 0.55;
   }
 }

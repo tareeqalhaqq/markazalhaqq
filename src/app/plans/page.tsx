@@ -23,27 +23,28 @@ export default function PlansPage() {
   return (
     <div className="bg-background">
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-sky-100 via-white to-sky-200" />
+        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-[#0f172a] via-background to-[#101b30]" />
+        <div className="absolute inset-0 -z-10 calligraphy-overlay opacity-35" />
         <div className="container mx-auto px-6 py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="bg-primary/10 text-primary">Plans & pricing</Badge>
-            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+            <Badge className="border border-primary/40 bg-primary/10 text-primary">Plans & pricing</Badge>
+            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-primary sm:text-5xl">
               Simple pricing for sincere seekers
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              One immersive subscription for committed students, plus the flexibility to purchase individual courses when you want to focus on a single topic.
+              The Student of Knowledge Program is available for $40 per month or $240 per year—choose what suits your rhythm, or purchase individual courses when you want to focus on a single topic.
             </p>
           </div>
         </div>
       </section>
 
       <section className="container mx-auto grid max-w-5xl gap-10 px-6 pb-20">
-        <Card className="overflow-hidden border border-primary/20 bg-gradient-to-br from-white via-sky-50 to-white shadow-xl shadow-primary/15">
+        <Card className="overflow-hidden border border-primary/30 bg-card/85 shadow-xl shadow-black/50">
           <CardHeader className="p-8 text-center">
             <p className="text-sm uppercase tracking-[0.3em] text-primary">Core offering</p>
-            <CardTitle className="mt-3 font-headline text-3xl text-foreground">Student of Knowledge Program</CardTitle>
+            <CardTitle className="mt-3 font-headline text-3xl text-primary">Student of Knowledge Program</CardTitle>
             <CardDescription className="mt-4 text-base text-muted-foreground">
-              Unlock every current and upcoming course, structured study plans, and weekly live support from the official Tareeq Al-Haqq teaching team.
+              Unlock every current and upcoming course, structured study plans, and weekly live support from the official Tareeq Al-Haqq teaching team. Prices below apply to the Student of Knowledge Program.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-10 px-8 pb-8 lg:grid-cols-[1fr_minmax(0,320px)] lg:items-start">
@@ -55,13 +56,13 @@ export default function PlansPage() {
                 </li>
               ))}
             </ul>
-            <div className="space-y-5 rounded-3xl bg-white/85 p-6 text-center shadow-lg shadow-primary/10 backdrop-blur">
+            <div className="space-y-5 rounded-3xl border border-primary/30 bg-card/80 p-6 text-center shadow-lg shadow-black/40 backdrop-blur">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Monthly access</p>
                 <p className="text-4xl font-bold text-primary">$40</p>
                 <p className="text-sm text-muted-foreground">per month · cancel anytime</p>
               </div>
-              <div className="rounded-2xl bg-primary/5 p-4 text-left">
+              <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-left">
                 <p className="text-sm font-semibold text-primary">Commit for the year</p>
                 <p className="text-sm text-muted-foreground">
                   Pay $240 once and receive 12 months of access — the equivalent of $20 per month while your membership remains active.
@@ -74,11 +75,11 @@ export default function PlansPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-dashed border-primary/30 bg-white/70 shadow-lg shadow-primary/10 backdrop-blur">
+        <Card className="border border-dashed border-primary/30 bg-card/70 shadow-lg shadow-black/40 backdrop-blur">
           <CardHeader className="p-8 text-center">
-            <CardTitle className="font-headline text-2xl text-foreground">Individual course purchases</CardTitle>
+            <CardTitle className="font-headline text-2xl text-primary">Individual course purchases</CardTitle>
             <CardDescription className="mt-3 text-base text-muted-foreground">
-              Prefer to study one subject at a time? Purchase single courses and keep the materials forever.
+              Prefer to study one subject at a time? Purchase single courses and keep the materials forever. Prices vary by course depth and instructor involvement.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-8 pb-8">

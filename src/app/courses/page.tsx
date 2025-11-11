@@ -68,11 +68,12 @@ export default function CoursesPage() {
   return (
     <div className="bg-background">
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-sky-100 via-white to-sky-200" />
+        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-[#0f172a] via-background to-[#101b30]" />
+        <div className="absolute inset-0 -z-10 calligraphy-overlay opacity-35" />
         <div className="container mx-auto px-6 py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="bg-primary/10 text-primary">Course library</Badge>
-            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+            <Badge className="border border-primary/40 bg-primary/10 text-primary">Course library</Badge>
+            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-primary sm:text-5xl">
               Guided pathways rooted in revelation
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
@@ -83,7 +84,7 @@ export default function CoursesPage() {
             <Input
               type="search"
               placeholder="Search courses or subjects"
-              className="w-full rounded-full border-primary/20 bg-white/80 backdrop-blur"
+              className="w-full rounded-full border-primary/30 bg-card/70 backdrop-blur"
             />
           </div>
         </div>
@@ -92,7 +93,7 @@ export default function CoursesPage() {
       <section className="container mx-auto px-6 pb-16">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {courses.map((course) => (
-            <Card key={course.title} className="flex h-full flex-col overflow-hidden border border-primary/10 bg-white/80 shadow-lg shadow-primary/10 backdrop-blur">
+            <Card key={course.title} className="flex h-full flex-col overflow-hidden border border-primary/20 bg-card/80 shadow-lg shadow-black/40 backdrop-blur">
               {course.image && (
                 <CardHeader className="p-0">
                   <Image
@@ -115,14 +116,14 @@ export default function CoursesPage() {
                   </Badge>
                 </div>
                 <div>
-                  <CardTitle className="font-headline text-xl text-foreground">{course.title}</CardTitle>
+                  <CardTitle className="font-headline text-xl text-primary">{course.title}</CardTitle>
                   <CardDescription className="mt-3 text-sm leading-relaxed text-muted-foreground">
                     {course.description}
                   </CardDescription>
                 </div>
                 <p className="text-sm font-medium text-primary">{course.highlight}</p>
               </CardContent>
-              <CardFooter className="flex items-center justify-between gap-4 bg-white/60 p-6">
+              <CardFooter className="flex items-center justify-between gap-4 bg-card/70 p-6">
                 <p className="text-sm font-medium text-muted-foreground">Instructor roster announced soon</p>
                 <Button asChild size="sm" className="rounded-full px-5">
                   <Link href="/signup">Join waitlist</Link>
@@ -132,16 +133,30 @@ export default function CoursesPage() {
           ))}
         </div>
 
-        <div className="mt-16 rounded-3xl bg-gradient-to-r from-primary via-sky-500 to-sky-300 p-10 text-center text-primary-foreground shadow-xl shadow-primary/20">
-          <h2 className="font-headline text-3xl font-bold">Prefer to sample individual topics?</h2>
-          <p className="mt-4 text-lg text-primary-foreground/90">
+        <div className="mt-16 space-y-10 rounded-3xl border border-primary/30 bg-card/85 p-10 text-center shadow-xl shadow-black/50">
+          <h2 className="font-headline text-3xl font-bold text-primary">Prefer to sample individual topics?</h2>
+          <p className="mt-4 text-lg text-muted-foreground">
             Every course can be purchased individually with lifetime access, while the Student of Knowledge Program unlocks them all for $40 per month or $240 yearly.
           </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-primary/30 bg-primary/10 p-6 text-left">
+              <h3 className="font-headline text-2xl text-primary">Tareeq Path</h3>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Focus on self purification with guided reflections, spiritual check-ins, and mentorship rooted in the Prophetic path.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-primary/30 bg-primary/10 p-6 text-left">
+              <h3 className="font-headline text-2xl text-primary">Haqq Path</h3>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Dive deep into knowledge—Arabic, aqeedah, fiqh, and hadith—sequenced for steady scholarly growth.
+              </p>
+            </div>
+          </div>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-            <Button asChild size="lg" className="bg-white text-primary hover:bg-slate-100">
+            <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
               <Link href="/plans">View plans</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+            <Button asChild size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10">
               <Link href="/faq">Read pricing FAQ</Link>
             </Button>
           </div>
