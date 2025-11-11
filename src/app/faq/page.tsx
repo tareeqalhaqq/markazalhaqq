@@ -13,7 +13,7 @@ const faqs = [
   {
     question: "What is MarkazalHaqq?",
     answer:
-      "MarkazalHaqq is the official academy of Tareeq Al-Haqq. It extends the lessons found on TareeqAlHaqq.org into structured courses with live mentorship and community support.",
+      "MarkazalHaqq is the official academy of Tareeq Al-Haqq. It extends the lessons found on TareeqAlHaqq.org into structured, live-guided study. Our current release focuses entirely on the Seerah through Al Aurjuzah Al Miyyah.",
   },
   {
     question: "Who are the instructors?",
@@ -26,19 +26,24 @@ const faqs = [
       "All content is rooted in the Quran and authentic Sunnah upon the understanding of the Companions and the righteous early generations (As-Salaf as-Salih).",
   },
   {
-    question: "Can I try a course for free?",
+    question: "Can I preview the materials?",
     answer:
-      "We periodically release introductory lessons or complimentary modules. Subscribe to updates when you create an account to be notified first.",
+      "Yes. After creating an account you will receive a sample lesson and a selection of memorisation resources so you can experience the course format before the first live class.",
   },
   {
-    question: "How do the subscription plans work?",
+    question: "How much does enrolment cost?",
     answer:
-      "The Student of Knowledge Program unlocks every course for $40 per month. You may also pre-pay $240 for the year (equivalent to $20 per month) or purchase courses individually with lifetime access.",
+      "The full 12-week programme is a one-time payment of $120. This includes all live sessions, replays, memorisation trackers, and downloadable notes. Scholarships are available upon request.",
   },
   {
-    question: "Is this suitable for beginners?",
+    question: "What level of study is required?",
     answer:
-      "Yes. Tracks are organized by level so you can start from foundational material and grow into intermediate and advanced studies.",
+      "The course is suitable for motivated beginners and intermediate students. Familiarity with basic Islamic terminology helps, and we provide vocabulary glossaries alongside each set of lines.",
+  },
+  {
+    question: "Will replays and resources remain available?",
+    answer:
+      "Absolutely. All replays, slides, and memorisation tools remain accessible in your account so you can review at your own pace after the live cohort concludes.",
   },
 ];
 
@@ -54,7 +59,7 @@ export default function FAQPage() {
               Questions & answers
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Everything about MarkazalHaqq’s programs, pricing, and learning experience in one place.
+              Everything you need to know about the Al Aurjuzah Al Miyyah cohort—pricing, access, and how the live sessions run.
             </p>
           </div>
         </div>
@@ -77,14 +82,14 @@ export default function FAQPage() {
         <div className="mt-12 rounded-3xl bg-gradient-to-r from-primary via-sky-500 to-sky-300 p-10 text-center text-primary-foreground shadow-lg shadow-primary/15">
           <h2 className="font-headline text-3xl font-bold">Need more details?</h2>
           <p className="mt-4 text-lg text-primary-foreground/90">
-            Browse our course catalog, review program plans, or reach out to the MarkazalHaqq support team for specific questions.
+            Explore the course overview or reach out to the MarkazalHaqq support team for assistance with enrolment.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
             <Button asChild size="lg" className="bg-white text-primary hover:bg-slate-100">
-              <Link href="/courses">Explore courses</Link>
+              <Link href="/courses">View course details</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-              <Link href="/plans">Review plans</Link>
+              <Link href="/plans">See pricing</Link>
             </Button>
           </div>
         </div>

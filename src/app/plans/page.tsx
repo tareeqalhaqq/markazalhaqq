@@ -5,96 +5,97 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
-const studentPlanFeatures = [
-  "Immediate access to the full Student of Knowledge curriculum",
-  "Weekly live review or Q&A touchpoints with the Tareeq Al-Haqq team",
-  "Downloadable notes, readings, and supplemental resources",
-  "Private student community for accountability and mentorship",
+const seerahPlanFeatures = [
+  "Twelve live sessions covering all 100 lines of Al Aurjuzah Al Miyyah",
+  "Annotated Arabic text, English translation, and memorisation trackers",
+  "Weekly Q&A, feedback on recitation submissions, and cohort discussions",
+  "Lifetime access to replays and downloadable course resources",
 ];
 
-const individualCourseFeatures = [
-  "Choose the subjects that matter most to your journey",
-  "Lifetime access to purchased course recordings and materials",
-  "Eligible for community discussions tied to that course",
-  "Upgrade into the Student of Knowledge Program at any time",
+const enrolSteps = [
+  "Create your MarkazalHaqq account and complete the intake form",
+  "Receive confirmation and cohort schedule within one business day",
+  "Attend orientation to review learning tools and memorisation pacing",
 ];
 
 export default function PlansPage() {
   return (
     <div className="bg-background">
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-[#0f172a] via-background to-[#101b30]" />
-        <div className="absolute inset-0 -z-10 calligraphy-overlay opacity-35" />
+        <div className="absolute inset-0 -z-20 bg-gradient-to-br from-sky-50 via-white to-sky-100" />
+        <div className="absolute inset-0 -z-10 calligraphy-overlay opacity-25" />
         <div className="container mx-auto px-6 py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="border border-primary/40 bg-primary/10 text-primary">Plans & pricing</Badge>
-            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-primary sm:text-5xl">
-              Simple pricing for sincere seekers
+            <Badge className="border border-primary/20 bg-primary/10 text-primary">Course pricing</Badge>
+            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+              Enrol in Al Aurjuzah Al Miyyah
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              The Student of Knowledge Program is available for $40 per month or $240 per year—choose what suits your rhythm, or purchase individual courses when you want to focus on a single topic.
+              One straightforward fee grants access to the full 12-week Seerah programme, including live sessions, memorisation support, and lifetime replays.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="container mx-auto grid max-w-5xl gap-10 px-6 pb-20">
-        <Card className="overflow-hidden border border-primary/30 bg-card/85 shadow-xl shadow-black/50">
+      <section className="container mx-auto grid max-w-4xl gap-10 px-6 pb-20">
+        <Card className="overflow-hidden border border-primary/15 bg-white/90 shadow-xl shadow-sky-100">
           <CardHeader className="p-8 text-center">
-            <p className="text-sm uppercase tracking-[0.3em] text-primary">Core offering</p>
-            <CardTitle className="mt-3 font-headline text-3xl text-primary">Student of Knowledge Program</CardTitle>
+            <p className="text-sm uppercase tracking-[0.3em] text-primary">Single programme</p>
+            <CardTitle className="mt-3 font-headline text-3xl text-foreground">Al Aurjuzah Al Miyyah Cohort</CardTitle>
             <CardDescription className="mt-4 text-base text-muted-foreground">
-              Unlock every current and upcoming course, structured study plans, and weekly live support from the official Tareeq Al-Haqq teaching team. Prices below apply to the Student of Knowledge Program.
+              One payment grants access to the live Seerah course, memorisation support, and all accompanying resources. No subscriptions or hidden tiers.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-10 px-8 pb-8 lg:grid-cols-[1fr_minmax(0,320px)] lg:items-start">
             <ul className="space-y-4 text-left text-base text-muted-foreground">
-              {studentPlanFeatures.map((feature) => (
+              {seerahPlanFeatures.map((feature) => (
                 <li key={feature} className="flex items-start gap-3">
                   <Check className="mt-1 h-5 w-5 flex-shrink-0 text-primary" />
                   <span>{feature}</span>
                 </li>
               ))}
             </ul>
-            <div className="space-y-5 rounded-3xl border border-primary/30 bg-card/80 p-6 text-center shadow-lg shadow-black/40 backdrop-blur">
+            <div className="space-y-5 rounded-3xl border border-primary/15 bg-primary/5 p-6 text-center">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Monthly access</p>
-                <p className="text-4xl font-bold text-primary">$40</p>
-                <p className="text-sm text-muted-foreground">per month · cancel anytime</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Course fee</p>
+                <p className="text-4xl font-bold text-primary">$120</p>
+                <p className="text-sm text-muted-foreground">one-time · replays included</p>
               </div>
-              <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 text-left">
-                <p className="text-sm font-semibold text-primary">Commit for the year</p>
+              <div className="rounded-2xl border border-primary/15 bg-white/90 p-4 text-left">
+                <p className="text-sm font-semibold text-primary">Need assistance?</p>
                 <p className="text-sm text-muted-foreground">
-                  Pay $240 once and receive 12 months of access — the equivalent of $20 per month while your membership remains active.
+                  Limited scholarships are available. Email support@tareeqalhaqq.org to inquire.
                 </p>
               </div>
               <Button asChild size="lg" className="w-full rounded-full">
-                <Link href="/signup">Join the program</Link>
+                <Link href="/signup">Reserve your seat</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-dashed border-primary/30 bg-card/70 shadow-lg shadow-black/40 backdrop-blur">
+        <Card className="border border-primary/15 bg-white/90 shadow-lg shadow-sky-100">
           <CardHeader className="p-8 text-center">
-            <CardTitle className="font-headline text-2xl text-primary">Individual course purchases</CardTitle>
+            <CardTitle className="font-headline text-2xl text-foreground">How enrolment works</CardTitle>
             <CardDescription className="mt-3 text-base text-muted-foreground">
-              Prefer to study one subject at a time? Purchase single courses and keep the materials forever. Prices vary by course depth and instructor involvement.
+              Follow these steps to join the upcoming cohort and access the learning platform.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-8 pb-8">
-            <ul className="space-y-4 text-base text-muted-foreground">
-              {individualCourseFeatures.map((feature) => (
-                <li key={feature} className="flex items-start gap-3">
-                  <Check className="mt-1 h-5 w-5 flex-shrink-0 text-primary" />
-                  <span>{feature}</span>
+            <ol className="space-y-4 text-left text-base text-muted-foreground">
+              {enrolSteps.map((step, index) => (
+                <li key={step} className="flex items-start gap-3">
+                  <span className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    {index + 1}
+                  </span>
+                  <span>{step}</span>
                 </li>
               ))}
-            </ul>
+            </ol>
           </CardContent>
           <CardFooter className="px-8 pb-8">
             <Button asChild variant="outline" className="w-full rounded-full" size="lg">
-              <Link href="/courses">Browse courses</Link>
+              <Link href="/faq">Read course FAQ</Link>
             </Button>
           </CardFooter>
         </Card>

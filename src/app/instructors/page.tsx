@@ -69,7 +69,7 @@ export default function InstructorsPage() {
         <div className="rounded-3xl bg-white/80 p-10 text-center shadow-xl shadow-primary/15 backdrop-blur">
           <h2 className="font-headline text-3xl font-bold text-foreground">Instructor roster coming soon</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            We will publish instructor bios and teaching schedules as we release each module of the Student of Knowledge Program. Join the waitlist to receive updates first.
+            We will publish instructor bios and teaching schedules as we confirm the Seerah cohort timeline. Join the waitlist to receive the announcements first.
           </p>
           <Button asChild size="lg" className="mt-6 rounded-full px-8">
             <Link href="/signup">Join the waitlist</Link>

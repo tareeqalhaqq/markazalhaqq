@@ -46,7 +46,7 @@ const milestones = [
     year: "2024",
     title: "Launching MarkazalHaqq",
     description:
-      "We began building an academy inspired by in-person circles—organized curricula, accountability, and direct access to our teachers.",
+      "We began building an academy that mirrors in-person circles—organized curricula, accountability, and direct access to our teachers.",
   },
 ];
 
