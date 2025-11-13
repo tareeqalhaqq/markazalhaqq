@@ -5,8 +5,8 @@ import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'MarkazalHaqq Online',
-  description: 'Your center for authentic Islamic knowledge.',
+  title: 'Markaz al-Haqq Academy',
+  description: 'A dedicated academy and hub for authentic Islamic knowledge.',
 };
 
 export default function RootLayout({

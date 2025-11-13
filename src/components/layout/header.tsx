@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, BookOpen, Users, DollarSign, HelpCircle, GraduationCap } from 'lucide-react';
+import { Menu, BookOpen, Users, DollarSign, HelpCircle, GraduationCap, CalendarClock } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
 
@@ -43,8 +43,7 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur">
-      <div className="absolute inset-x-0 top-0 -z-10 h-full bg-gradient-to-b from-background/95 via-background/85 to-background/30" aria-hidden />
-      <div className="absolute inset-0 -z-20 calligraphy-overlay" aria-hidden />
+      <div className="absolute inset-x-0 top-0 -z-10 h-full bg-gradient-to-b from-background via-background/70 to-background/30" aria-hidden />
       <div className="container mx-auto flex max-w-screen-xl items-center justify-between px-6 py-5 md:py-7">
         <div className="flex flex-1 items-center gap-4">
           <Sheet>
@@ -61,8 +60,9 @@ export function Header() {
                     <Logo className="h-6 w-auto" />
                   </Link>
                 </SheetClose>
-                <div className="rounded-2xl border border-border/50 bg-card/80 p-4 text-sm font-medium uppercase tracking-[0.3em] text-primary">
-                  Admissions Open
+                <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 p-4 text-left text-sm text-muted-foreground">
+                  <CalendarClock className="h-5 w-5 text-primary" />
+                  <span className="font-medium uppercase tracking-[0.3em] text-primary">Next intake to be announced</span>
                 </div>
                 <nav className="flex flex-col gap-3">
                   {navLinks.map((link) => (
@@ -77,7 +77,7 @@ export function Header() {
                     <Link href="/login">Login</Link>
                   </Button>
                   <Button asChild className="w-full">
-                    <Link href="/signup">Join now</Link>
+                    <Link href="/signup">Join the waitlist</Link>
                   </Button>
                 </div>
               </div>
@@ -88,7 +88,7 @@ export function Header() {
           </Link>
         </div>
 
-        <nav className="hidden flex-none items-center gap-3 rounded-full border border-border/70 bg-card/70 px-5 py-3 shadow-[0_18px_40px_-28px] shadow-black/40 backdrop-blur md:flex">
+        <nav className="hidden flex-none items-center gap-3 rounded-full border border-border/70 bg-card/70 px-5 py-3 shadow-[0_18px_40px_-32px] shadow-black/40 backdrop-blur md:flex">
           {navLinks.map((link) => (
             <NavLink key={link.href} href={link.href}>
               {link.label}
@@ -97,14 +97,15 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          <div className="hidden rounded-full border border-primary/40 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-primary md:inline-flex">
-            Admissions Open
+          <div className="hidden items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-primary md:inline-flex">
+            <CalendarClock className="h-4 w-4" />
+            Intake update soon
           </div>
           <Button asChild variant="ghost" className="hidden rounded-full border border-transparent px-5 text-foreground md:inline-flex">
             <Link href="/login">Login</Link>
           </Button>
           <Button asChild className="rounded-full px-5">
-            <Link href="/signup">Join now</Link>
+            <Link href="/signup">Join the waitlist</Link>
           </Button>
         </div>
       </div>
