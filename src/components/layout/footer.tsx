@@ -16,9 +16,9 @@ export function Footer() {
               <Logo className="h-7 w-auto" />
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              A serene space for seekers—rooted in Tareeq Al-Haqq and etched with the flowing strokes of a calligraphic majlis.
+              The academy hub for seekers of authentic Islamic knowledge—anchored in scholarship and service.
             </p>
-            <div className="inline-flex rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-primary">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-primary">
               stay connected
             </div>
           </div>
@@ -44,7 +44,7 @@ export function Footer() {
                 Instructors
               </Link>
               <Link href="/signup" className="block transition-colors hover:text-primary">
-                Admissions
+                Join the waitlist
               </Link>
             </div>
             <div className="space-y-3">
