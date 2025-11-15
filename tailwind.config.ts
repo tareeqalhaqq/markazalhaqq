@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Cairo', 'sans-serif'],
-        headline: ['"Aref Ruqaa Ink"', 'serif'],
+        body: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        headline: ['"Playfair Display"', 'serif'],
         code: ['monospace'],
       },
       colors: {

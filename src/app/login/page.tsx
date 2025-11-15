@@ -86,8 +86,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-sky-100 via-white to-sky-200 px-4 py-16">
-      <Card className="w-full max-w-md border border-primary/10 bg-white/80 shadow-xl shadow-primary/20 backdrop-blur">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-white via-blue-50/60 to-purple-50/60 px-4 py-16">
+      <Card className="w-full max-w-md border border-muted bg-white/85 shadow-xl shadow-primary/15 backdrop-blur">
         <CardHeader className="space-y-3 text-center">
           <CardTitle className="font-headline text-3xl font-bold tracking-tight text-foreground">Welcome back</CardTitle>
           <CardDescription className="text-base text-muted-foreground">
@@ -136,7 +136,7 @@ export default function LoginPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3">
@@ -150,13 +150,13 @@ export default function LoginPage() {
                 <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
               </Button>
             </div>
-            <div className="grid gap-3 rounded-2xl border border-border/60 bg-card/70 p-4">
+            <div className="grid gap-3 rounded-2xl border border-muted bg-white/70 p-4">
               <h3 className="text-sm font-semibold uppercase tracking-[0.28em] text-muted-foreground">Prototype credentials</h3>
               <div className="grid gap-3 text-left text-sm">
                 {accounts.map((account) => (
                   <div
                     key={account.role}
-                    className="rounded-xl border border-border/50 bg-background/80 p-3 shadow-sm shadow-primary/5"
+                    className="rounded-xl border border-muted bg-white/80 p-3 shadow-sm shadow-primary/10"
                   >
                     <div className="flex items-center justify-between text-xs uppercase tracking-[0.28em] text-muted-foreground">
                       <span>{account.role === "instructor" ? "Instructor admin" : "Student"}</span>

@@ -11,62 +11,64 @@ import { Button } from "@/components/ui/button";
 
 const faqs = [
   {
-    question: "What is MarkazalHaqq?",
+    question: "What is Markaz al-Haqq Academy?",
     answer:
-      "MarkazalHaqq is the official academy of Tareeq Al-Haqq. It extends the lessons found on TareeqAlHaqq.org into structured, live-guided study. Our current release focuses entirely on the Prophetic biography through our flagship Seerah cohort.",
+      "Markaz al-Haqq is the official academy of Tareeq Al-Haqq. We extend trusted lessons into structured, live-guided study with polished resources and mentorship.",
   },
   {
-    question: "Who are the instructors?",
+    question: "Who teaches the programmes?",
     answer:
-      "Teachers are members of the Tareeq Al-Haqq network. Each instructor is vetted for methodology, ijazaat, and ability to deliver lessons with clarity and sincerity.",
+      "Classes are delivered by teachers within the Tareeq Al-Haqq network—each vetted for ijazaat, clarity, and alignment with the methodology of the Salaf.",
   },
   {
-    question: "What is the source of the teachings?",
+    question: "What sources are used?",
     answer:
-      "All content is rooted in the Quran and authentic Sunnah upon the understanding of the Companions and the righteous early generations (As-Salaf as-Salih).",
+      "All materials are rooted in the Qur'an and authentic Sunnah upon the understanding of the Companions and the righteous early generations.",
   },
   {
-    question: "Can I preview the materials?",
+    question: "Can I preview the learning experience?",
     answer:
-      "Yes. After creating an account you will receive a sample lesson and a selection of memorisation resources so you can experience the course format before the first live class.",
+      "Yes. After creating an account you'll receive a sample lesson, memorisation trackers, and a walkthrough of our sokacademy-inspired interface.",
   },
   {
-    question: "How much does enrolment cost?",
+    question: "What are the fees?",
     answer:
-      "The full 12-week programme is a one-time payment of $120. This includes all live sessions, replays, memorisation trackers, and downloadable notes. Scholarships are available upon request.",
+      "Our flagship cohort is a one-time payment that includes live sessions, replays, memorisation support, and downloadable workbooks. Scholarships are available.",
   },
   {
-    question: "What level of study is required?",
+    question: "Do I need prior study?",
     answer:
-      "The course is suitable for motivated beginners and intermediate students. Familiarity with basic Islamic terminology helps, and we provide vocabulary glossaries alongside each set of lines.",
+      "We design cohorts for motivated beginners and intermediate seekers. Glossaries and mentor support ensure you stay on track.",
   },
   {
-    question: "Will replays and resources remain available?",
+    question: "How long do I keep access?",
     answer:
-      "Absolutely. All replays, slides, and memorisation tools remain accessible in your account so you can review at your own pace after the live cohort concludes.",
+      "Replays, slides, and assignments remain in your dashboard indefinitely so you can review at your own pace.",
   },
 ];
 
 export default function FAQPage() {
   return (
-    <div className="bg-background">
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
-        <div className="container mx-auto px-6 py-16 sm:py-24">
+    <div className="space-y-20 pb-24">
+      <section className="relative overflow-hidden pt-24">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white via-purple-50/70 to-blue-50/60" aria-hidden />
+        <div className="container mx-auto px-6">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge className="border border-primary/30 bg-primary/10 text-primary">FAQ</Badge>
-            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+            <Badge className="rounded-full border border-primary/20 bg-primary/10 px-5 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-primary">
+              FAQ
+            </Badge>
+            <h1 className="mt-6 font-headline text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
               Questions & answers
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Everything you need to know about our current Seerah cohort—pricing, access, and how the live sessions run.
+              Get clarity on our programmes, pricing, and the polished learning journey you can expect inside the academy.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="container mx-auto max-w-4xl px-6 pb-20">
-        <Accordion type="single" collapsible className="w-full rounded-3xl border border-primary/20 bg-card/85 p-8 shadow-xl shadow-slate-950/40 backdrop-blur">
+      <section className="container mx-auto max-w-4xl px-6">
+        <Accordion type="single" collapsible className="w-full rounded-3xl border border-muted bg-white/90 p-8 shadow-xl shadow-primary/5">
           {faqs.map((faq, index) => (
             <AccordionItem key={faq.question} value={`item-${index}`}>
               <AccordionTrigger className="text-left text-lg font-semibold text-foreground">
@@ -79,16 +81,16 @@ export default function FAQPage() {
           ))}
         </Accordion>
 
-        <div className="mt-12 rounded-3xl border border-primary/25 bg-gradient-to-r from-primary/20 via-slate-900 to-slate-950 p-10 text-center text-foreground shadow-lg shadow-slate-950/40">
-          <h2 className="font-headline text-3xl font-bold text-foreground">Need more details?</h2>
+        <div className="mt-12 rounded-3xl border border-primary/20 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/5 p-10 text-center shadow-lg shadow-primary/10">
+          <h2 className="font-headline text-3xl font-semibold text-foreground">Need more details?</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Explore the course overview or reach out to the MarkazalHaqq support team for assistance with enrolment.
+            Explore the course catalog or reach out to our team for a personalised recommendation.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-            <Button asChild size="lg" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link href="/courses">View course details</Link>
+            <Button asChild size="lg" className="rounded-full px-8">
+              <Link href="/courses">View courses</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full border-primary text-primary hover:bg-primary/10">
+            <Button asChild size="lg" variant="outline" className="rounded-full border-primary/40 px-8 text-primary hover:bg-primary/10">
               <Link href="/plans">See pricing</Link>
             </Button>
           </div>
