@@ -26,6 +26,9 @@ export function Footer() {
               <Link href="/courses" className="block transition-colors hover:text-white">
                 Courses
               </Link>
+              <Link href="/talib-al-ilm" className="block transition-colors hover:text-white">
+                Talib al Ilm membership
+              </Link>
               <Link href="/plans" className="block transition-colors hover:text-white">
                 Tuition & plans
               </Link>

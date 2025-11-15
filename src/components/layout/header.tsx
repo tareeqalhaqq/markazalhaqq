@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, BookOpen, Users, DollarSign, HelpCircle, GraduationCap, CalendarClock } from 'lucide-react';
+import { Menu, BookOpen, Users, DollarSign, HelpCircle, GraduationCap, CalendarClock, Sparkles } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
 
@@ -14,6 +14,7 @@ const navLinks = [
   { href: '/courses', label: 'Courses', icon: BookOpen },
   { href: '/about', label: 'About', icon: Users },
   { href: '/instructors', label: 'Instructors', icon: GraduationCap },
+  { href: '/talib-al-ilm', label: 'Talib al Ilm', icon: Sparkles },
   { href: '/plans', label: 'Plans', icon: DollarSign },
   { href: '/faq', label: 'FAQ', icon: HelpCircle },
 ];

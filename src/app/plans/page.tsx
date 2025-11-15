@@ -101,6 +101,46 @@ export default function PlansPage() {
           </CardFooter>
         </Card>
       </section>
+
+      <section className="container mx-auto px-6">
+        <Card className="border border-muted bg-white/90 shadow-xl shadow-primary/5">
+          <CardHeader className="p-10 text-center">
+            <p className="text-sm uppercase tracking-[0.3em] text-primary">All-access programme</p>
+            <CardTitle className="mt-3 font-headline text-3xl text-foreground">Talib al Ilm Membership</CardTitle>
+            <CardDescription className="mt-4 text-base text-muted-foreground">
+              One membership that unlocks every current and future course, quiz, and discussion space. Ideal for seekers who want a guided path through the full Markaz al-Haqq curriculum.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-10 px-10 pb-10 lg:grid-cols-3">
+            <div className="space-y-3 text-left text-sm text-muted-foreground">
+              <p className="font-semibold text-foreground">Everything included</p>
+              <ul className="space-y-2">
+                <li>Instant access to all live cohorts & replay archives</li>
+                <li>Participation in every quiz and assessment created by instructors</li>
+                <li>Community discussions, announcements, and mentor touchpoints</li>
+              </ul>
+            </div>
+            <div className="space-y-3 text-left text-sm text-muted-foreground">
+              <p className="font-semibold text-foreground">Level-based roadmap</p>
+              <ul className="space-y-2">
+                <li>Courses grouped into levels for foundational, intermediate, and scholarly seekers</li>
+                <li>Admins drag-and-drop courses between levels to craft bespoke journeys</li>
+                <li>Progress syncs with instructor workspaces and the student dashboard</li>
+              </ul>
+            </div>
+            <div className="space-y-4 rounded-3xl border border-primary/30 bg-primary/5 p-6 text-center">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Membership pricing</p>
+                <p className="text-4xl font-bold text-primary">$95/mo</p>
+                <p className="text-sm text-muted-foreground">or $950 annually • scholarships available</p>
+              </div>
+              <Button asChild className="w-full rounded-full" size="lg">
+                <Link href="/talib-al-ilm">Explore Talib al Ilm</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

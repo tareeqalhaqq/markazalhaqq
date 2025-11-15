@@ -8,6 +8,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const courseCatalog = [
   {
+    slug: "aurjuzah-al-miyyah-immersive",
     title: "Aurjuzah Al-Miyyah Immersive",
     category: "Seerah",
     level: "Intermediate",
@@ -19,6 +20,7 @@ const courseCatalog = [
     details: ["Line-by-line commentary", "Audio library & memorisation pacing", "Weekly live Q&A"],
   },
   {
+    slug: "foundations-of-aqidah",
     title: "Foundations of Aqidah",
     category: "Aqidah",
     level: "Beginner",
@@ -30,6 +32,7 @@ const courseCatalog = [
     details: ["Guided text readings", "Scenario-based workshops", "Community forums"],
   },
   {
+    slug: "fiqh-of-worship",
     title: "Fiqh of Worship & Daily Living",
     category: "Fiqh",
     level: "Intermediate",
@@ -41,6 +44,7 @@ const courseCatalog = [
     details: ["Weekly case studies", "Comparative madhhab insights", "Accountability cohorts"],
   },
   {
+    slug: "arabic-for-sacred-texts",
     title: "Arabic for Sacred Texts",
     category: "Arabic",
     level: "All levels",
@@ -145,9 +149,14 @@ export default function CoursesPage() {
                   <p className="font-semibold text-foreground">{course.duration} • {course.price}</p>
                   <p>Includes replays, resources, and mentorship</p>
                 </div>
-                <Button asChild className="rounded-full px-6">
-                  <Link href="/signup">Join waitlist</Link>
-                </Button>
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                  <Button asChild variant="outline" className="rounded-full px-6">
+                    <Link href={`/courses/${course.slug}`}>Enter course workspace</Link>
+                  </Button>
+                  <Button asChild className="rounded-full px-6">
+                    <Link href="/signup">Join waitlist</Link>
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           ))}
