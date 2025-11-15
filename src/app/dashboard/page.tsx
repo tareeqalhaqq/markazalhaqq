@@ -8,14 +8,14 @@ const dashboardCards = [
   {
     title: "Instructor workspace",
     description:
-      "Prototype area for administrators to plan courses, lessons, and cohort logistics. Actions are simulated to outline the workflow.",
+      "Create courses, publish lessons, and share resources. Every action instantly updates the student preview so you can validate the flow before wiring Firebase.",
     href: "/dashboard/instructor",
     badge: "Admin",
   },
   {
     title: "Student timeline",
     description:
-      "Preview of what an enrolled learner will see: progress tracking, upcoming lessons, and resources gathered in one place.",
+      "See exactly what learners will experience. Lesson progress, live sessions, and downloads stay in sync with the instructor dashboard.",
     href: "/dashboard/student",
     badge: "Learner",
   },
@@ -26,14 +26,14 @@ export default function DashboardLandingPage() {
     <div className="container mx-auto max-w-5xl space-y-10 px-6">
       <div className="rounded-3xl border border-primary/20 bg-white/90 p-10 text-center shadow-xl shadow-primary/10">
         <Badge variant="outline" className="border-primary/50 text-primary">
-          Prototype preview
+          Linked preview
         </Badge>
         <h1 className="mt-4 font-headline text-4xl font-bold tracking-tight text-foreground">
-          Explore the academy dashboards
+          Explore the connected academy dashboards
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          We are experimenting with the instructor and student experiences before wiring them to the live data layer. Use the hard
-          coded accounts on the login page to preview each role.
+          Manage everything from one place. The instructor tools feed directly into the student view so you can test the product
+          experience while you prepare the Firebase integration.
         </p>
       </div>
 
