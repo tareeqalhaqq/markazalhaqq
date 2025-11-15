@@ -31,8 +31,8 @@ function TareeqAlhaqqIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export default function SignupPage() {
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-sky-100 via-white to-sky-200 px-4 py-16">
-      <Card className="w-full max-w-md border border-primary/10 bg-white/80 shadow-xl shadow-primary/20 backdrop-blur">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-white via-blue-50/60 to-purple-50/60 px-4 py-16">
+      <Card className="w-full max-w-md border border-muted bg-white/85 shadow-xl shadow-primary/15 backdrop-blur">
         <CardHeader className="space-y-3 text-center">
           <CardTitle className="font-headline text-3xl font-bold tracking-tight text-foreground">Create an account</CardTitle>
           <CardDescription className="text-base text-muted-foreground">
@@ -63,7 +63,7 @@ export default function SignupPage() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or sign up with</span>
+                <span className="bg-white px-2 text-muted-foreground">Or sign up with</span>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3">

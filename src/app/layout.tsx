@@ -20,11 +20,12 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa+Ink&family=Cairo:wght@300;400;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="font-body bg-background text-foreground antialiased">
+      <body className="bg-background font-body text-foreground antialiased">
+        <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.12),_transparent_55%),_radial-gradient(circle_at_top_right,_rgba(56,189,248,0.12),_transparent_50%)]" aria-hidden />
         <div className="flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">{children}</main>

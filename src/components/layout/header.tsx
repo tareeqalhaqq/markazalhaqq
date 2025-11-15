@@ -28,9 +28,9 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
       className={cn(
         'font-medium transition-colors',
         mobile
-          ? 'flex items-center rounded-md p-2 text-lg hover:bg-secondary/30'
-          : 'rounded-full px-4 py-2 text-[0.7rem] uppercase tracking-[0.32em] hover:bg-secondary/30 backdrop-blur',
-        isActive ? 'text-primary' : 'text-foreground/70 hover:text-primary'
+          ? 'flex items-center rounded-xl p-2 text-base hover:bg-muted'
+          : 'rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] hover:bg-primary/10',
+        isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
       )}
     >
       {children}
@@ -42,9 +42,13 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur">
-      <div className="absolute inset-x-0 top-0 -z-10 h-full bg-gradient-to-b from-background via-background/70 to-background/30" aria-hidden />
-      <div className="container mx-auto flex max-w-screen-xl items-center justify-between px-6 py-5 md:py-7">
+    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-white/80 backdrop-blur-md">
+      <div className="hidden border-b border-primary/20 bg-gradient-to-r from-primary via-primary/80 to-secondary/90 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary-foreground md:block">
+        <div className="container mx-auto flex items-center justify-center px-6">
+          Next cohort opens soon · Join the waitlist today
+        </div>
+      </div>
+      <div className="container mx-auto flex max-w-screen-xl items-center justify-between px-6 py-4 md:py-6">
         <div className="flex flex-1 items-center gap-4">
           <Sheet>
             <SheetTrigger asChild>
@@ -53,14 +57,14 @@ export function Header() {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] bg-background/95 text-foreground">
+            <SheetContent side="left" className="w-[320px] bg-white/95 text-foreground">
               <div className="flex h-full flex-col gap-8 p-4">
                 <SheetClose asChild>
                   <Link href="/" className="flex items-center">
                     <Logo className="h-6 w-auto" />
                   </Link>
                 </SheetClose>
-                <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 p-4 text-left text-sm text-muted-foreground">
+                <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-left text-sm text-muted-foreground">
                   <CalendarClock className="h-5 w-5 text-primary" />
                   <span className="font-medium uppercase tracking-[0.3em] text-primary">Next intake to be announced</span>
                 </div>
@@ -73,10 +77,10 @@ export function Header() {
                   ))}
                 </nav>
                 <div className="mt-auto space-y-3">
-                  <Button asChild variant="ghost" className="w-full">
+                  <Button asChild variant="outline" className="w-full rounded-full border-border">
                     <Link href="/login">Login</Link>
                   </Button>
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full rounded-full">
                     <Link href="/signup">Join the waitlist</Link>
                   </Button>
                 </div>
@@ -84,11 +88,11 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <Link href="/" className="flex items-center space-x-3">
-            <Logo className="h-7 w-auto" />
+            <Logo className="h-8 w-auto" />
           </Link>
         </div>
 
-        <nav className="hidden flex-none items-center gap-3 rounded-full border border-border/70 bg-card/70 px-5 py-3 shadow-[0_18px_40px_-32px] shadow-black/40 backdrop-blur md:flex">
+        <nav className="hidden flex-none items-center gap-2 rounded-full border border-border/80 bg-white/80 px-3 py-2 shadow-sm md:flex">
           {navLinks.map((link) => (
             <NavLink key={link.href} href={link.href}>
               {link.label}
@@ -97,14 +101,10 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          <div className="hidden items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.4em] text-primary md:inline-flex">
-            <CalendarClock className="h-4 w-4" />
-            Intake update soon
-          </div>
-          <Button asChild variant="ghost" className="hidden rounded-full border border-transparent px-5 text-foreground md:inline-flex">
+          <Button asChild variant="ghost" className="hidden rounded-full px-5 text-muted-foreground hover:text-foreground md:inline-flex">
             <Link href="/login">Login</Link>
           </Button>
-          <Button asChild className="rounded-full px-5">
+          <Button asChild className="rounded-full px-5 shadow-[0_20px_30px_-15px_rgba(99,102,241,0.4)]">
             <Link href="/signup">Join the waitlist</Link>
           </Button>
         </div>
