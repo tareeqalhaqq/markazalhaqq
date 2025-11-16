@@ -1,5 +1,5 @@
 import { getApp, getApps, initializeApp } from "firebase/app"
-import { getAuth } from "firebase/auth"
+import { getAuth, GoogleAuthProvider, OAuthProvider } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 
 const firebaseConfig = {
@@ -15,4 +15,10 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
 export const db = getFirestore(app)
+
+export const googleProvider = new GoogleAuthProvider()
+
+const appleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === "true"
+export const appleProvider = appleAuthEnabled ? new OAuthProvider("apple.com") : null
+
 export { app }
