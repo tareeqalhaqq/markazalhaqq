@@ -8,6 +8,7 @@ import { FirebaseError } from "firebase/app"
 import {
   GoogleAuthProvider,
   OAuthProvider,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
