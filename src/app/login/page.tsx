@@ -5,7 +5,13 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { FirebaseError } from "firebase/app"
-import { getRedirectResult, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from "firebase/auth"
+import {
+  GoogleAuthProvider,
+  OAuthProvider,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -13,8 +19,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { appleProvider, auth, googleProvider } from "@/lib/firebaseClient"
-import { ensureUserDocument } from "@/lib/firestoreUser"
+import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
+import { auth } from "@/lib/firebaseClient"
 
 function AppleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -51,11 +57,16 @@ function getFriendlyErrorMessage(error: unknown) {
   return "Something went wrong while signing you in. Please try again."
 }
 
+const googleProvider = new GoogleAuthProvider()
+const appleProvider = new OAuthProvider("apple.com")
+appleProvider.addScope("email")
+appleProvider.addScope("name")
+
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [federatedLoading, setFederatedLoading] = useState<"google" | "apple" | null>(null)
+  const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -91,50 +102,43 @@ export default function LoginPage() {
 
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password)
-      await ensureUserDocument(credential.user)
+      await ensureAcademyUser(credential.user)
       router.push("/academy")
     } catch (err) {
-      setError(getFriendlyErrorMessage(err))
+      if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
+        setError(getFriendlyErrorMessage(err))
+      } else {
+        console.error("Failed to ensure academy user profile", err)
+        setError("We couldn't finish preparing your academy profile. Please try again.")
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  async function handleFederatedSignIn(providerName: "google" | "apple") {
-    const provider = providerName === "google" ? googleProvider : appleProvider
-
-    if (!provider) {
-      setError("That sign-in option isn't available yet.")
-      return
-    }
-
+  async function handleSocialSignIn(provider: GoogleAuthProvider | OAuthProvider, providerName: "google" | "apple") {
     setError(null)
-    setFederatedLoading(providerName)
-
-    const shouldRedirect = shouldUseRedirectSignIn()
+    setSocialLoading(providerName)
 
     try {
-      if (shouldRedirect) {
-        await signInWithRedirect(auth, provider)
-        return
-      }
-
-      const result = await signInWithPopup(auth, provider)
-      await ensureUserDocument(result.user)
+      const credential = await signInWithPopup(auth, provider)
+      await ensureAcademyUser(credential.user)
       router.push("/academy")
     } catch (err) {
-      if (err instanceof FirebaseError && err.code === "auth/popup-blocked") {
-        await signInWithRedirect(auth, provider)
-        return
+      if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
+        setError(getFriendlyErrorMessage(err))
+      } else if (err && typeof err === "object" && "code" in err) {
+        const firebaseErr = err as FirebaseError
+        console.error("Failed to complete Firestore profile setup", firebaseErr)
+        setError("We couldn't finish preparing your academy profile. Please try again.")
+      } else {
+        console.error("Unexpected authentication error", err)
+        setError("We couldn't finish preparing your academy profile. Please try again.")
       }
-
-      setError(getFriendlyErrorMessage(err))
     } finally {
-      setFederatedLoading(null)
+      setSocialLoading(null)
     }
   }
-
-  const appleSupported = Boolean(appleProvider)
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-white via-blue-50/60 to-purple-50/60 px-4 py-16">
@@ -192,18 +196,37 @@ export default function LoginPage() {
             </div>
             <div className="grid grid-cols-1 gap-3">
               <Button
+                type="button"
                 variant="outline"
                 className="w-full"
-                disabled={federatedLoading !== null}
-                onClick={() => handleFederatedSignIn("google")}
+                disabled={socialLoading === "google"}
+                onClick={() => handleSocialSignIn(googleProvider, "google")}
               >
-                {federatedLoading === "google" ? (
-                  "Connecting to Google..."
+                {socialLoading === "google" ? (
+                  "Connecting to Google…"
                 ) : (
                   <>
                     <GoogleIcon className="mr-2 h-5 w-5" /> Login with Google
                   </>
                 )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full bg-black text-white hover:bg-black/80 hover:text-white"
+                disabled={socialLoading === "apple"}
+                onClick={() => handleSocialSignIn(appleProvider, "apple")}
+              >
+                {socialLoading === "apple" ? (
+                  "Connecting to Apple…"
+                ) : (
+                  <>
+                    <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" className="w-full">
+                <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
               </Button>
               {appleSupported ? (
                 <Button
