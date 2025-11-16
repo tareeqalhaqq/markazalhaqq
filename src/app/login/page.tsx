@@ -1,11 +1,17 @@
-'use client'
+"use client"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { FirebaseError } from "firebase/app"
-import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth"
+import {
+  GoogleAuthProvider,
+  OAuthProvider,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
 import { auth } from "@/lib/firebaseClient"
 
 function AppleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -58,10 +65,16 @@ function getFriendlyErrorMessage(error: unknown) {
   return "Something went wrong while signing you in. Please try again."
 }
 
+const googleProvider = new GoogleAuthProvider()
+const appleProvider = new OAuthProvider("apple.com")
+appleProvider.addScope("email")
+appleProvider.addScope("name")
+
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -83,12 +96,42 @@ export default function LoginPage() {
     const password = String(formData.get("password") || "")
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      await ensureAcademyUser(credential.user)
       router.push("/academy")
     } catch (err) {
-      setError(getFriendlyErrorMessage(err))
+      if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
+        setError(getFriendlyErrorMessage(err))
+      } else {
+        console.error("Failed to ensure academy user profile", err)
+        setError("We couldn't finish preparing your academy profile. Please try again.")
+      }
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  async function handleSocialSignIn(provider: GoogleAuthProvider | OAuthProvider, providerName: "google" | "apple") {
+    setError(null)
+    setSocialLoading(providerName)
+
+    try {
+      const credential = await signInWithPopup(auth, provider)
+      await ensureAcademyUser(credential.user)
+      router.push("/academy")
+    } catch (err) {
+      if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
+        setError(getFriendlyErrorMessage(err))
+      } else if (err && typeof err === "object" && "code" in err) {
+        const firebaseErr = err as FirebaseError
+        console.error("Failed to complete Firestore profile setup", firebaseErr)
+        setError("We couldn't finish preparing your academy profile. Please try again.")
+      } else {
+        console.error("Unexpected authentication error", err)
+        setError("We couldn't finish preparing your academy profile. Please try again.")
+      }
+    } finally {
+      setSocialLoading(null)
     }
   }
 
@@ -147,11 +190,35 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3">
-              <Button variant="outline" className="w-full">
-                <GoogleIcon className="mr-2 h-5 w-5" /> Login with Google
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={socialLoading === "google"}
+                onClick={() => handleSocialSignIn(googleProvider, "google")}
+              >
+                {socialLoading === "google" ? (
+                  "Connecting to Google…"
+                ) : (
+                  <>
+                    <GoogleIcon className="mr-2 h-5 w-5" /> Login with Google
+                  </>
+                )}
               </Button>
-              <Button variant="outline" className="w-full bg-black text-white hover:bg-black/80 hover:text-white">
-                <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full bg-black text-white hover:bg-black/80 hover:text-white"
+                disabled={socialLoading === "apple"}
+                onClick={() => handleSocialSignIn(appleProvider, "apple")}
+              >
+                {socialLoading === "apple" ? (
+                  "Connecting to Apple…"
+                ) : (
+                  <>
+                    <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
+                  </>
+                )}
               </Button>
               <Button variant="outline" className="w-full">
                 <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
