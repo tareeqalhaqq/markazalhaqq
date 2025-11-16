@@ -4,12 +4,16 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
+import { FirebaseError } from "firebase/app"
+import { signInWithEmailAndPassword } from "firebase/auth"
+
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { auth } from "@/lib/firebase"
 
 function AppleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -36,53 +40,46 @@ function TareeqAlhaqqIcon(props: React.SVGProps<SVGSVGElement>) {
     )
 }
 
+function getFriendlyErrorMessage(error: unknown) {
+  if (error instanceof FirebaseError) {
+    switch (error.code) {
+      case "auth/invalid-credential":
+      case "auth/invalid-email":
+      case "auth/user-not-found":
+      case "auth/wrong-password":
+        return "Those credentials don’t match any Tareeq Al-Haqq account. Double-check your email and password."
+      case "auth/too-many-requests":
+        return "Too many attempts in a short time. Please wait a moment and try again."
+      default:
+        return "We couldn't sign you in. Please try again or contact support if the issue continues."
+    }
+  }
+
+  return "Something went wrong while signing you in. Please try again."
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const accounts = [
-    {
-      role: "instructor" as const,
-      email: "admin@tareeqalhaqq.com",
-      password: "admin123",
-      description:
-        "Access to the instructor workspace. Use this to manage courses, lessons, and cohorts in the prototype dashboard.",
-    },
-    {
-      role: "student" as const,
-      email: "student@tareeqalhaqq.com",
-      password: "student123",
-      description: "Preview the student view that shows enrolled courses and lesson progress.",
-    },
-  ]
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
     setIsSubmitting(true)
 
     const formData = new FormData(event.currentTarget)
-    const email = String(formData.get("email") || "").trim().toLowerCase()
+    const email = String(formData.get("email") || "").trim()
     const password = String(formData.get("password") || "")
 
-    const match = accounts.find(
-      (account) => account.email.toLowerCase() === email && account.password === password,
-    )
-
-    if (!match) {
-      setError("Those credentials don’t match our prototype accounts. Try the instructor or student details below.")
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+      router.push("/dashboard")
+    } catch (err) {
+      setError(getFriendlyErrorMessage(err))
+    } finally {
       setIsSubmitting(false)
-      return
     }
-
-    const destination = match.role === "instructor" ? "/dashboard/instructor" : "/dashboard/student"
-
-    // Small delay for UX polish
-    setTimeout(() => {
-      router.push(destination)
-      setIsSubmitting(false)
-    }, 400)
   }
 
   return (
@@ -99,13 +96,13 @@ export default function LoginPage() {
             <div className="grid gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-left">
               <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-primary">
                 <Badge variant="outline" className="border-primary/40 text-xs uppercase tracking-[0.3em] text-primary">
-                  Prototype
+                  Secure
                 </Badge>
-                Instructor &amp; student demos
+                Firebase-authenticated access
               </div>
               <p className="text-sm text-muted-foreground">
-                Use the pre-configured accounts to explore the instructor workspace and student timeline. These are front-end only
-                experiences and nothing is persisted yet.
+                Your credentials are processed through Firebase Authentication so you can safely manage your learning journey across
+                devices.
               </p>
             </div>
             {error ? (
@@ -127,8 +124,8 @@ export default function LoginPage() {
                 </div>
                 <Input id="password" name="password" type="password" placeholder="••••••••" required />
               </div>
-              <Button type="submit" className="w-full">
-                {isSubmitting ? "Checking..." : "Login"}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Signing in..." : "Login"}
               </Button>
             </form>
             <div className="relative">
@@ -149,35 +146,6 @@ export default function LoginPage() {
               <Button variant="outline" className="w-full">
                 <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
               </Button>
-            </div>
-            <div className="grid gap-3 rounded-2xl border border-muted bg-white/70 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.28em] text-muted-foreground">Prototype credentials</h3>
-              <div className="grid gap-3 text-left text-sm">
-                {accounts.map((account) => (
-                  <div
-                    key={account.role}
-                    className="rounded-xl border border-muted bg-white/80 p-3 shadow-sm shadow-primary/10"
-                  >
-                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.28em] text-muted-foreground">
-                      <span>{account.role === "instructor" ? "Instructor admin" : "Student"}</span>
-                      <Badge variant="outline" className="border-primary/30 text-primary">
-                        {account.role === "instructor" ? "Admin" : "Learner"}
-                      </Badge>
-                    </div>
-                    <dl className="mt-2 space-y-1">
-                      <div className="flex items-center justify-between font-medium">
-                        <dt>Email</dt>
-                        <dd className="font-mono text-xs text-primary">{account.email}</dd>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <dt>Password</dt>
-                        <dd className="font-mono text-xs text-primary">{account.password}</dd>
-                      </div>
-                    </dl>
-                    <p className="mt-3 text-xs text-muted-foreground">{account.description}</p>
-                  </div>
-                ))}
-              </div>
             </div>
             <div className="text-center text-sm">
               Don&apos;t have an account?{" "}
