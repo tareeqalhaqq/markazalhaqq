@@ -1,11 +1,11 @@
-'use client'
+"use client"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { FirebaseError } from "firebase/app"
-import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth"
+import { getRedirectResult, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from "firebase/auth"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { auth } from "@/lib/firebaseClient"
+import { appleProvider, auth, googleProvider } from "@/lib/firebaseClient"
+import { ensureUserDocument } from "@/lib/firestoreUser"
 
 function AppleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -32,14 +33,6 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
         </svg>
     )
 }
-function TareeqAlhaqqIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-      <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8.5 16.5l-3-3 1.5-1.5L8.5 13.5l6-6 1.5 1.5-7.5 7.5z" />
-      </svg>
-    )
-}
-
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof FirebaseError) {
     switch (error.code) {
@@ -62,6 +55,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [federatedLoading, setFederatedLoading] = useState<"google" | "apple" | null>(null)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -71,6 +65,19 @@ export default function LoginPage() {
     })
 
     return () => unsubscribe()
+  }, [router])
+
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          await ensureUserDocument(result.user)
+          router.push("/academy")
+        }
+      })
+      .catch((redirectError) => {
+        setError(getFriendlyErrorMessage(redirectError))
+      })
   }, [router])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -83,7 +90,8 @@ export default function LoginPage() {
     const password = String(formData.get("password") || "")
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      await ensureUserDocument(credential.user)
       router.push("/academy")
     } catch (err) {
       setError(getFriendlyErrorMessage(err))
@@ -91,6 +99,42 @@ export default function LoginPage() {
       setIsSubmitting(false)
     }
   }
+
+  async function handleFederatedSignIn(providerName: "google" | "apple") {
+    const provider = providerName === "google" ? googleProvider : appleProvider
+
+    if (!provider) {
+      setError("That sign-in option isn't available yet.")
+      return
+    }
+
+    setError(null)
+    setFederatedLoading(providerName)
+
+    const shouldRedirect = shouldUseRedirectSignIn()
+
+    try {
+      if (shouldRedirect) {
+        await signInWithRedirect(auth, provider)
+        return
+      }
+
+      const result = await signInWithPopup(auth, provider)
+      await ensureUserDocument(result.user)
+      router.push("/academy")
+    } catch (err) {
+      if (err instanceof FirebaseError && err.code === "auth/popup-blocked") {
+        await signInWithRedirect(auth, provider)
+        return
+      }
+
+      setError(getFriendlyErrorMessage(err))
+    } finally {
+      setFederatedLoading(null)
+    }
+  }
+
+  const appleSupported = Boolean(appleProvider)
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-white via-blue-50/60 to-purple-50/60 px-4 py-16">
@@ -147,15 +191,40 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3">
-              <Button variant="outline" className="w-full">
-                <GoogleIcon className="mr-2 h-5 w-5" /> Login with Google
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={federatedLoading !== null}
+                onClick={() => handleFederatedSignIn("google")}
+              >
+                {federatedLoading === "google" ? (
+                  "Connecting to Google..."
+                ) : (
+                  <>
+                    <GoogleIcon className="mr-2 h-5 w-5" /> Login with Google
+                  </>
+                )}
               </Button>
-              <Button variant="outline" className="w-full bg-black text-white hover:bg-black/80 hover:text-white">
-                <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
-              </Button>
-              <Button variant="outline" className="w-full">
-                <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
-              </Button>
+              {appleSupported ? (
+                <Button
+                  variant="outline"
+                  className="w-full bg-black text-white hover:bg-black/80 hover:text-white"
+                  disabled={federatedLoading !== null}
+                  onClick={() => handleFederatedSignIn("apple")}
+                >
+                  {federatedLoading === "apple" ? (
+                    "Connecting to Apple..."
+                  ) : (
+                    <>
+                      <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-dashed border-muted-foreground/50 px-4 py-3 text-sm text-muted-foreground">
+                  Apple sign-in is coming soon once the integration is fully configured.
+                </div>
+              )}
             </div>
             <div className="text-center text-sm">
               Don&apos;t have an account?{" "}
@@ -168,4 +237,12 @@ export default function LoginPage() {
       </Card>
     </div>
   );
+}
+
+function shouldUseRedirectSignIn() {
+  if (typeof window === "undefined") {
+    return false
+  }
+
+  return /Mobi|Android/i.test(window.navigator.userAgent)
 }
