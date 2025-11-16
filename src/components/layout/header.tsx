@@ -4,11 +4,23 @@ import Link from 'next/link';
 import { Menu, BookOpen, Users, DollarSign, HelpCircle, GraduationCap, CalendarClock, Sparkles } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
+import { onAuthStateChanged, type User } from 'firebase/auth';
 
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { auth } from '@/lib/firebaseClient';
+import { logout } from '@/lib/logout';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navLinks = [
   { href: '/courses', label: 'Courses', icon: BookOpen },
@@ -42,6 +54,73 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
 }
 
 export function Header() {
+  const [user, setUser] = React.useState<User | null>(null);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const userDisplayName = user?.displayName ?? user?.email ?? 'Account';
+  const userInitials = React.useMemo(() => {
+    if (!userDisplayName) return 'U';
+    const parts = user?.displayName?.split(' ').filter(Boolean);
+    if (parts && parts.length > 0) {
+      const [first, second] = parts;
+      return `${first?.[0] ?? ''}${second?.[0] ?? ''}`.trim().toUpperCase() || userDisplayName.slice(0, 2).toUpperCase();
+    }
+    return userDisplayName.slice(0, 2).toUpperCase();
+  }, [user?.displayName, userDisplayName]);
+
+  const userMenu = (options?: { className?: string; showLabel?: boolean }) => {
+    if (!user) return null;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              'flex items-center gap-3 rounded-full border-border/70 bg-white/80 px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-white',
+              options?.className
+            )}
+          >
+            <Avatar className="h-9 w-9 border border-border/50 bg-muted">
+              <AvatarImage src={user.photoURL ?? undefined} alt={userDisplayName} />
+              <AvatarFallback className="text-xs font-semibold uppercase tracking-wide">{userInitials}</AvatarFallback>
+            </Avatar>
+            {options?.showLabel ? <span className="text-left">{userDisplayName}</span> : null}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Signed in as</p>
+            <p className="font-semibold text-foreground">{userDisplayName}</p>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard">View profile</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/plans">Billing</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              void logout();
+            }}
+          >
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-white/80 backdrop-blur-md">
       <div className="hidden border-b border-primary/20 bg-gradient-to-r from-primary via-primary/80 to-secondary/90 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary-foreground md:block">
@@ -78,12 +157,18 @@ export function Header() {
                   ))}
                 </nav>
                 <div className="mt-auto space-y-3">
-                  <Button asChild variant="outline" className="w-full rounded-full border-border">
-                    <Link href="/login">Login</Link>
-                  </Button>
-                  <Button asChild className="w-full rounded-full">
-                    <Link href="/signup">Join the waitlist</Link>
-                  </Button>
+                  {user
+                    ? userMenu({ className: 'w-full justify-start px-4 py-3 text-base', showLabel: true })
+                    : (
+                        <>
+                          <Button asChild variant="outline" className="w-full rounded-full border-border">
+                            <Link href="/login">Login</Link>
+                          </Button>
+                          <Button asChild className="w-full rounded-full">
+                            <Link href="/signup">Join the waitlist</Link>
+                          </Button>
+                        </>
+                      )}
                 </div>
               </div>
             </SheetContent>
@@ -102,12 +187,22 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          <Button asChild variant="ghost" className="hidden rounded-full px-5 text-muted-foreground hover:text-foreground md:inline-flex">
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild className="rounded-full px-5 shadow-[0_20px_30px_-15px_rgba(99,102,241,0.4)]">
-            <Link href="/signup">Join the waitlist</Link>
-          </Button>
+          {user ? (
+            userMenu({ className: 'px-2 py-1.5', showLabel: false })
+          ) : (
+            <>
+              <Button
+                asChild
+                variant="ghost"
+                className="hidden rounded-full px-5 text-muted-foreground hover:text-foreground md:inline-flex"
+              >
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild className="rounded-full px-5 shadow-[0_20px_30px_-15px_rgba(99,102,241,0.4)]">
+                <Link href="/signup">Join the waitlist</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
