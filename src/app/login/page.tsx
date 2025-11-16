@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
 import { auth } from "@/lib/firebaseClient"
-import { TareeqAlhaqqIcon } from "@/components/icons/TareeqAlhaqqIcon"
 
 function AppleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -226,9 +225,6 @@ export default function LoginPage() {
                     <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
                   </>
                 )}
-              </Button>
-              <Button variant="outline" className="w-full">
-                <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
               </Button>
             </div>
             <div className="text-center text-sm">
