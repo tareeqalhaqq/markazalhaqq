@@ -57,6 +57,23 @@ function getSignupErrorMessage(error: unknown) {
   return "We couldn't create your account. Please try again."
 }
 
+function getFriendlyErrorMessage(error: unknown) {
+  if (error instanceof FirebaseError) {
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        return "That email is already registered. Try signing in or resetting your password."
+      case "auth/invalid-email":
+        return "That email doesn’t look right. Please double-check and try again."
+      case "auth/weak-password":
+        return "Your password must be at least 6 characters. Please choose a stronger password."
+      default:
+        return "We couldn’t create your account. Please try again or contact support if the issue continues."
+    }
+  }
+
+  return "Something went wrong while creating your account. Please try again."
+}
+
 export default function SignupPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -180,6 +197,11 @@ export default function SignupPage() {
                 {isSubmitting ? "Creating account..." : "Create account"}
               </Button>
             </form>
+            {isSubmitting ? (
+              <p className="text-center text-sm text-muted-foreground" aria-live="polite">
+                Creating your account and preparing your academy dashboard…
+              </p>
+            ) : null}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
