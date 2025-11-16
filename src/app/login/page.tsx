@@ -39,14 +39,6 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
         </svg>
     )
 }
-function TareeqAlhaqqIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-      <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8.5 16.5l-3-3 1.5-1.5L8.5 13.5l6-6 1.5 1.5-7.5 7.5z" />
-      </svg>
-    )
-}
-
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof FirebaseError) {
     switch (error.code) {
@@ -84,6 +76,19 @@ export default function LoginPage() {
     })
 
     return () => unsubscribe()
+  }, [router])
+
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          await ensureUserDocument(result.user)
+          router.push("/academy")
+        }
+      })
+      .catch((redirectError) => {
+        setError(getFriendlyErrorMessage(redirectError))
+      })
   }, [router])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -223,6 +228,26 @@ export default function LoginPage() {
               <Button variant="outline" className="w-full">
                 <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
               </Button>
+              {appleSupported ? (
+                <Button
+                  variant="outline"
+                  className="w-full bg-black text-white hover:bg-black/80 hover:text-white"
+                  disabled={federatedLoading !== null}
+                  onClick={() => handleFederatedSignIn("apple")}
+                >
+                  {federatedLoading === "apple" ? (
+                    "Connecting to Apple..."
+                  ) : (
+                    <>
+                      <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-dashed border-muted-foreground/50 px-4 py-3 text-sm text-muted-foreground">
+                  Apple sign-in is coming soon once the integration is fully configured.
+                </div>
+              )}
             </div>
             <div className="text-center text-sm">
               Don&apos;t have an account?{" "}
@@ -235,4 +260,12 @@ export default function LoginPage() {
       </Card>
     </div>
   );
+}
+
+function shouldUseRedirectSignIn() {
+  if (typeof window === "undefined") {
+    return false
+  }
+
+  return /Mobi|Android/i.test(window.navigator.userAgent)
 }
