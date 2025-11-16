@@ -8,6 +8,7 @@ import { FirebaseError } from "firebase/app"
 import {
   GoogleAuthProvider,
   OAuthProvider,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -21,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
 import { auth } from "@/lib/firebaseClient"
+import { TareeqAlhaqqIcon } from "@/components/icons/TareeqAlhaqqIcon"
 
 function AppleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -82,7 +84,7 @@ export default function LoginPage() {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result?.user) {
-          await ensureUserDocument(result.user)
+          await ensureAcademyUser(result.user)
           router.push("/academy")
         }
       })
@@ -228,26 +230,6 @@ export default function LoginPage() {
               <Button variant="outline" className="w-full">
                 <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Login with Tareeqalhaqq
               </Button>
-              {appleSupported ? (
-                <Button
-                  variant="outline"
-                  className="w-full bg-black text-white hover:bg-black/80 hover:text-white"
-                  disabled={federatedLoading !== null}
-                  onClick={() => handleFederatedSignIn("apple")}
-                >
-                  {federatedLoading === "apple" ? (
-                    "Connecting to Apple..."
-                  ) : (
-                    <>
-                      <AppleIcon className="mr-2 h-5 w-5" /> Login with Apple
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <div className="rounded-lg border border-dashed border-muted-foreground/50 px-4 py-3 text-sm text-muted-foreground">
-                  Apple sign-in is coming soon once the integration is fully configured.
-                </div>
-              )}
             </div>
             <div className="text-center text-sm">
               Don&apos;t have an account?{" "}

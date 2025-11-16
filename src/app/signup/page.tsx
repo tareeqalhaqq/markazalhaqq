@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { TareeqAlhaqqIcon } from "@/components/icons/TareeqAlhaqqIcon"
 import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
 import { auth } from "@/lib/firebaseClient"
 
@@ -232,26 +233,6 @@ export default function SignupPage() {
               <Button variant="outline" className="w-full">
                 <TareeqAlhaqqIcon className="mr-2 h-5 w-5 text-green-600" /> Sign up with Tareeqalhaqq
               </Button>
-              {appleSupported ? (
-                <Button
-                  variant="outline"
-                  className="w-full bg-black text-white hover:bg-black/80 hover:text-white"
-                  disabled={federatedLoading !== null}
-                  onClick={() => handleFederatedSignIn("apple")}
-                >
-                  {federatedLoading === "apple" ? (
-                    "Connecting to Apple..."
-                  ) : (
-                    <>
-                      <AppleIcon className="mr-2 h-5 w-5" /> Sign up with Apple
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <div className="rounded-lg border border-dashed border-muted-foreground/50 px-4 py-3 text-sm text-muted-foreground">
-                  Apple sign-up will be available soon once configuration is complete.
-                </div>
-              )}
             </div>
             <div className="text-center text-sm">
               Already have an account?{" "}
