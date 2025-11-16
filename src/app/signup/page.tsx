@@ -1,8 +1,19 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+
+import { FirebaseError } from "firebase/app"
+import { createUserWithEmailAndPassword } from "firebase/auth"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { auth } from "@/lib/firebaseClient"
+import { upsertUserDocument } from "@/lib/users"
 
 function AppleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -29,7 +40,60 @@ function TareeqAlhaqqIcon(props: React.SVGProps<SVGSVGElement>) {
     )
 }
 
+function getFriendlyErrorMessage(error: unknown) {
+  if (error instanceof FirebaseError) {
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        return "That email is already registered. Try signing in or resetting your password."
+      case "auth/invalid-email":
+        return "That email doesn’t look right. Please double-check and try again."
+      case "auth/weak-password":
+        return "Your password must be at least 6 characters. Please choose a stronger password."
+      default:
+        return "We couldn’t create your account. Please try again or contact support if the issue continues."
+    }
+  }
+
+  return "Something went wrong while creating your account. Please try again."
+}
+
 export default function SignupPage() {
+  const router = useRouter()
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const isFormValid = Boolean(fullName.trim() && email.trim() && password.length >= 6)
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!isFormValid || isSubmitting) {
+      return
+    }
+
+    setError(null)
+    setIsSubmitting(true)
+
+    try {
+      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password)
+
+      await upsertUserDocument({
+        uid: credential.user.uid,
+        email: credential.user.email ?? email.trim(),
+        fullName: fullName.trim(),
+      })
+
+      router.push("/academy")
+    } catch (err) {
+      setError(getFriendlyErrorMessage(err))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-white via-blue-50/60 to-purple-50/60 px-4 py-16">
       <Card className="w-full max-w-md border border-muted bg-white/85 shadow-xl shadow-primary/15 backdrop-blur">
@@ -41,23 +105,56 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
-            <form className="grid gap-4">
+            {error ? (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            <form className="grid gap-4" onSubmit={handleSubmit}>
               <div className="grid gap-2">
                 <Label htmlFor="full-name">Full name</Label>
-                <Input id="full-name" placeholder="Your name" required />
+                <Input
+                  id="full-name"
+                  name="fullName"
+                  placeholder="Your name"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" required />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  minLength={6}
+                  required
+                />
               </div>
-              <Button type="submit" className="w-full">
-                Create account
+              <Button type="submit" className="w-full" disabled={!isFormValid || isSubmitting}>
+                {isSubmitting ? "Creating your account..." : "Create account"}
               </Button>
             </form>
+            {isSubmitting ? (
+              <p className="text-center text-sm text-muted-foreground" aria-live="polite">
+                Creating your account and preparing your academy dashboard…
+              </p>
+            ) : null}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
