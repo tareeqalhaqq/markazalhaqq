@@ -5,6 +5,7 @@ import { onAuthStateChanged, type User } from "firebase/auth"
 import { collection, doc, getDoc, getDocs, type DocumentData } from "firebase/firestore"
 
 import { auth, db } from "@/lib/firebaseClient"
+import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
 
 type AcademyCourse = DocumentData & { id: string }
 
@@ -35,6 +36,7 @@ export function useAcademyUser(): UseAcademyUserResult {
       setLoading(true)
 
       try {
+        await ensureAcademyUser(currentUser)
         const userRef = doc(db, "users", currentUser.uid)
         const userSnapshot = await getDoc(userRef)
 
