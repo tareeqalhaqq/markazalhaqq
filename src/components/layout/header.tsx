@@ -4,13 +4,11 @@ import Link from 'next/link';
 import { Menu, BookOpen, Users, DollarSign, HelpCircle, GraduationCap, CalendarClock, Sparkles } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
 
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { auth } from '@/lib/firebaseClient';
 import { logout } from '@/lib/logout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -21,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const navLinks = [
   { href: '/courses', label: 'Courses', icon: BookOpen },
@@ -54,15 +53,7 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
 }
 
 export function Header() {
-  const [user, setUser] = React.useState<User | null>(null);
-
-  React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-    });
-
-    return unsubscribe;
-  }, []);
+  const { user, role } = useUserRole();
 
   const userDisplayName = user?.displayName ?? user?.email ?? 'Account';
   const userInitials = React.useMemo(() => {
@@ -107,6 +98,11 @@ export function Header() {
           <DropdownMenuItem asChild>
             <Link href="/plans">Billing</Link>
           </DropdownMenuItem>
+          {role === 'admin' ? (
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/admin">Admin workspace</Link>
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onSelect={(event) => {

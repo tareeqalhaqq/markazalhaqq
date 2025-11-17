@@ -10,6 +10,7 @@ import {
   OAuthProvider,
   getRedirectResult,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
 } from "firebase/auth"
@@ -66,8 +67,12 @@ appleProvider.addScope("name")
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
   const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(null)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -95,14 +100,13 @@ export default function LoginPage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setStatusMessage(null)
     setIsSubmitting(true)
 
-    const formData = new FormData(event.currentTarget)
-    const email = String(formData.get("email") || "").trim()
-    const password = String(formData.get("password") || "")
+    const trimmedEmail = email.trim()
 
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password)
+      const credential = await signInWithEmailAndPassword(auth, trimmedEmail, password)
       await ensureAcademyUser(credential.user)
       router.push("/academy")
     } catch (err) {
@@ -119,6 +123,7 @@ export default function LoginPage() {
 
   async function handleSocialSignIn(provider: GoogleAuthProvider | OAuthProvider, providerName: "google" | "apple") {
     setError(null)
+    setStatusMessage(null)
     setSocialLoading(providerName)
 
     try {
@@ -138,6 +143,31 @@ export default function LoginPage() {
       }
     } finally {
       setSocialLoading(null)
+    }
+  }
+
+  async function handlePasswordReset() {
+    setError(null)
+    setStatusMessage(null)
+
+    if (!email.trim()) {
+      setError("Enter the email you use for Tareeq Al-Haqq so we can send a reset link.")
+      return
+    }
+
+    try {
+      setIsResettingPassword(true)
+      await sendPasswordResetEmail(auth, email.trim())
+      setStatusMessage(`Password reset instructions are on their way to ${email.trim()}. Check your inbox and spam folder.`)
+    } catch (err) {
+      if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
+        setError(getFriendlyErrorMessage(err))
+      } else {
+        console.error("Failed to send password reset email", err)
+        setError("We couldn't send the reset email. Please try again or contact support.")
+      }
+    } finally {
+      setIsResettingPassword(false)
     }
   }
 
@@ -164,6 +194,11 @@ export default function LoginPage() {
                 devices.
               </p>
             </div>
+            {statusMessage ? (
+              <Alert>
+                <AlertDescription>{statusMessage}</AlertDescription>
+              </Alert>
+            ) : null}
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -172,16 +207,37 @@ export default function LoginPage() {
             <form className="grid gap-4" onSubmit={handleSubmit}>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" placeholder="admin@tareeqalhaqq.com" required />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="admin@tareeqalhaqq.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="ml-auto inline-block text-sm text-primary underline">
-                    Forgot password?
-                  </Link>
+                  <button
+                    type="button"
+                    onClick={handlePasswordReset}
+                    className="ml-auto inline-block text-sm text-primary underline disabled:opacity-60"
+                    disabled={isResettingPassword}
+                  >
+                    {isResettingPassword ? "Sending reset link…" : "Forgot password?"}
+                  </button>
                 </div>
-                <Input id="password" name="password" type="password" placeholder="••••••••" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                />
               </div>
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Signing in..." : "Login"}
