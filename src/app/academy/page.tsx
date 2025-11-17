@@ -1,104 +1,103 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 
-import { addDays, format } from "date-fns"
-import { CheckCircle2, CreditCard, Receipt } from "lucide-react"
+import { format } from "date-fns"
+import {
+  BellRing,
+  BookOpenCheck,
+  CalendarDays,
+  GraduationCap,
+  LayoutDashboard,
+  LibraryBig,
+  MonitorPlay,
+  ShieldCheck,
+  UsersRound,
+} from "lucide-react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAcademyUser } from "@/hooks/useAcademyUser"
+import { useFirestoreCollection, type FirestoreDocument } from "@/hooks/useFirestoreCollection"
+import {
+  type AcademyCourse,
+  type Announcement,
+  type ExamOrCertification,
+  type LiveSession,
+  type ResourceLibraryItem,
+} from "@/lib/academy-data"
 import { logout } from "@/lib/logout"
+import { cn } from "@/lib/utils"
 
-type BillingPlanDefinition = {
-  id: string
-  name: string
-  price: string
-  cadence: string
-  perks: string[]
-  nextBillingDaysOffset?: number
+const studentTabs = [
+  { value: "dashboard", label: "Student dashboard", icon: LayoutDashboard },
+  { value: "courses", label: "Courses", icon: GraduationCap },
+  { value: "sessions", label: "Live sessions", icon: MonitorPlay },
+  { value: "resources", label: "Resources", icon: LibraryBig },
+  { value: "announcements", label: "Announcements", icon: BellRing },
+  { value: "exams", label: "Exams & certifications", icon: ShieldCheck },
+]
+
+function formatDisplayDate(value?: string | number | Date): string {
+  if (!value) return "Date coming soon"
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value.toString()
+  }
+  return format(date, "MMM d, yyyy")
 }
 
-const billingPlanCatalog: Record<string, BillingPlanDefinition> = {
-  none: {
-    id: "none",
-    name: "No active plan",
-    price: "$0",
-    cadence: "You're not enrolled in an academy subscription yet.",
-    perks: ["Complete checkout from the plans page to activate access."],
-  },
-  "talib-al-ilm": {
-    id: "talib-al-ilm",
-    name: "Talib al Ilm Membership",
-    price: "$95/mo",
-    cadence: "Monthly all-access membership",
-    nextBillingDaysOffset: 28,
-    perks: [
-      "Unlimited course library access",
-      "Priority Q&A during live intensives",
-      "Downloadable workbooks and archives",
-    ],
-  },
-  "seerah-cohort": {
-    id: "seerah-cohort",
-    name: "Current Seerah Cohort",
-    price: "$180",
-    cadence: "One-time payment • lifetime replay access",
-    perks: [
-      "12 live sessions",
-      "Guided memorisation resources",
-      "Direct instructor office hours",
-    ],
-  },
-}
-
-function formatToReadableDate(value: unknown): string | null {
-  if (!value) {
-    return null
-  }
-
-  if (value instanceof Date) {
-    return format(value, "MMM d, yyyy")
-  }
-
-  if (typeof value === "number") {
-    return format(new Date(value), "MMM d, yyyy")
-  }
-
-  if (typeof value === "string") {
-    return value
-  }
-
-  if (typeof value === "object" && "toDate" in (value as { toDate?: () => Date }) && typeof (value as { toDate?: () => Date }).toDate === "function") {
-    return format((value as { toDate: () => Date }).toDate(), "MMM d, yyyy")
-  }
-
-  return null
-}
-
-function resolveBillingPlan(planId: string): BillingPlanDefinition {
-  if (billingPlanCatalog[planId]) {
-    return billingPlanCatalog[planId]
-  }
-
-  return {
-    id: planId || "custom-plan",
-    name: planId ? `Custom plan (${planId})` : "Custom plan",
-    price: "Custom pricing",
-    cadence: "Managed directly by the admin team",
-    perks: ["Your instructor will confirm the benefits shortly."],
-    nextBillingDaysOffset: 30,
-  }
+function calculateProgress(course: FirestoreDocument<AcademyCourse>): number {
+  const total = course.lessonCount ?? 0
+  if (!total) return 0
+  const completed = course.completedLessons ?? 0
+  return Math.min(100, Math.round((completed / total) * 100))
 }
 
 export default function AcademyDashboardPage() {
   const router = useRouter()
-  const { firebaseUser, userDoc, courses, loading } = useAcademyUser()
+  const { firebaseUser, loading } = useAcademyUser()
+  const { data: courses, loading: coursesLoading } = useFirestoreCollection<AcademyCourse>("courses", {
+    orderByField: "updatedAt",
+    orderDirection: "desc",
+  })
+  const { data: liveSessions, loading: sessionsLoading } = useFirestoreCollection<LiveSession>("liveSessions", {
+    orderByField: "scheduledAt",
+    orderDirection: "asc",
+  })
+  const { data: resources, loading: resourcesLoading } = useFirestoreCollection<ResourceLibraryItem>("resources", {
+    orderByField: "createdAt",
+    orderDirection: "desc",
+  })
+  const { data: announcements, loading: announcementsLoading } = useFirestoreCollection<Announcement>("announcements", {
+    orderByField: "createdAt",
+    orderDirection: "desc",
+  })
+  const { data: exams, loading: examsLoading } = useFirestoreCollection<ExamOrCertification>("exams", {
+    orderByField: "createdAt",
+    orderDirection: "desc",
+  })
+  const [activeTab, setActiveTab] = useState("dashboard")
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const isLoading =
+    loading || coursesLoading || sessionsLoading || resourcesLoading || announcementsLoading || examsLoading
+
+  const upcomingSessions = useMemo(() => {
+    return [...liveSessions].sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt)).slice(0, 3)
+  }, [liveSessions])
+
+  const nextAnnouncement = announcements[0]
+  const totalProgress = useMemo(() => {
+    if (!courses.length) return 0
+    const aggregate = courses.reduce((sum, course) => sum + calculateProgress(course), 0)
+    return Math.round(aggregate / courses.length)
+  }, [courses])
 
   async function handleLogout() {
     try {
@@ -109,11 +108,10 @@ export default function AcademyDashboardPage() {
       setIsLoggingOut(false)
     }
   }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-muted-foreground">Loading your academy data…</p>
+        <p className="text-muted-foreground">Loading your dashboard…</p>
       </div>
     )
   }
@@ -121,10 +119,8 @@ export default function AcademyDashboardPage() {
   if (!firebaseUser) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4 text-center">
-        <h1 className="text-3xl font-bold">Please login</h1>
-        <p className="text-muted-foreground">
-          You must be signed in to access the Markaz al Haqq academy dashboard.
-        </p>
+        <h1 className="text-3xl font-bold">Please log in</h1>
+        <p className="text-muted-foreground">You must sign in to view the student dashboard.</p>
         <Button asChild>
           <Link href="/login">Go to login</Link>
         </Button>
@@ -132,177 +128,281 @@ export default function AcademyDashboardPage() {
     )
   }
 
-  const academyRole = (userDoc?.academyRole as string | undefined) ?? "Not set"
-  const isAcademyStudent = Boolean(userDoc?.isAcademyStudent)
-  const displayName = firebaseUser.displayName || (userDoc?.displayName as string | undefined) || firebaseUser.email || "Academy learner"
-  const accountEmail = firebaseUser.email || (userDoc?.email as string | undefined) || "No email on file"
-  const memberSince = formatToReadableDate(userDoc?.createdAt) ?? "Awaiting activation"
-  const planIdFromDoc = typeof userDoc?.academyPlanId === "string" ? userDoc.academyPlanId : undefined
-  const resolvedPlanId = planIdFromDoc && planIdFromDoc.trim() ? planIdFromDoc : isAcademyStudent ? "talib-al-ilm" : "none"
-  const resolvedPlan = resolveBillingPlan(resolvedPlanId)
-  const nextBillingDate = resolvedPlan.id === "none" ? null : format(addDays(new Date(), resolvedPlan.nextBillingDaysOffset ?? 30), "MMM d, yyyy")
-  const activePlans = resolvedPlan.id === "none" ? [] : [resolvedPlan]
-  const profileDetails = [
-    { label: "Full name", value: displayName },
-    { label: "Email", value: accountEmail },
-    { label: "Account ID", value: firebaseUser.uid },
-    { label: "Member since", value: memberSince },
-    { label: "Academy role", value: academyRole },
-    { label: "Student access", value: isAcademyStudent ? "Active" : "Inactive" },
-  ]
-
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm uppercase tracking-wide text-muted-foreground">Welcome back</p>
-          <h1 className="text-3xl font-bold">{displayName}</h1>
-          <p className="text-muted-foreground">{accountEmail}</p>
-        </div>
-        <Button onClick={handleLogout} disabled={isLoggingOut} variant="outline">
-          {isLoggingOut ? "Signing out…" : "Logout"}
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Academy status</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border p-4">
-            <p className="text-sm text-muted-foreground">Role</p>
-            <p className="text-xl font-semibold">{academyRole}</p>
+    <div className="min-h-screen bg-slate-950/95 text-slate-100">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 lg:flex-row">
+        <aside className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-2xl shadow-slate-900/40 lg:w-64">
+          <div className="space-y-1">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Welcome back</p>
+            <h2 className="text-2xl font-semibold text-white">{firebaseUser.displayName || firebaseUser.email}</h2>
+            <p className="text-sm text-slate-400">Student access</p>
           </div>
-          <div className="rounded-lg border p-4">
-            <p className="text-sm text-muted-foreground">Student Access</p>
-            <div className="mt-1 flex items-center gap-2 text-xl font-semibold">
-              {isAcademyStudent ? "Active" : "Inactive"}
-              <Badge variant={isAcademyStudent ? "default" : "secondary"}>
-                {isAcademyStudent ? "Enrolled" : "Not enrolled"}
-              </Badge>
-            </div>
+          <div className="mt-6 space-y-2">
+            {studentTabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium transition",
+                  activeTab === tab.value ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5",
+                )}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+          <Button onClick={handleLogout} variant="outline" className="mt-6 w-full border-white/30 text-white">
+            {isLoggingOut ? "Signing out…" : "Logout"}
+          </Button>
+        </aside>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>The information you shared during onboarding stays synced here.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <dl className="grid gap-4">
-              {profileDetails.map((item) => (
-                <div key={item.label} className="flex flex-col rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <dt className="text-sm font-medium text-muted-foreground">{item.label}</dt>
-                  <dd className="text-base font-semibold text-foreground">{item.value}</dd>
-                </div>
+        <main className="flex-1">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="hidden">
+              {studentTabs.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value}>
+                  {tab.label}
+                </TabsTrigger>
               ))}
-            </dl>
-            <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="rounded-full">Update profile</Button>
-              <Button asChild variant="ghost" className="rounded-full text-primary">
-                <Link href="/signup">Edit intake form</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing &amp; plans</CardTitle>
-            <CardDescription>Active memberships and saved payment method.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {activePlans.length ? (
-              activePlans.map((plan) => (
-                <div key={plan.id} className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+            <TabsContent value="dashboard" className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Card className="border-white/10 bg-slate-900/70 text-white">
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                      <p className="text-sm uppercase tracking-[0.3em] text-primary">Active plan</p>
-                      <p className="text-lg font-semibold text-foreground">{plan.name}</p>
-                      <p className="text-sm text-muted-foreground">{plan.cadence}</p>
+                      <CardTitle className="text-base text-slate-300">Overall progress</CardTitle>
+                      <p className="text-4xl font-bold text-white">{totalProgress}%</p>
                     </div>
-                    <Badge variant="outline" className="border-primary/40 text-primary">
-                      {plan.price}
-                    </Badge>
-                  </div>
-                  <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                    {plan.perks.map((perk) => (
-                      <li key={perk} className="flex items-start gap-2">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                        <span>{perk}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {nextBillingDate ? (
-                    <p className="mt-4 text-sm font-medium text-primary">Next renewal on {nextBillingDate}</p>
-                  ) : null}
-                </div>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
-                Add a plan from the pricing page and it will appear here immediately.
+                    <BookOpenCheck className="h-10 w-10 text-emerald-300" />
+                  </CardHeader>
+                </Card>
+                <Card className="border-white/10 bg-slate-900/70 text-white">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base text-slate-300">Active courses</CardTitle>
+                      <p className="text-4xl font-bold text-white">{courses.length}</p>
+                    </div>
+                    <GraduationCap className="h-10 w-10 text-sky-300" />
+                  </CardHeader>
+                </Card>
               </div>
-            )}
 
-            <div className="rounded-2xl border border-border/60 bg-background/50 p-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <CreditCard className="h-10 w-10 rounded-full border border-border/60 p-2 text-primary" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">{(userDoc?.paymentMethodLabel as string | undefined) ?? "Visa •••• 2746"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {nextBillingDate ? `Next payment scheduled for ${nextBillingDate}` : "No payment scheduled"}
-                  </p>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Card className="border-white/10 bg-slate-900/70 text-white">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Upcoming sessions</CardTitle>
+                    <CardDescription className="text-slate-400">
+                      Your next live touchpoints across every enrolled course.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {upcomingSessions.length ? (
+                      upcomingSessions.map((session) => (
+                        <div key={session.id} className="rounded-2xl border border-white/10 p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-slate-400">{session.courseTitle}</p>
+                              <p className="text-lg font-semibold text-white">{session.title}</p>
+                            </div>
+                            <Badge className="bg-white/15 text-white">{session.format}</Badge>
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-400">
+                            <span className="flex items-center gap-2">
+                              <CalendarDays className="h-4 w-4" /> {formatDisplayDate(session.scheduledAt)}
+                            </span>
+                            <span className="flex items-center gap-2">
+                              <UsersRound className="h-4 w-4" /> {session.presenter}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <Alert>
+                        <AlertDescription>No live sessions are scheduled yet.</AlertDescription>
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
+                <Card className="border-white/10 bg-slate-900/70 text-white">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Latest announcement</CardTitle>
+                    <CardDescription className="text-slate-400">
+                      Academy bulletins appear here immediately after publication.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {nextAnnouncement ? (
+                      <div className="space-y-3">
+                        <Badge variant="outline" className="border-white/30 text-xs uppercase tracking-[0.3em] text-white">
+                          {nextAnnouncement.audience}
+                        </Badge>
+                        <h3 className="text-2xl font-semibold text-white">{nextAnnouncement.title}</h3>
+                        <p className="text-slate-300">{nextAnnouncement.body}</p>
+                      </div>
+                    ) : (
+                      <Alert>
+                        <AlertDescription>No announcements have been published.</AlertDescription>
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            <TabsContent value="courses" className="space-y-4">
+              {courses.length ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {courses.map((course) => (
+                    <Card key={course.id} className="border-white/10 bg-slate-900/70 text-white">
+                      <CardHeader>
+                        <CardTitle className="text-xl">{course.title}</CardTitle>
+                        <CardDescription className="text-slate-400">{course.instructor}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between text-sm text-slate-400">
+                          <span>Status: {course.status}</span>
+                          <span>Level: {course.level}</span>
+                        </div>
+                        <p className="text-sm text-slate-300">{course.description}</p>
+                        <div className="flex items-center justify-between text-sm text-slate-400">
+                          <span>Start: {formatDisplayDate(course.startDate)}</span>
+                          <span>Progress: {calculateProgress(course)}%</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-                <Badge variant={isAcademyStudent ? "default" : "secondary"}>
-                  {isAcademyStudent ? "Auto-pay enabled" : "Billing paused"}
-                </Badge>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button variant="outline" className="rounded-full">
-                  Update card
-                </Button>
-                <Button variant="ghost" className="rounded-full text-primary">
-                  <Receipt className="mr-2 h-4 w-4" /> Download receipt
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              ) : (
+                <Alert>
+                  <AlertDescription>No courses assigned yet.</AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+
+            <TabsContent value="sessions" className="space-y-4">
+              {liveSessions.length ? (
+                <div className="space-y-4">
+                  {liveSessions.map((session) => (
+                    <Card key={session.id} className="border-white/10 bg-slate-900/70 text-white">
+                      <CardHeader>
+                        <CardTitle className="text-lg">{session.title}</CardTitle>
+                        <CardDescription className="text-slate-400">{session.courseTitle}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
+                        <span className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4" /> {formatDisplayDate(session.scheduledAt)}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <MonitorPlay className="h-4 w-4" /> {session.format}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <UsersRound className="h-4 w-4" /> {session.presenter}
+                        </span>
+                        {session.link ? (
+                          <Button asChild size="sm" variant="secondary" className="rounded-full bg-white/10 text-white">
+                            <a href={session.link} target="_blank" rel="noreferrer">
+                              Join session
+                            </a>
+                          </Button>
+                        ) : null}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <AlertDescription>Live sessions will appear here once scheduled.</AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+
+            <TabsContent value="resources" className="space-y-4">
+              {resources.length ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {resources.map((resource) => (
+                    <Card key={resource.id} className="border-white/10 bg-slate-900/70 text-white">
+                      <CardHeader>
+                        <CardTitle className="text-lg">{resource.title}</CardTitle>
+                        <CardDescription className="text-slate-400">{resource.courseTitle}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3 text-sm text-slate-300">
+                        <p>Type: {resource.type}</p>
+                        <div className="flex flex-wrap gap-3">
+                          <Button asChild size="sm" variant="secondary" className="rounded-full bg-white/10 text-white">
+                            <a href={resource.embedUrl} target="_blank" rel="noreferrer">
+                              View / stream
+                            </a>
+                          </Button>
+                          <Button asChild size="sm" variant="outline" className="rounded-full border-white/30 text-white">
+                            <a href={resource.downloadUrl} target="_blank" rel="noreferrer">
+                              Download
+                            </a>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <AlertDescription>No resources have been shared with you yet.</AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+            <TabsContent value="announcements" className="space-y-4">
+              {announcements.length ? (
+                <div className="space-y-4">
+                  {announcements.map((announcement) => (
+                    <Card key={announcement.id} className="border-white/10 bg-slate-900/70 text-white">
+                      <CardHeader>
+                        <Badge variant="outline" className="mb-3 w-fit border-white/30 text-white">
+                          {announcement.audience}
+                        </Badge>
+                        <CardTitle className="text-xl">{announcement.title}</CardTitle>
+                        <CardDescription className="text-slate-400">
+                          Published {formatDisplayDate(announcement.publishedAt)}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-slate-300">{announcement.body}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <AlertDescription>No announcements yet.</AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+
+            <TabsContent value="exams" className="space-y-4">
+              {exams.length ? (
+                <div className="space-y-4">
+                  {exams.map((exam) => (
+                    <Card key={exam.id} className="border-white/10 bg-slate-900/70 text-white">
+                      <CardHeader>
+                        <CardTitle className="text-lg">{exam.title}</CardTitle>
+                        <CardDescription className="text-slate-400">{exam.courseTitle}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
+                        <span>Status: {exam.status}</span>
+                        <span>Available: {formatDisplayDate(exam.availableOn)}</span>
+                        <span>Mode: {exam.proctored ? "Proctored" : "Self-paced"}</span>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <AlertDescription>Exam windows will appear here once scheduled.</AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+          </Tabs>
+        </main>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Enrolled courses</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {courses.length === 0 ? (
-            <p className="text-muted-foreground">You&apos;re not enrolled in any academy courses yet.</p>
-          ) : (
-            courses.map((course) => {
-              const progressValue = typeof course.progress === "number" ? course.progress : 0
-              const progressLabel = `${progressValue}% complete`
-
-              return (
-                <div key={course.id} className="rounded-lg border p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-lg font-semibold">{(course.title as string) ?? course.id}</p>
-                      {course.description ? (
-                        <p className="text-sm text-muted-foreground">{String(course.description)}</p>
-                      ) : null}
-                    </div>
-                    <Badge variant="outline">{progressLabel}</Badge>
-                  </div>
-                  <Progress value={progressValue} className="mt-4" />
-                </div>
-              )
-            })
-          )}
-        </CardContent>
-      </Card>
     </div>
   )
 }
