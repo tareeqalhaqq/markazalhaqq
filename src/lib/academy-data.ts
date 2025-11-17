@@ -9,6 +9,7 @@ export type AcademyCourse = {
   instructor: string
   level: string
   status: "upcoming" | "active" | "completed"
+  slug?: string
   description: string
   startDate?: string
   lessonCount?: number
