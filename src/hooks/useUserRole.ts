@@ -5,7 +5,7 @@ import { onAuthStateChanged, type User } from "firebase/auth"
 import { doc, onSnapshot } from "firebase/firestore"
 
 import { auth, db } from "@/lib/firebaseClient"
-import type { UserRole } from "@/lib/userRoles"
+import { deriveRoleFromProfile, type UserRole } from "@/lib/userRoles"
 
 export type UseUserRoleResult = {
   user: User | null
@@ -42,7 +42,7 @@ export function useUserRole(): UseUserRoleResult {
         profileRef,
         (snapshot) => {
           const data = snapshot.data()
-          setRole((data?.role as UserRole | undefined) ?? "user")
+          setRole(deriveRoleFromProfile(data))
           setLoading(false)
         },
         () => {
