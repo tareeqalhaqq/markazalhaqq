@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 
 import { addDays, format } from "date-fns"
 import { CheckCircle2, CreditCard, Receipt } from "lucide-react"
@@ -141,7 +141,7 @@ export default function AcademyDashboardPage() {
   const resolvedPlanId = planIdFromDoc && planIdFromDoc.trim() ? planIdFromDoc : isAcademyStudent ? "talib-al-ilm" : "none"
   const resolvedPlan = resolveBillingPlan(resolvedPlanId)
   const nextBillingDate = resolvedPlan.id === "none" ? null : format(addDays(new Date(), resolvedPlan.nextBillingDaysOffset ?? 30), "MMM d, yyyy")
-  const activePlans = useMemo(() => (resolvedPlan.id === "none" ? [] : [resolvedPlan]), [resolvedPlan])
+  const activePlans = resolvedPlan.id === "none" ? [] : [resolvedPlan]
   const profileDetails = [
     { label: "Full name", value: displayName },
     { label: "Email", value: accountEmail },
