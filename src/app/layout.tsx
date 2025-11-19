@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { Suspense } from 'react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className="bg-background font-body text-foreground antialiased">
         <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.12),_transparent_55%),_radial-gradient(circle_at_top_right,_rgba(56,189,248,0.12),_transparent_50%)]" aria-hidden />
         <div className="flex min-h-screen flex-col">
-          <Header />
+          <Suspense fallback={null}>
+            <Header />
+          </Suspense>
           <main className="flex-1">{children}</main>
           <Footer />
         </div>
