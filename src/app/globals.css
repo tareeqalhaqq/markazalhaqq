@@ -4,39 +4,39 @@
 
 @layer base {
   :root {
-    --background: 212 33% 97%;
-    --foreground: 226 27% 16%;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 226 27% 16%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 226 27% 16%;
-    --primary: 253 88% 64%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 191 84% 56%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 213 33% 90%;
-    --muted-foreground: 228 19% 32%;
-    --accent: 200 94% 76%;
-    --accent-foreground: 210 40% 20%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 222 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 33 96% 52%;
+    --secondary-foreground: 34 100% 11%;
+    --muted: 214 32% 94%;
+    --muted-foreground: 215 16% 34%;
+    --accent: 200 94% 86%;
+    --accent-foreground: 221 47% 21%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 219 24% 82%;
-    --input: 219 24% 82%;
-    --ring: 253 88% 64%;
-    --chart-1: 253 88% 64%;
-    --chart-2: 191 84% 56%;
-    --chart-3: 219 58% 60%;
+    --border: 214 32% 90%;
+    --input: 214 32% 90%;
+    --ring: 222 83% 53%;
+    --chart-1: 222 83% 53%;
+    --chart-2: 33 96% 52%;
+    --chart-3: 162 63% 52%;
     --chart-4: 44 100% 68%;
-    --chart-5: 162 63% 52%;
+    --chart-5: 203 89% 64%;
     --radius: 0.75rem;
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 226 27% 16%;
-    --sidebar-primary: 253 88% 64%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 213 33% 90%;
-    --sidebar-accent-foreground: 228 19% 32%;
-    --sidebar-border: 219 24% 82%;
-    --sidebar-ring: 253 88% 64%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 222 83% 53%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 214 32% 94%;
+    --sidebar-accent-foreground: 215 16% 34%;
+    --sidebar-border: 214 32% 90%;
+    --sidebar-ring: 222 83% 53%;
   }
 }
 
@@ -47,9 +47,9 @@
   body {
     @apply bg-background text-foreground;
     background-image:
-      radial-gradient(120% 120% at 0% 0%, hsl(191 84% 92% / 0.8) 0%, transparent 55%),
-      radial-gradient(80% 80% at 90% 0%, hsl(253 88% 92% / 0.7) 0%, transparent 60%),
-      linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
+      radial-gradient(160% 140% at 10% 0%, hsl(200 94% 94% / 0.7) 0%, transparent 55%),
+      radial-gradient(120% 120% at 90% 0%, hsl(33 96% 90% / 0.55) 0%, transparent 60%),
+      linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 97%) 100%);
     background-attachment: fixed;
   }
 }

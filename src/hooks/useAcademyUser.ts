@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { onAuthStateChanged, type User } from "firebase/auth"
-import { collection, doc, getDoc, getDocs, type DocumentData } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, query, where, type DocumentData } from "firebase/firestore"
 
 import { auth, db } from "@/lib/firebaseClient"
 import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
@@ -42,7 +42,17 @@ export function useAcademyUser(): UseAcademyUserResult {
 
         setUserDoc(userSnapshot.exists() ? { id: userSnapshot.id, ...userSnapshot.data() } : null)
 
-        const coursesSnapshot = await getDocs(collection(userRef, "academyCourses"))
+        const assignmentsCollection = collection(db, "academyCourses")
+        let coursesSnapshot = await getDocs(query(assignmentsCollection, where("userId", "==", currentUser.uid)))
+
+        if (coursesSnapshot.empty) {
+          coursesSnapshot = await getDocs(query(assignmentsCollection, where("userUid", "==", currentUser.uid)))
+        }
+
+        if (coursesSnapshot.empty) {
+          coursesSnapshot = await getDocs(query(assignmentsCollection, where("studentId", "==", currentUser.uid)))
+        }
+
         const nextCourses: AcademyCourse[] = coursesSnapshot.docs.map((courseDoc) => ({
           id: courseDoc.id,
           ...courseDoc.data(),
