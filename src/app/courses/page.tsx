@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import Link from "next/link"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -7,8 +8,28 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useFirestoreCollection, type FirestoreDocument } from "@/hooks/useFirestoreCollection"
+import { useUserRole } from "@/hooks/useUserRole"
 import type { AcademyCourse } from "@/lib/academy-data"
 import { cn } from "@/lib/utils"
+
+type TimestampLike = { toDate: () => Date }
+
+function coerceDate(value?: string | number | Date | TimestampLike | null) {
+  if (!value) return null
+  if (value instanceof Date) return value
+  if (typeof value === "number") {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+  if (typeof value === "string") {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+  if (typeof value === "object" && typeof value.toDate === "function") {
+    return value.toDate()
+  }
+  return null
+}
 
 const coursePillars = [
   {
@@ -46,11 +67,20 @@ const gradientPalette = [
 
 type CourseDoc = FirestoreDocument<AcademyCourse>
 
-function formatStartDate(value?: string) {
-  if (!value) return "Start date TBA"
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
+function formatStartDate(value?: string | number | Date | TimestampLike | null) {
+  const date = coerceDate(value)
+  if (!date) return "Start date TBA"
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+}
+
+function formatLastUpdated(date: Date) {
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })
 }
 
 function formatLessonCount(value?: number) {
@@ -144,8 +174,20 @@ export default function CoursesPage() {
     orderByField: "updatedAt",
     orderDirection: "desc",
   })
+  const { role } = useUserRole()
+  const isAdmin = role === "admin"
 
   const hasCourses = courses.length > 0
+  const lastUpdated = useMemo(() => {
+    return courses.reduce<Date | null>((latest, course) => {
+      const current = coerceDate(course.updatedAt ?? null)
+      if (!current) return latest
+      if (!latest || current.getTime() > latest.getTime()) {
+        return current
+      }
+      return latest
+    }, null)
+  }, [courses])
 
   return (
     <div className="space-y-20 pb-24">
@@ -167,6 +209,11 @@ export default function CoursesPage() {
                 ? `${courses.length} programme${courses.length === 1 ? "" : "s"} ready for enrolment`
                 : "Courses publish automatically once admins create them"}
             </p>
+            {lastUpdated ? (
+              <p className="mt-3 text-sm text-slate-500">
+                Catalog refreshed {formatLastUpdated(lastUpdated)} via Firestore
+              </p>
+            ) : null}
           </div>
         </div>
       </section>
@@ -217,10 +264,21 @@ export default function CoursesPage() {
                 As soon as an administrator publishes the first course inside the dashboard, it will populate this section without additional development work.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button asChild className="rounded-full">
-                <Link href="/dashboard/admin">Open admin workspace</Link>
-              </Button>
+            <CardContent className="flex flex-col gap-4">
+              {isAdmin ? (
+                <Button asChild className="rounded-full">
+                  <Link href="/dashboard/admin">Open admin workspace</Link>
+                </Button>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-600">
+                    The catalog syncs directly with Firebase—once the admin team adds programmes in the dashboard, they go live here automatically.
+                  </p>
+                  <Button asChild className="rounded-full">
+                    <Link href="/signup">Join the waitlist</Link>
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
