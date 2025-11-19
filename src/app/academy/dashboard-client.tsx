@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 
 import { format } from "date-fns"
+import type { Timestamp } from "firebase/firestore"
 import {
   BellRing,
   BookOpenCheck,
@@ -35,7 +36,7 @@ import { logout } from "@/lib/logout"
 import { cn } from "@/lib/utils"
 
 const studentTabs = [
-  { value: "dashboard", label: "Student dashboard", icon: LayoutDashboard },
+  { value: "dashboard", label: "Overview", icon: LayoutDashboard },
   { value: "courses", label: "Courses", icon: GraduationCap },
   { value: "sessions", label: "Live sessions", icon: MonitorPlay },
   { value: "resources", label: "Resources", icon: LibraryBig },
@@ -45,27 +46,45 @@ const studentTabs = [
 
 type StudentTabValue = (typeof studentTabs)[number]["value"]
 
-function formatDisplayDate(value?: string | number | Date): string {
+type Assignment = Record<string, unknown> & { id: string; progress?: number; courseId?: string }
+
+function formatDisplayDate(value?: string | number | Date | Timestamp): string {
   if (!value) return "Date coming soon"
-  const date = value instanceof Date ? value : new Date(value)
+  const date =
+    value instanceof Date
+      ? value
+      : typeof value === "object" && value !== null && "toDate" in value
+        ? (value as Timestamp).toDate()
+        : new Date(value)
   if (Number.isNaN(date.getTime())) {
     return value.toString()
   }
   return format(date, "MMM d, yyyy")
 }
 
-function calculateProgress(course: FirestoreDocument<AcademyCourse>): number {
+function calculateProgress(course: Pick<AcademyCourse, "lessonCount" | "completedLessons">): number {
   const total = course.lessonCount ?? 0
   if (!total) return 0
   const completed = course.completedLessons ?? 0
-  return Math.min(100, Math.round((completed / total) * 100))
+  return Math.min(100, Math.max(0, Math.round((completed / total) * 100)))
+}
+
+function CourseProgressBar({ value }: { value: number }) {
+  return (
+    <div className="relative h-2 overflow-hidden rounded-full bg-slate-200">
+      <span
+        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500"
+        style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+      />
+    </div>
+  )
 }
 
 export function AcademyDashboardClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { firebaseUser, loading } = useAcademyUser()
-  const { data: courses, loading: coursesLoading } = useFirestoreCollection<AcademyCourse>("courses", {
+  const { firebaseUser, courses: assignedCourses, loading: userLoading } = useAcademyUser()
+  const { data: catalogCourses, loading: coursesLoading } = useFirestoreCollection<AcademyCourse>("courses", {
     orderByField: "updatedAt",
     orderDirection: "desc",
   })
@@ -105,19 +124,70 @@ export function AcademyDashboardClient() {
     router.replace(`/academy?${nextSearch.toString()}`, { scroll: false })
   }
 
+  const resolvedAssignments = useMemo(() => {
+    if (!assignedCourses.length) return []
+
+    const catalogMap = new Map<string, FirestoreDocument<AcademyCourse>>()
+    catalogCourses.forEach((course) => catalogMap.set(course.id, course))
+
+    return assignedCourses.map((assignment) => {
+      const typedAssignment = assignment as Assignment
+      const catalogMatch = typedAssignment.courseId ? catalogMap.get(typedAssignment.courseId) : undefined
+      const merged = { ...(catalogMatch ?? {}), ...typedAssignment }
+
+      const hasExplicitProgress = typeof merged.progress === "number" && !Number.isNaN(merged.progress)
+      const lessons = Number(merged.lessonCount ?? catalogMatch?.lessonCount ?? 0)
+      const completed = Number(merged.completedLessons ?? catalogMatch?.completedLessons ?? 0)
+      const derivedProgress = hasExplicitProgress
+        ? Number(merged.progress)
+        : lessons
+          ? Math.round((completed / lessons) * 100)
+          : calculateProgress({
+              lessonCount: catalogMatch?.lessonCount,
+              completedLessons: catalogMatch?.completedLessons,
+            })
+
+      return {
+        ...merged,
+        title:
+          (merged as { title?: string }).title ??
+          (merged as { courseTitle?: string }).courseTitle ??
+          catalogMatch?.title ??
+          "Course details syncing",
+        instructor: (merged as { instructor?: string }).instructor ?? catalogMatch?.instructor ?? "Instructor TBA",
+        level: (merged as { level?: string }).level ?? catalogMatch?.level ?? "All levels",
+        status: (merged as { status?: string }).status ?? catalogMatch?.status ?? "upcoming",
+        description:
+          (merged as { description?: string }).description ??
+          catalogMatch?.description ??
+          "This course was assigned by the registrar.",
+        startDate: (merged as { startDate?: string }).startDate ?? catalogMatch?.startDate,
+        lessonCount: merged.lessonCount ?? catalogMatch?.lessonCount,
+        progress: Math.min(100, Math.max(0, derivedProgress)),
+      }
+    })
+  }, [assignedCourses, catalogCourses])
+
+  const totalProgress = useMemo(() => {
+    if (!resolvedAssignments.length) return 0
+    const aggregate = resolvedAssignments.reduce((sum, course) => sum + Number(course.progress ?? 0), 0)
+    return Math.round(aggregate / resolvedAssignments.length)
+  }, [resolvedAssignments])
+
   const isLoading =
-    loading || coursesLoading || sessionsLoading || resourcesLoading || announcementsLoading || examsLoading
+    userLoading ||
+    coursesLoading ||
+    sessionsLoading ||
+    resourcesLoading ||
+    announcementsLoading ||
+    examsLoading
 
   const upcomingSessions = useMemo(() => {
     return [...liveSessions].sort((a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt)).slice(0, 3)
   }, [liveSessions])
 
   const nextAnnouncement = announcements[0]
-  const totalProgress = useMemo(() => {
-    if (!courses.length) return 0
-    const aggregate = courses.reduce((sum, course) => sum + calculateProgress(course), 0)
-    return Math.round(aggregate / courses.length)
-  }, [courses])
+  const nextExam = exams[0]
 
   async function handleLogout() {
     try {
@@ -128,10 +198,11 @@ export function AcademyDashboardClient() {
       setIsLoggingOut(false)
     }
   }
+
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-muted-foreground">Loading your dashboard…</p>
+        <p className="text-muted-foreground">Loading your academy workspace…</p>
       </div>
     )
   }
@@ -149,92 +220,172 @@ export function AcademyDashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950/95 text-slate-100">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 lg:flex-row">
-        <aside className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-2xl shadow-slate-900/40 lg:w-64">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Welcome back</p>
-            <h2 className="text-2xl font-semibold text-white">{firebaseUser.displayName || firebaseUser.email}</h2>
-            <p className="text-sm text-slate-400">Student access</p>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-sky-50">
+      <div className="pointer-events-none absolute inset-0 opacity-40 calligraphy-overlay" aria-hidden />
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10">
+        <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-[0_15px_55px_rgba(15,23,42,0.08)] backdrop-blur">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-3">
+              <Badge variant="outline" className="w-fit rounded-full border-slate-200 bg-slate-50 text-[0.6rem] uppercase tracking-[0.4em] text-slate-500">
+                Markaz al-Haqq Academy
+              </Badge>
+              <div>
+                <h1 className="text-3xl font-semibold text-slate-900">
+                  Welcome back, {firebaseUser.displayName || firebaseUser.email}
+                </h1>
+                <p className="mt-2 text-sm text-slate-600">
+                  Your personalised sokacademy-inspired dashboard has been rebuilt for clarity and speed. Track assignments,
+                  sessions, and resources in one calm space.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="outline" className="border-slate-200 text-slate-700">
+                <Link href="/">Return to site</Link>
+              </Button>
+              <Button
+                onClick={handleLogout}
+                className="bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-900/90"
+              >
+                {isLoggingOut ? "Signing out…" : "Logout"}
+              </Button>
+            </div>
           </div>
-          <div className="mt-6 space-y-2">
+        </section>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="border-slate-200/70 bg-white/90 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base text-slate-500">Overall progress</CardTitle>
+                <p className="text-4xl font-semibold text-slate-900">{totalProgress}%</p>
+              </div>
+              <BookOpenCheck className="h-10 w-10 text-sky-500" />
+            </CardHeader>
+          </Card>
+          <Card className="border-slate-200/70 bg-white/90 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base text-slate-500">Assigned courses</CardTitle>
+                <p className="text-4xl font-semibold text-slate-900">{resolvedAssignments.length}</p>
+              </div>
+              <GraduationCap className="h-10 w-10 text-indigo-500" />
+            </CardHeader>
+          </Card>
+          <Card className="border-slate-200/70 bg-white/90 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base text-slate-500">Upcoming sessions</CardTitle>
+                <p className="text-4xl font-semibold text-slate-900">{liveSessions.length}</p>
+              </div>
+              <MonitorPlay className="h-10 w-10 text-amber-500" />
+            </CardHeader>
+          </Card>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as StudentTabValue)} className="space-y-6">
+          <TabsList className="flex w-full flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white/80 p-1 shadow-sm">
             {studentTabs.map((tab) => (
-              <button
+              <TabsTrigger
                 key={tab.value}
-                onClick={() => handleTabChange(tab.value)}
+                value={tab.value}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium transition",
-                  activeTab === tab.value ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5",
+                  "flex-1 rounded-2xl px-4 py-2 text-sm font-medium text-slate-500 transition hover:text-slate-900",
+                  "data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-md",
                 )}
               >
-                <tab.icon className="h-4 w-4" />
+                <tab.icon className="mr-2 h-4 w-4" />
                 {tab.label}
-              </button>
+              </TabsTrigger>
             ))}
-          </div>
-          <Button onClick={handleLogout} variant="outline" className="mt-6 w-full border-white/30 text-white">
-            {isLoggingOut ? "Signing out…" : "Logout"}
-          </Button>
-        </aside>
+          </TabsList>
 
-        <main className="flex-1">
-          <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as StudentTabValue)} className="space-y-6">
-            <TabsList className="hidden">
-              {studentTabs.map((tab) => (
-                <TabsTrigger key={tab.value} value={tab.value}>
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            <TabsContent value="dashboard" className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Card className="border-white/10 bg-slate-900/70 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-base text-slate-300">Overall progress</CardTitle>
-                      <p className="text-4xl font-bold text-white">{totalProgress}%</p>
-                    </div>
-                    <BookOpenCheck className="h-10 w-10 text-emerald-300" />
-                  </CardHeader>
-                </Card>
-                <Card className="border-white/10 bg-slate-900/70 text-white">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-base text-slate-300">Active courses</CardTitle>
-                      <p className="text-4xl font-bold text-white">{courses.length}</p>
-                    </div>
-                    <GraduationCap className="h-10 w-10 text-sky-300" />
-                  </CardHeader>
-                </Card>
-              </div>
-
-              <div className="grid gap-6 lg:grid-cols-2">
-                <Card className="border-white/10 bg-slate-900/70 text-white">
+          <TabsContent value="dashboard" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="space-y-6 lg:col-span-2">
+                <Card className="border-slate-200/70 bg-white/90 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-xl">Upcoming sessions</CardTitle>
-                    <CardDescription className="text-slate-400">
-                      Your next live touchpoints across every enrolled course.
-                    </CardDescription>
+                    <CardTitle className="text-xl text-slate-900">Your active tracks</CardTitle>
+                    <CardDescription>Assignments sync from the academy registrar instantly.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    {resolvedAssignments.length ? (
+                      resolvedAssignments.map((course) => (
+                        <div
+                          key={course.id}
+                          className="rounded-2xl border border-slate-100/80 bg-white/80 p-4 shadow-[0_8px_30px_rgba(15,23,42,0.06)]"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                                {course.level}
+                              </p>
+                              <p className="text-lg font-semibold text-slate-900">{course.title}</p>
+                              <p className="text-sm text-slate-500">{course.instructor}</p>
+                            </div>
+                            <Badge variant="secondary" className="rounded-full border-slate-200 bg-slate-100 text-slate-600">
+                              {course.status}
+                            </Badge>
+                          </div>
+                          <p className="mt-3 text-sm text-slate-600">{course.description}</p>
+                          <div className="mt-4 space-y-2">
+                            <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                              <span>Progress</span>
+                              <span>{course.progress ?? 0}%</span>
+                            </div>
+                            <CourseProgressBar value={Number(course.progress ?? 0)} />
+                            <div className="flex flex-wrap justify-between text-xs text-slate-400">
+                              <span>Start {formatDisplayDate(course.startDate)}</span>
+                              <span>
+                                {course.lessonCount
+                                  ? `${course.lessonCount} lessons`
+                                  : "Curriculum syncing"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <Alert>
+                        <AlertDescription>No courses are linked to your account yet.</AlertDescription>
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="border-slate-200/70 bg-white/90 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-slate-900">Upcoming sessions</CardTitle>
+                    <CardDescription>Every cohort touchpoint across your assignments.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {upcomingSessions.length ? (
                       upcomingSessions.map((session) => (
-                        <div key={session.id} className="rounded-2xl border border-white/10 p-4">
-                          <div className="flex items-center justify-between">
+                        <div
+                          key={session.id}
+                          className="rounded-2xl border border-slate-100/80 bg-gradient-to-br from-white to-slate-50 p-4"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                              <p className="text-sm text-slate-400">{session.courseTitle}</p>
-                              <p className="text-lg font-semibold text-white">{session.title}</p>
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{session.courseTitle}</p>
+                              <p className="text-lg font-semibold text-slate-900">{session.title}</p>
                             </div>
-                            <Badge className="bg-white/15 text-white">{session.format}</Badge>
+                            <Badge className="rounded-full bg-slate-900 text-white">{session.format}</Badge>
                           </div>
-                          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-400">
+                          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-600">
                             <span className="flex items-center gap-2">
                               <CalendarDays className="h-4 w-4" /> {formatDisplayDate(session.scheduledAt)}
                             </span>
                             <span className="flex items-center gap-2">
                               <UsersRound className="h-4 w-4" /> {session.presenter}
                             </span>
+                            {session.link ? (
+                              <Button asChild size="sm" variant="outline" className="border-slate-200 text-slate-700">
+                                <a href={session.link} target="_blank" rel="noreferrer">
+                                  Join session
+                                </a>
+                              </Button>
+                            ) : null}
                           </div>
                         </div>
                       ))
@@ -245,21 +396,25 @@ export function AcademyDashboardClient() {
                     )}
                   </CardContent>
                 </Card>
-                <Card className="border-white/10 bg-slate-900/70 text-white">
+              </div>
+
+              <div className="space-y-6">
+                <Card className="border-slate-200/70 bg-gradient-to-br from-amber-50 to-white shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-xl">Latest announcement</CardTitle>
-                    <CardDescription className="text-slate-400">
-                      Academy bulletins appear here immediately after publication.
-                    </CardDescription>
+                    <CardTitle className="text-xl text-slate-900">Latest announcement</CardTitle>
+                    <CardDescription>Stay aligned with new policies, launches, and reminders.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {nextAnnouncement ? (
                       <div className="space-y-3">
-                        <Badge variant="outline" className="border-white/30 text-xs uppercase tracking-[0.3em] text-white">
+                        <Badge variant="outline" className="border-amber-200 bg-white text-xs uppercase tracking-[0.3em] text-amber-600">
                           {nextAnnouncement.audience}
                         </Badge>
-                        <h3 className="text-2xl font-semibold text-white">{nextAnnouncement.title}</h3>
-                        <p className="text-slate-300">{nextAnnouncement.body}</p>
+                        <h3 className="text-2xl font-semibold text-slate-900">{nextAnnouncement.title}</h3>
+                        <p className="text-sm text-slate-700">{nextAnnouncement.body}</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                          Published {formatDisplayDate(nextAnnouncement.publishedAt)}
+                        </p>
                       </div>
                     ) : (
                       <Alert>
@@ -268,26 +423,69 @@ export function AcademyDashboardClient() {
                     )}
                   </CardContent>
                 </Card>
+
+                <Card className="border-slate-200/70 bg-white/90 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-slate-900">Next assessment</CardTitle>
+                    <CardDescription>Exam timings update automatically once published.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {nextExam ? (
+                      <div className="space-y-2 text-sm text-slate-600">
+                        <p className="text-lg font-semibold text-slate-900">{nextExam.title}</p>
+                        <p className="text-slate-500">{nextExam.courseTitle}</p>
+                        <p>Status: {nextExam.status}</p>
+                        <p>Available: {formatDisplayDate(nextExam.availableOn)}</p>
+                        <p>Mode: {nextExam.proctored ? "Proctored" : "Self-paced"}</p>
+                      </div>
+                    ) : (
+                      <Alert>
+                        <AlertDescription>Exam windows will appear here once scheduled.</AlertDescription>
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
-            </TabsContent>
-            <TabsContent value="courses" className="space-y-4">
-              {courses.length ? (
+            </div>
+          </TabsContent>
+
+          <TabsContent value="courses" className="space-y-8">
+            <section className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-2xl font-semibold text-slate-900">Your assigned courses</h3>
+                  <p className="text-sm text-slate-600">These are the tracks registrar staff attached to your profile.</p>
+                </div>
+                <Badge variant="secondary" className="rounded-full border-slate-200 bg-slate-100 text-slate-600">
+                  {resolvedAssignments.length} total
+                </Badge>
+              </div>
+              {resolvedAssignments.length ? (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {courses.map((course) => (
-                    <Card key={course.id} className="border-white/10 bg-slate-900/70 text-white">
+                  {resolvedAssignments.map((course) => (
+                    <Card key={course.id} className="border-slate-200/70 bg-white/90 shadow-sm">
                       <CardHeader>
-                        <CardTitle className="text-xl">{course.title}</CardTitle>
-                        <CardDescription className="text-slate-400">{course.instructor}</CardDescription>
+                        <CardTitle className="text-xl text-slate-900">{course.title}</CardTitle>
+                        <CardDescription className="text-slate-500">{course.instructor}</CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex items-center justify-between text-sm text-slate-400">
-                          <span>Status: {course.status}</span>
-                          <span>Level: {course.level}</span>
+                      <CardContent className="space-y-3 text-sm text-slate-600">
+                        <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                          <span>{course.level}</span>
+                          <span>{course.status}</span>
                         </div>
-                        <p className="text-sm text-slate-300">{course.description}</p>
-                        <div className="flex items-center justify-between text-sm text-slate-400">
-                          <span>Start: {formatDisplayDate(course.startDate)}</span>
-                          <span>Progress: {calculateProgress(course)}%</span>
+                        <p>{course.description}</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                            <span>Progress</span>
+                            <span>{course.progress ?? 0}%</span>
+                          </div>
+                          <CourseProgressBar value={Number(course.progress ?? 0)} />
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Start {formatDisplayDate(course.startDate)}</span>
+                          <span>
+                            {course.lessonCount ? `${course.lessonCount} lessons` : "Curriculum syncing"}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -298,67 +496,32 @@ export function AcademyDashboardClient() {
                   <AlertDescription>No courses assigned yet.</AlertDescription>
                 </Alert>
               )}
-            </TabsContent>
+            </section>
 
-            <TabsContent value="sessions" className="space-y-4">
-              {liveSessions.length ? (
-                <div className="space-y-4">
-                  {liveSessions.map((session) => (
-                    <Card key={session.id} className="border-white/10 bg-slate-900/70 text-white">
-                      <CardHeader>
-                        <CardTitle className="text-lg">{session.title}</CardTitle>
-                        <CardDescription className="text-slate-400">{session.courseTitle}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
-                        <span className="flex items-center gap-2">
-                          <CalendarDays className="h-4 w-4" /> {formatDisplayDate(session.scheduledAt)}
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <MonitorPlay className="h-4 w-4" /> {session.format}
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <UsersRound className="h-4 w-4" /> {session.presenter}
-                        </span>
-                        {session.link ? (
-                          <Button asChild size="sm" variant="secondary" className="rounded-full bg-white/10 text-white">
-                            <a href={session.link} target="_blank" rel="noreferrer">
-                              Join session
-                            </a>
-                          </Button>
-                        ) : null}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Alert>
-                  <AlertDescription>Live sessions will appear here once scheduled.</AlertDescription>
-                </Alert>
-              )}
-            </TabsContent>
-
-            <TabsContent value="resources" className="space-y-4">
-              {resources.length ? (
+            <section className="space-y-4">
+              <div>
+                <h3 className="text-2xl font-semibold text-slate-900">Academy catalog</h3>
+                <p className="text-sm text-slate-600">
+                  Browse every programme currently in rotation—perfect for planning your next step.
+                </p>
+              </div>
+              {catalogCourses.length ? (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {resources.map((resource) => (
-                    <Card key={resource.id} className="border-white/10 bg-slate-900/70 text-white">
+                  {catalogCourses.map((course) => (
+                    <Card key={course.id} className="border-slate-200/70 bg-white/90 shadow-sm">
                       <CardHeader>
-                        <CardTitle className="text-lg">{resource.title}</CardTitle>
-                        <CardDescription className="text-slate-400">{resource.courseTitle}</CardDescription>
+                        <CardTitle className="text-xl text-slate-900">{course.title}</CardTitle>
+                        <CardDescription className="text-slate-500">{course.instructor}</CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-3 text-sm text-slate-300">
-                        <p>Type: {resource.type}</p>
-                        <div className="flex flex-wrap gap-3">
-                          <Button asChild size="sm" variant="secondary" className="rounded-full bg-white/10 text-white">
-                            <a href={resource.embedUrl} target="_blank" rel="noreferrer">
-                              View / stream
-                            </a>
-                          </Button>
-                          <Button asChild size="sm" variant="outline" className="rounded-full border-white/30 text-white">
-                            <a href={resource.downloadUrl} target="_blank" rel="noreferrer">
-                              Download
-                            </a>
-                          </Button>
+                      <CardContent className="space-y-3 text-sm text-slate-600">
+                        <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                          <span>{course.level}</span>
+                          <span>{course.status}</span>
+                        </div>
+                        <p>{course.description}</p>
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <span>Start {formatDisplayDate(course.startDate)}</span>
+                          <span>Progress {calculateProgress(course)}%</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -366,62 +529,134 @@ export function AcademyDashboardClient() {
                 </div>
               ) : (
                 <Alert>
-                  <AlertDescription>No resources have been shared with you yet.</AlertDescription>
+                  <AlertDescription>The catalog is being prepared.</AlertDescription>
                 </Alert>
               )}
-            </TabsContent>
-            <TabsContent value="announcements" className="space-y-4">
-              {announcements.length ? (
-                <div className="space-y-4">
-                  {announcements.map((announcement) => (
-                    <Card key={announcement.id} className="border-white/10 bg-slate-900/70 text-white">
-                      <CardHeader>
-                        <Badge variant="outline" className="mb-3 w-fit border-white/30 text-white">
-                          {announcement.audience}
-                        </Badge>
-                        <CardTitle className="text-xl">{announcement.title}</CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Published {formatDisplayDate(announcement.publishedAt)}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-slate-300">{announcement.body}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Alert>
-                  <AlertDescription>No announcements yet.</AlertDescription>
-                </Alert>
-              )}
-            </TabsContent>
+            </section>
+          </TabsContent>
 
-            <TabsContent value="exams" className="space-y-4">
-              {exams.length ? (
-                <div className="space-y-4">
-                  {exams.map((exam) => (
-                    <Card key={exam.id} className="border-white/10 bg-slate-900/70 text-white">
-                      <CardHeader>
-                        <CardTitle className="text-lg">{exam.title}</CardTitle>
-                        <CardDescription className="text-slate-400">{exam.courseTitle}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
-                        <span>Status: {exam.status}</span>
-                        <span>Available: {formatDisplayDate(exam.availableOn)}</span>
-                        <span>Mode: {exam.proctored ? "Proctored" : "Self-paced"}</span>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Alert>
-                  <AlertDescription>Exam windows will appear here once scheduled.</AlertDescription>
-                </Alert>
-              )}
-            </TabsContent>
-          </Tabs>
-        </main>
+          <TabsContent value="sessions" className="space-y-4">
+            {liveSessions.length ? (
+              <div className="space-y-4">
+                {liveSessions.map((session) => (
+                  <Card key={session.id} className="border-slate-200/70 bg-white/90 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-slate-900">{session.title}</CardTitle>
+                      <CardDescription className="text-slate-500">{session.courseTitle}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+                      <span className="flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4" /> {formatDisplayDate(session.scheduledAt)}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <MonitorPlay className="h-4 w-4" /> {session.format}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <UsersRound className="h-4 w-4" /> {session.presenter}
+                      </span>
+                      {session.link ? (
+                        <Button asChild size="sm" variant="outline" className="border-slate-200 text-slate-700">
+                          <a href={session.link} target="_blank" rel="noreferrer">
+                            Join session
+                          </a>
+                        </Button>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertDescription>Live sessions will appear here once scheduled.</AlertDescription>
+              </Alert>
+            )}
+          </TabsContent>
+
+          <TabsContent value="resources" className="space-y-4">
+            {resources.length ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {resources.map((resource) => (
+                  <Card key={resource.id} className="border-slate-200/70 bg-white/90 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-slate-900">{resource.title}</CardTitle>
+                      <CardDescription className="text-slate-500">{resource.courseTitle}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600">
+                      <p>Type: {resource.type}</p>
+                      <div className="flex flex-wrap gap-3">
+                        <Button asChild size="sm" className="bg-slate-900 text-white hover:bg-slate-900/90">
+                          <a href={resource.embedUrl} target="_blank" rel="noreferrer">
+                            View / stream
+                          </a>
+                        </Button>
+                        <Button asChild size="sm" variant="outline" className="border-slate-200 text-slate-700">
+                          <a href={resource.downloadUrl} target="_blank" rel="noreferrer">
+                            Download
+                          </a>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertDescription>No resources have been shared with you yet.</AlertDescription>
+              </Alert>
+            )}
+          </TabsContent>
+
+          <TabsContent value="announcements" className="space-y-4">
+            {announcements.length ? (
+              <div className="space-y-4">
+                {announcements.map((announcement) => (
+                  <Card key={announcement.id} className="border-slate-200/70 bg-white/90 shadow-sm">
+                    <CardHeader>
+                      <Badge variant="outline" className="mb-3 w-fit border-slate-200 bg-slate-50 text-slate-600">
+                        {announcement.audience}
+                      </Badge>
+                      <CardTitle className="text-xl text-slate-900">{announcement.title}</CardTitle>
+                      <CardDescription className="text-slate-500">
+                        Published {formatDisplayDate(announcement.publishedAt)}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-slate-600">{announcement.body}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertDescription>No announcements yet.</AlertDescription>
+              </Alert>
+            )}
+          </TabsContent>
+
+          <TabsContent value="exams" className="space-y-4">
+            {exams.length ? (
+              <div className="space-y-4">
+                {exams.map((exam) => (
+                  <Card key={exam.id} className="border-slate-200/70 bg-white/90 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-slate-900">{exam.title}</CardTitle>
+                      <CardDescription className="text-slate-500">{exam.courseTitle}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+                      <span>Status: {exam.status}</span>
+                      <span>Available: {formatDisplayDate(exam.availableOn)}</span>
+                      <span>Mode: {exam.proctored ? "Proctored" : "Self-paced"}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertDescription>Exam windows will appear here once scheduled.</AlertDescription>
+              </Alert>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )
