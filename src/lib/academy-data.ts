@@ -1,6 +1,6 @@
 "use client"
 
-import { addDoc, collection, serverTimestamp } from "firebase/firestore"
+import { addDoc, collection, serverTimestamp, type Timestamp } from "firebase/firestore"
 
 import { db } from "./firebaseClient"
 
@@ -11,11 +11,11 @@ export type AcademyCourse = {
   status: "upcoming" | "active" | "completed"
   slug?: string
   description: string
-  startDate?: string
+  startDate?: string | Date | Timestamp
   lessonCount?: number
   completedLessons?: number
   coverImage?: string
-  updatedAt?: Date
+  updatedAt?: string | Date | Timestamp
 }
 
 export type LiveSession = {

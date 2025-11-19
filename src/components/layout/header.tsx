@@ -1,8 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, BookOpen, Users, DollarSign, HelpCircle, GraduationCap, CalendarClock, Sparkles } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import {
+  Menu,
+  BookOpen,
+  Users,
+  DollarSign,
+  HelpCircle,
+  GraduationCap,
+  CalendarClock,
+  Sparkles,
+  LayoutDashboard,
+  MonitorPlay,
+  LibraryBig,
+  BellRing,
+  ShieldCheck,
+  UserRound,
+  Settings,
+  CreditCard,
+} from 'lucide-react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import * as React from 'react';
 
 import { Logo } from '@/components/logo';
@@ -21,7 +38,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUserRole } from '@/hooks/useUserRole';
 
-const navLinks = [
+type NavLinkConfig = {
+  href: string;
+  label: string;
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+};
+
+const publicNavLinks: NavLinkConfig[] = [
   { href: '/courses', label: 'Courses', icon: BookOpen },
   { href: '/about', label: 'About', icon: Users },
   { href: '/instructors', label: 'Instructors', icon: GraduationCap },
@@ -30,9 +53,36 @@ const navLinks = [
   { href: '/faq', label: 'FAQ', icon: HelpCircle },
 ];
 
-function NavLink({ href, children, mobile = false }: { href: string; children: React.ReactNode; mobile?: boolean }) {
+const studentNavLinks: NavLinkConfig[] = [
+  { href: '/academy?tab=dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/academy?tab=courses', label: 'Courses', icon: GraduationCap },
+  { href: '/academy?tab=sessions', label: 'Live sessions', icon: MonitorPlay },
+  { href: '/academy?tab=resources', label: 'Resources', icon: LibraryBig },
+  { href: '/academy?tab=announcements', label: 'Announcements', icon: BellRing },
+  { href: '/academy?tab=exams', label: 'Exams & certifications', icon: ShieldCheck },
+  { href: '/account/profile', label: 'Profile & settings', icon: UserRound },
+  { href: '/account/settings', label: 'Account settings', icon: Settings },
+  { href: '/plans', label: 'Billing', icon: CreditCard },
+];
+
+const adminNavLinks: NavLinkConfig[] = [
+  { href: '/dashboard/admin', label: 'Admin dashboard', icon: LayoutDashboard },
+  ...studentNavLinks.filter((link) => link.href !== '/academy?tab=dashboard'),
+];
+
+function NavLink({
+  href,
+  children,
+  mobile = false,
+  isActive,
+}: {
+  href: string;
+  children: React.ReactNode;
+  mobile?: boolean;
+  isActive?: boolean;
+}) {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const resolvedIsActive = typeof isActive === 'boolean' ? isActive : pathname === href;
 
   const linkContent = (
     <Link
@@ -42,7 +92,7 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
         mobile
           ? 'flex items-center rounded-xl p-2 text-base hover:bg-muted'
           : 'rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] hover:bg-primary/10',
-        isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+        resolvedIsActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
       )}
     >
       {children}
@@ -54,6 +104,8 @@ function NavLink({ href, children, mobile = false }: { href: string; children: R
 
 export function Header() {
   const { user, role } = useUserRole();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const userDisplayName = user?.displayName ?? user?.email ?? 'Account';
   const userInitials = React.useMemo(() => {
@@ -93,16 +145,14 @@ export function Header() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/dashboard">View profile</Link>
+            <Link href="/account/profile">Profile &amp; settings</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/account/settings">Account preferences</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/plans">Billing</Link>
           </DropdownMenuItem>
-          {role === 'admin' ? (
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/admin">Admin workspace</Link>
-            </DropdownMenuItem>
-          ) : null}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onSelect={(event) => {
@@ -116,6 +166,34 @@ export function Header() {
       </DropdownMenu>
     );
   };
+
+  const resolvedNavLinks = React.useMemo(() => {
+    if (!user) {
+      return publicNavLinks;
+    }
+    if (role === 'admin') {
+      return adminNavLinks;
+    }
+    return studentNavLinks;
+  }, [user, role]);
+
+  const activeTab = pathname === '/academy' ? searchParams?.get('tab') ?? 'dashboard' : null;
+
+  const navLinksWithActive = resolvedNavLinks.map((link) => {
+    if (!link.href.includes('?')) {
+      return { ...link, isActive: pathname === link.href };
+    }
+
+    const [linkPath, queryString] = link.href.split('?');
+    const linkParams = new URLSearchParams(queryString);
+    if (!linkParams.has('tab')) {
+      return { ...link, isActive: pathname === linkPath };
+    }
+
+    const targetTab = linkParams.get('tab');
+    const isActive = pathname === linkPath && activeTab === targetTab;
+    return { ...link, isActive };
+  });
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-white/80 backdrop-blur-md">
@@ -145,9 +223,9 @@ export function Header() {
                   <span className="font-medium uppercase tracking-[0.3em] text-primary">Next intake to be announced</span>
                 </div>
                 <nav className="flex flex-col gap-3">
-                  {navLinks.map((link) => (
-                    <NavLink key={link.href} href={link.href} mobile>
-                      <link.icon className="mr-3 h-5 w-5 text-primary/80" />
+                  {navLinksWithActive.map((link) => (
+                    <NavLink key={link.href} href={link.href} mobile isActive={link.isActive}>
+                      {link.icon ? <link.icon className="mr-3 h-5 w-5 text-primary/80" /> : null}
                       {link.label}
                     </NavLink>
                   ))}
@@ -175,8 +253,8 @@ export function Header() {
         </div>
 
         <nav className="hidden flex-none items-center gap-2 rounded-full border border-border/80 bg-white/80 px-3 py-2 shadow-sm md:flex">
-          {navLinks.map((link) => (
-            <NavLink key={link.href} href={link.href}>
+          {navLinksWithActive.map((link) => (
+            <NavLink key={link.href} href={link.href} isActive={link.isActive}>
               {link.label}
             </NavLink>
           ))}

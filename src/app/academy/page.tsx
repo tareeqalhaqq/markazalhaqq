@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import { format } from "date-fns"
 import {
@@ -41,7 +41,9 @@ const studentTabs = [
   { value: "resources", label: "Resources", icon: LibraryBig },
   { value: "announcements", label: "Announcements", icon: BellRing },
   { value: "exams", label: "Exams & certifications", icon: ShieldCheck },
-]
+] as const
+
+type StudentTabValue = (typeof studentTabs)[number]["value"]
 
 function formatDisplayDate(value?: string | number | Date): string {
   if (!value) return "Date coming soon"
@@ -61,6 +63,7 @@ function calculateProgress(course: FirestoreDocument<AcademyCourse>): number {
 
 export default function AcademyDashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { firebaseUser, loading } = useAcademyUser()
   const { data: courses, loading: coursesLoading } = useFirestoreCollection<AcademyCourse>("courses", {
     orderByField: "updatedAt",
@@ -82,8 +85,25 @@ export default function AcademyDashboardPage() {
     orderByField: "createdAt",
     orderDirection: "desc",
   })
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const [activeTab, setActiveTab] = useState<StudentTabValue>("dashboard")
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  useEffect(() => {
+    const requestedTab = searchParams.get("tab") as StudentTabValue | null
+    if (requestedTab && studentTabs.some((tab) => tab.value === requestedTab) && requestedTab !== activeTab) {
+      setActiveTab(requestedTab)
+    }
+    if (!requestedTab && activeTab !== "dashboard") {
+      setActiveTab("dashboard")
+    }
+  }, [activeTab, searchParams])
+
+  function handleTabChange(value: StudentTabValue) {
+    setActiveTab(value)
+    const nextSearch = new URLSearchParams(searchParams.toString())
+    nextSearch.set("tab", value)
+    router.replace(`/academy?${nextSearch.toString()}`, { scroll: false })
+  }
 
   const isLoading =
     loading || coursesLoading || sessionsLoading || resourcesLoading || announcementsLoading || examsLoading
@@ -141,7 +161,7 @@ export default function AcademyDashboardPage() {
             {studentTabs.map((tab) => (
               <button
                 key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
+                onClick={() => handleTabChange(tab.value)}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium transition",
                   activeTab === tab.value ? "bg-white/10 text-white" : "text-slate-400 hover:bg-white/5",
@@ -158,7 +178,7 @@ export default function AcademyDashboardPage() {
         </aside>
 
         <main className="flex-1">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as StudentTabValue)} className="space-y-6">
             <TabsList className="hidden">
               {studentTabs.map((tab) => (
                 <TabsTrigger key={tab.value} value={tab.value}>
