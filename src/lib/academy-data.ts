@@ -1,6 +1,14 @@
 "use client"
 
-import { addDoc, collection, serverTimestamp, type Timestamp } from "firebase/firestore"
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  updateDoc,
+  type Timestamp,
+} from "firebase/firestore"
 
 import { db } from "./firebaseClient"
 
@@ -16,6 +24,7 @@ export type AcademyCourse = {
   completedLessons?: number
   coverImage?: string
   updatedAt?: string | Date | Timestamp
+  instructorId?: string
 }
 
 export type LiveSession = {
@@ -56,6 +65,19 @@ export type TeacherProfile = {
   specialty: string
 }
 
+export type CourseModule = {
+  title: string
+  order: number
+  summary?: string
+}
+
+export type CourseLesson = {
+  title: string
+  order: number
+  content?: string
+  videoUrl?: string
+}
+
 function withTimestamps<T extends Record<string, unknown>>(payload: T) {
   return {
     ...payload,
@@ -64,8 +86,64 @@ function withTimestamps<T extends Record<string, unknown>>(payload: T) {
   }
 }
 
+function withUpdateTimestamp<T extends Record<string, unknown>>(payload: T) {
+  return {
+    ...payload,
+    updatedAt: serverTimestamp(),
+  }
+}
+
 export async function createCourse(course: AcademyCourse) {
   await addDoc(collection(db, "courses"), withTimestamps(course))
+}
+
+export async function updateCourse(courseId: string, updates: Partial<AcademyCourse>) {
+  const courseRef = doc(db, "courses", courseId)
+  await updateDoc(courseRef, withUpdateTimestamp(updates))
+}
+
+export async function deleteCourse(courseId: string) {
+  const courseRef = doc(db, "courses", courseId)
+  await deleteDoc(courseRef)
+}
+
+export async function createCourseModule(courseId: string, module: CourseModule) {
+  const modulesCollection = collection(db, "courses", courseId, "modules")
+  await addDoc(modulesCollection, withTimestamps(module))
+}
+
+export async function updateCourseModule(
+  courseId: string,
+  moduleId: string,
+  updates: Partial<CourseModule>,
+) {
+  const moduleRef = doc(db, "courses", courseId, "modules", moduleId)
+  await updateDoc(moduleRef, withUpdateTimestamp(updates))
+}
+
+export async function deleteCourseModule(courseId: string, moduleId: string) {
+  const moduleRef = doc(db, "courses", courseId, "modules", moduleId)
+  await deleteDoc(moduleRef)
+}
+
+export async function createCourseLesson(courseId: string, moduleId: string, lesson: CourseLesson) {
+  const lessonsCollection = collection(db, "courses", courseId, "modules", moduleId, "lessons")
+  await addDoc(lessonsCollection, withTimestamps(lesson))
+}
+
+export async function updateCourseLesson(
+  courseId: string,
+  moduleId: string,
+  lessonId: string,
+  updates: Partial<CourseLesson>,
+) {
+  const lessonRef = doc(db, "courses", courseId, "modules", moduleId, "lessons", lessonId)
+  await updateDoc(lessonRef, withUpdateTimestamp(updates))
+}
+
+export async function deleteCourseLesson(courseId: string, moduleId: string, lessonId: string) {
+  const lessonRef = doc(db, "courses", courseId, "modules", moduleId, "lessons", lessonId)
+  await deleteDoc(lessonRef)
 }
 
 export async function createLiveSession(session: LiveSession) {
