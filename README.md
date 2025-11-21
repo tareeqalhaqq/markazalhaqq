@@ -47,3 +47,51 @@ These rules ensure:
 - Every authenticated user can create and manage their own `users/{uid}` profile document.
 - Only admins (users whose Firestore `role` is set to `admin`) may change another user’s role or access `admin_content`.
 - Students cannot self-promote because updates that change the `role` field are rejected unless the request is made by an admin.
+
+## Course management model
+
+For a full course catalog with modules and lessons, organise Firestore like this:
+
+- `courses` collection (one document per course) with fields such as `title`, `description`, `instructorId`, `status`, `createdAt`, and `updatedAt`.
+- `modules` subcollection under each course document with `title` and `order` fields to control sequencing.
+- `lessons` subcollection under each module document with `title`, `content`, `videoUrl`, and `order` fields.
+- `users` collection stores profile data including a boolean `isAdmin` flag that gates write access.
+
+Recommended security rules to mirror this structure:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+
+      match /modules/{moduleId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAdmin();
+
+        match /lessons/{lessonId} {
+          allow read: if isAuthenticated();
+          allow create, update, delete: if isAdmin();
+        }
+      }
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (userId == request.auth.uid || isAdmin());
+      allow create, update: if isAdmin();
+    }
+  }
+}
+```
+
+These rules keep course content readable to all signed-in learners while restricting course, module, and lesson edits to admins.
