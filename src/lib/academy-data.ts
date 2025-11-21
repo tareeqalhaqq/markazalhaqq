@@ -6,6 +6,7 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  setDoc,
   updateDoc,
   type Timestamp,
 } from "firebase/firestore"
@@ -25,6 +26,7 @@ export type AcademyCourse = {
   coverImage?: string
   updatedAt?: string | Date | Timestamp
   instructorId?: string
+  isLive?: boolean
 }
 
 export type LiveSession = {
@@ -34,6 +36,7 @@ export type LiveSession = {
   scheduledAt: string
   format: string
   link?: string
+  isLive?: boolean
 }
 
 export type ResourceLibraryItem = {
@@ -63,6 +66,28 @@ export type TeacherProfile = {
   fullName: string
   email: string
   specialty: string
+}
+
+export type StudentProfile = {
+  fullName: string
+  email: string
+  cohort?: string
+  track?: string
+  enrollmentStatus?: "active" | "paused" | "cancelled" | "prospect"
+  liveAccess?: boolean
+  notes?: string
+  id?: string
+}
+
+export type Quiz = {
+  title: string
+  courseTitle: string
+  section?: string
+  status: "draft" | "live" | "archived"
+  questionCount?: number
+  isTimed?: boolean
+  instructions?: string
+  id?: string
 }
 
 export type CourseModule = {
@@ -164,4 +189,31 @@ export async function createExamOrCertification(exam: ExamOrCertification) {
 
 export async function createTeacherProfile(teacher: TeacherProfile) {
   await addDoc(collection(db, "teachers"), withTimestamps(teacher))
+}
+
+export async function upsertStudentProfile(student: StudentProfile) {
+  const normalizedEmail = student.email.trim().toLowerCase()
+  const studentRef = doc(db, "students", normalizedEmail)
+
+  await setDoc(studentRef, withTimestamps(student), { merge: true })
+}
+
+export async function removeStudentProfile(email: string) {
+  if (!email) return
+  const studentRef = doc(db, "students", email.trim().toLowerCase())
+  await deleteDoc(studentRef)
+}
+
+export async function createQuiz(quiz: Quiz) {
+  await addDoc(collection(db, "quizzes"), withTimestamps(quiz))
+}
+
+export async function updateQuiz(quizId: string, updates: Partial<Quiz>) {
+  const quizRef = doc(db, "quizzes", quizId)
+  await updateDoc(quizRef, withUpdateTimestamp(updates))
+}
+
+export async function deleteQuiz(quizId: string) {
+  const quizRef = doc(db, "quizzes", quizId)
+  await deleteDoc(quizRef)
 }
