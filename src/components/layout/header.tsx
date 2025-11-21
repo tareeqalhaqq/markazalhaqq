@@ -197,11 +197,6 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-white/80 backdrop-blur-md">
-      <div className="hidden border-b border-primary/20 bg-gradient-to-r from-primary via-primary/80 to-secondary/90 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary-foreground md:block">
-        <div className="container mx-auto flex items-center justify-center px-6">
-          Next cohort opens soon · Join the waitlist today
-        </div>
-      </div>
       <div className="container mx-auto flex max-w-screen-xl items-center justify-between px-6 py-4 md:py-6">
         <div className="flex flex-1 items-center gap-4">
           <Sheet>
