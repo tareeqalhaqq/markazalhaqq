@@ -316,6 +316,14 @@ const sharedWorkspaceExtensions: Record<string, Partial<Workspace>> = {
   },
 };
 
+export function generateStaticParams() {
+  const catalogSlugs = Object.keys(workspaceCatalog);
+  const sharedSlugs = Object.keys(sharedWorkspaceExtensions);
+  const uniqueSlugs = Array.from(new Set([...catalogSlugs, ...sharedSlugs]));
+
+  return uniqueSlugs.map((slug) => ({ slug }));
+}
+
 function getWorkspace(slug: string): Workspace | null {
   if (workspaceCatalog[slug]) {
     return workspaceCatalog[slug];
