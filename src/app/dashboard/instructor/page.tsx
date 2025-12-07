@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import {
+  ArrowRight,
   BadgeCheck,
   BookOpenCheck,
   CalendarClock,
@@ -9,9 +10,12 @@ import {
   Eye,
   EyeOff,
   GraduationCap,
+  LayoutList,
   Layers,
+  PanelRight,
   PlusCircle,
   Radio,
+  Sparkles,
   Trash2,
 } from "lucide-react"
 
@@ -19,6 +23,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -28,7 +40,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/hooks/use-toast"
 
 import {
@@ -67,7 +80,6 @@ type ResourceFormState = {
   size: string
 }
 
-const phaseOptions: Course["phase"][] = ["Drafting", "Revision", "Enrollment", "Active", "Archived"]
 const sessionFormats = ["Live seminar", "Workshop", "Q&A", "Office hours"]
 const resourceTypes = ["PDF", "Audio", "Video", "Link"]
 
@@ -85,6 +97,7 @@ export default function InstructorDashboardPage() {
 
   const courses = state.courses
   const [selectedCourseId, setSelectedCourseId] = useState<string>(courses[0]?.id ?? "")
+  const [draggingCourseId, setDraggingCourseId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!courses.find((course) => course.id === selectedCourseId)) {
@@ -103,23 +116,30 @@ export default function InstructorDashboardPage() {
     cohort: "",
     startDate: "",
   })
+  const [courseError, setCourseError] = useState<string | null>(null)
   const [lessonForm, setLessonForm] = useState<LessonFormState>({
     title: "",
     releaseDate: "",
     status: "published",
     makeVisible: false,
   })
+  const [lessonError, setLessonError] = useState<string | null>(null)
   const [sessionForm, setSessionForm] = useState<SessionFormState>({
     title: "",
     format: sessionFormats[0] ?? "Live seminar",
     date: "",
     time: "",
   })
+  const [sessionError, setSessionError] = useState<string | null>(null)
   const [resourceForm, setResourceForm] = useState<ResourceFormState>({
     title: "",
     type: resourceTypes[0] ?? "PDF",
     size: "",
   })
+  const [resourceError, setResourceError] = useState<string | null>(null)
+  const [lessonDialogOpen, setLessonDialogOpen] = useState(false)
+  const [sessionDialogOpen, setSessionDialogOpen] = useState(false)
+  const [resourceDialogOpen, setResourceDialogOpen] = useState(false)
 
   const visibleCourses = useMemo(() => courses.filter((course) => course.isVisibleToStudents), [courses])
   const publishedLessonCount = useMemo(
@@ -131,16 +151,15 @@ export default function InstructorDashboardPage() {
     [courses],
   )
   const hiddenCourses = useMemo(() => courses.filter((course) => !course.isVisibleToStudents).length, [courses])
+  const courseProgress = useMemo(() => (selectedCourse ? getCourseProgress(selectedCourse) : 0), [selectedCourse])
+  const nextLesson = useMemo(() => (selectedCourse ? getNextLesson(selectedCourse) : null), [selectedCourse])
 
   function handleCreateCourse(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setCourseError(null)
 
     if (!courseForm.title.trim() || !courseForm.instructor.trim()) {
-      toast({
-        title: "Course details required",
-        description: "Provide at least a title and instructor to create the course entry.",
-        variant: "destructive",
-      })
+      setCourseError("Provide at least a course title and instructor to create the roadmap card.")
       return
     }
 
@@ -150,21 +169,19 @@ export default function InstructorDashboardPage() {
       description: `${courseForm.title} is now in the roadmap. Publish lessons to share it with students soon.`,
     })
     setCourseForm({ title: "", instructor: "", cohort: "", startDate: "" })
+    setCourseError(null)
   }
 
   function handlePublishLesson(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setLessonError(null)
 
     if (!selectedCourse) {
       return
     }
 
     if (!lessonForm.title.trim()) {
-      toast({
-        title: "Lesson title required",
-        description: "Name the lesson before publishing it to the roadmap.",
-        variant: "destructive",
-      })
+      setLessonError("Name the lesson before publishing it to the roadmap.")
       return
     }
 
@@ -184,21 +201,19 @@ export default function InstructorDashboardPage() {
     })
 
     setLessonForm({ title: "", releaseDate: "", status: "published", makeVisible: false })
+    setLessonDialogOpen(false)
   }
 
   function handleScheduleSession(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setSessionError(null)
 
     if (!selectedCourse) {
       return
     }
 
     if (!sessionForm.title.trim() || !sessionForm.date.trim()) {
-      toast({
-        title: "Session details missing",
-        description: "Add a title and date to schedule the live experience.",
-        variant: "destructive",
-      })
+      setSessionError("Add a title and date to schedule the live experience.")
       return
     }
 
@@ -213,21 +228,19 @@ export default function InstructorDashboardPage() {
     })
 
     setSessionForm({ title: "", format: sessionFormats[0] ?? "Live seminar", date: "", time: "" })
+    setSessionDialogOpen(false)
   }
 
   function handleAddResource(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setResourceError(null)
 
     if (!selectedCourse) {
       return
     }
 
     if (!resourceForm.title.trim()) {
-      toast({
-        title: "Resource title required",
-        description: "Give the download a clear name before saving it.",
-        variant: "destructive",
-      })
+      setResourceError("Give the download a clear name before saving it.")
       return
     }
 
@@ -242,6 +255,7 @@ export default function InstructorDashboardPage() {
     })
 
     setResourceForm({ title: "", type: resourceTypes[0] ?? "PDF", size: "" })
+    setResourceDialogOpen(false)
   }
 
   function handleToggleVisibility(course: Course) {
@@ -271,6 +285,21 @@ export default function InstructorDashboardPage() {
         description: `${course.title} is now tracked as ${phase}.`,
       })
     }
+  }
+
+  function handleCourseDragStart(courseId: string) {
+    setDraggingCourseId(courseId)
+  }
+
+  function handleCourseDragEnd() {
+    setDraggingCourseId(null)
+  }
+
+  function handleCourseDrop(phase: Course["phase"]) {
+    if (!draggingCourseId) return
+    handlePhaseChange(draggingCourseId, phase)
+    setSelectedCourseId(draggingCourseId)
+    setDraggingCourseId(null)
   }
 
   return (
@@ -348,463 +377,617 @@ export default function InstructorDashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
-        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
-          <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <CardTitle className="font-headline text-2xl">Course roadmap</CardTitle>
-              <CardDescription>Select a course to review its publishing status and manage visibility.</CardDescription>
-            </div>
-            <Badge variant="outline" className="border-primary/30 text-primary">
-              {courses.length} total courses
-            </Badge>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Cohort</TableHead>
-                  <TableHead>Phase</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Lessons</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {courses.map((course) => {
-                  const publishedLessons = getPublishedLessons(course)
-                  return (
-                    <TableRow
-                      key={course.id}
-                      onClick={() => setSelectedCourseId(course.id)}
-                      className={`cursor-pointer transition-colors ${
-                        selectedCourse?.id === course.id ? "bg-primary/10" : "hover:bg-muted/50"
-                      }`}
-                    >
-                      <TableCell className="font-medium text-foreground">{course.title}</TableCell>
-                      <TableCell>{course.cohort || "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="border-primary/40 text-primary">
-                          {course.phase}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={course.isVisibleToStudents ? "default" : "outline"}
-                          className={course.isVisibleToStudents ? "bg-emerald-600" : "border-border/60"}
-                        >
-                          {course.isVisibleToStudents ? "Published" : "Hidden"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-sm text-muted-foreground">
-                        {publishedLessons.length}/{course.lessons.length}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
-          <CardHeader>
-            <CardTitle className="font-headline text-2xl">Add a new course</CardTitle>
-            <CardDescription>Create the shell so the curriculum team can begin drafting content.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form className="grid gap-4" onSubmit={handleCreateCourse}>
-              <div className="grid gap-2">
-                <Label htmlFor="course-title">Course title</Label>
-                <Input
-                  id="course-title"
-                  value={courseForm.title}
-                  onChange={(event) => setCourseForm((prev) => ({ ...prev, title: event.target.value }))}
-                  placeholder="e.g. Tafsir Essentials"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="course-instructor">Instructor</Label>
-                <Input
-                  id="course-instructor"
-                  value={courseForm.instructor}
-                  onChange={(event) => setCourseForm((prev) => ({ ...prev, instructor: event.target.value }))}
-                  placeholder="Lead instructor"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="course-cohort">Cohort</Label>
-                <Input
-                  id="course-cohort"
-                  value={courseForm.cohort}
-                  onChange={(event) => setCourseForm((prev) => ({ ...prev, cohort: event.target.value }))}
-                  placeholder="Cohort name or number"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="course-start">Projected start date</Label>
-                <Input
-                  id="course-start"
-                  value={courseForm.startDate}
-                  onChange={(event) => setCourseForm((prev) => ({ ...prev, startDate: event.target.value }))}
-                  placeholder="e.g. Jun 3, 2024"
-                />
-              </div>
-              <Button type="submit" className="rounded-full">
-                <PlusCircle className="mr-2 h-5 w-5" /> Create course
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-
-      {selectedCourse ? (
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
-            <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <CardTitle className="font-headline text-2xl">{selectedCourse.title}</CardTitle>
-                <CardDescription>
-                  Track lesson progress, control visibility, and manage the learning experience for this cohort.
-                </CardDescription>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => handleToggleVisibility(selectedCourse)}
-                >
-                  {selectedCourse.isVisibleToStudents ? (
-                    <>
-                      <EyeOff className="mr-2 h-4 w-4" /> Hide from students
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="mr-2 h-4 w-4" /> Publish to students
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-full text-red-600 hover:bg-red-50"
-                  onClick={() => handleDeleteCourse(selectedCourse)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> Archive course
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border/50 bg-background/70 p-4">
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                    <span>Phase</span>
-                    <Badge variant="outline" className="border-primary/30 text-primary">
-                      {selectedCourse.phase}
-                    </Badge>
-                  </div>
-                  <Select
-                    value={selectedCourse.phase}
-                    onValueChange={(value) => handlePhaseChange(selectedCourse.id, value as Course["phase"])}
-                  >
-                    <SelectTrigger className="mt-3">
-                      <SelectValue placeholder="Select phase" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {phaseOptions.map((phase) => (
-                        <SelectItem key={phase} value={phase}>
-                          {phase}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+      <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+        <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <CardTitle className="font-headline text-2xl">Roadmap board</CardTitle>
+            <CardDescription>Drag courses between lanes to show the team what is next in the pipeline.</CardDescription>
+          </div>
+          <Badge variant="outline" className="border-primary/30 text-primary">
+            {courses.length} total courses
+          </Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {(["Drafting", "Revision", "Enrollment", "Active"] as const).map((lane) => (
+              <div
+                key={lane}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => handleCourseDrop(lane)}
+                className={`flex min-h-[260px] flex-col gap-3 rounded-2xl border bg-background/60 p-4 transition shadow-sm ${
+                  draggingCourseId ? "border-primary/60 ring-1 ring-primary/30" : "border-border/60"
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                  <span>{lane}</span>
+                  <Badge variant="outline" className="border-border/80">
+                    {courses.filter((course) => course.phase === lane).length}
+                  </Badge>
                 </div>
-                <div className="rounded-2xl border border-border/50 bg-background/70 p-4">
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                    <span>Progress</span>
-                    <Badge variant="outline" className="border-primary/30 text-primary">
-                      {selectedCourse.isVisibleToStudents ? "Student view" : "Internal"}
-                    </Badge>
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold text-foreground">{getCourseProgress(selectedCourse)}%</p>
-                  <p className="text-sm text-muted-foreground">
-                    Based on published lessons completed by the demo student account.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
-                <div className="rounded-2xl border border-border/50 bg-background/70 p-4">
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                    <span>Publishing queue</span>
-                    <Badge variant="outline" className="border-primary/30 text-primary">
-                      {selectedCourse.lessons.length} lessons
-                    </Badge>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    {selectedCourse.lessons
-                      .slice()
-                      .sort((a, b) => a.order - b.order)
-                      .map((lesson) => (
+                <Separator className="bg-border/70" />
+                <div className="space-y-3">
+                  {courses
+                    .filter((course) => course.phase === lane)
+                    .map((course) => {
+                      const publishedLessons = getPublishedLessons(course)
+                      return (
                         <div
-                          key={lesson.id}
-                          className="flex items-start justify-between rounded-xl border border-border/40 bg-white/80 p-3"
+                          key={course.id}
+                          draggable
+                          onDragStart={() => handleCourseDragStart(course.id)}
+                          onDragEnd={handleCourseDragEnd}
+                          onClick={() => setSelectedCourseId(course.id)}
+                          className={`cursor-grab rounded-xl border bg-white/90 p-3 text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                            selectedCourse?.id === course.id ? "border-primary/40 ring-1 ring-primary/30" : "border-border/60"
+                          }`}
                         >
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{lesson.title}</p>
-                            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                              {lesson.status === "published" ? "Published" : lesson.status === "ready" ? "Ready" : "Draft"}
-                              {lesson.releaseDate ? ` • ${lesson.releaseDate}` : ""}
-                            </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-semibold text-foreground">{course.title}</p>
+                            <Badge variant="outline" className="border-primary/30 text-primary">
+                              {course.cohort || "No cohort"}
+                            </Badge>
                           </div>
-                          {selectedCourse.completedLessonIds.includes(lesson.id) ? (
-                            <BadgeCheck className="h-5 w-5 text-emerald-600" />
-                          ) : null}
+                          <div className="mt-1 flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                            <span>
+                              {publishedLessons.length}/{course.lessons.length} published
+                            </span>
+                            <span>{course.isVisibleToStudents ? "Published" : "Hidden"}</span>
+                          </div>
                         </div>
-                      ))}
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border/50 bg-background/70 p-4">
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                    <span>Next student lesson</span>
-                    <Badge variant="outline" className="border-primary/30 text-primary">
-                      Demo portal
-                    </Badge>
-                  </div>
-                  {getNextLesson(selectedCourse) ? (
-                    <div className="mt-4 space-y-3">
-                      <p className="text-sm font-semibold text-foreground">{getNextLesson(selectedCourse)?.title}</p>
-                      <p className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                        <CalendarClock className="h-4 w-4" />
-                        {getNextLesson(selectedCourse)?.releaseDate ?? "Release date TBC"}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="mt-4 text-sm text-muted-foreground">
-                      Publish a lesson to set the next milestone for learners.
+                      )
+                    })}
+                  {!courses.some((course) => course.phase === lane) && (
+                    <p className="rounded-lg border border-dashed border-border/60 p-3 text-xs text-muted-foreground">
+                      Drop a course here to track it as {lane.toLowerCase()}.
                     </p>
                   )}
                 </div>
               </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <form className="space-y-3 rounded-2xl border border-primary/30 bg-primary/5 p-4" onSubmit={handlePublishLesson}>
-                  <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-                    <BookOpenCheck className="h-4 w-4" /> Publish lesson
-                  </h3>
-                  <div className="grid gap-2">
-                    <Label htmlFor="lesson-title">Lesson title</Label>
-                    <Input
-                      id="lesson-title"
-                      value={lessonForm.title}
-                      onChange={(event) => setLessonForm((prev) => ({ ...prev, title: event.target.value }))}
-                      placeholder="e.g. Battle of Badr insights"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="lesson-release">Release date</Label>
-                    <Input
-                      id="lesson-release"
-                      value={lessonForm.releaseDate}
-                      onChange={(event) => setLessonForm((prev) => ({ ...prev, releaseDate: event.target.value }))}
-                      placeholder="e.g. Apr 28, 2024"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="lesson-status">Status</Label>
-                    <Select
-                      value={lessonForm.status}
-                      onValueChange={(value) => setLessonForm((prev) => ({ ...prev, status: value as LessonStatus }))}
-                    >
-                      <SelectTrigger id="lesson-status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="ready">Ready for review</SelectItem>
-                        <SelectItem value="draft">Draft only</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Checkbox
-                      checked={lessonForm.makeVisible}
-                      onCheckedChange={(checked) =>
-                        setLessonForm((prev) => ({ ...prev, makeVisible: Boolean(checked) }))
-                      }
-                    />
-                    Make course visible to students if it is hidden
-                  </label>
-                  <Button type="submit" className="rounded-full">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Save lesson
-                  </Button>
-                </form>
+      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.1fr]">
+        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+          <CardHeader className="flex flex-col gap-3">
+            <CardTitle className="font-headline text-2xl">Workflow rail</CardTitle>
+            <CardDescription>
+              Navigate between course, lesson, session, and resource steps while keeping a live student preview on the right.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Focus course</Label>
+              <Select value={selectedCourse?.id} onValueChange={setSelectedCourseId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                <form className="space-y-3 rounded-2xl border border-border/50 bg-background/80 p-4" onSubmit={handleScheduleSession}>
-                  <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-foreground">
-                    <CalendarClock className="h-4 w-4" /> Schedule live session
-                  </h3>
-                  <div className="grid gap-2">
-                    <Label htmlFor="session-title">Session title</Label>
-                    <Input
-                      id="session-title"
-                      value={sessionForm.title}
-                      onChange={(event) => setSessionForm((prev) => ({ ...prev, title: event.target.value }))}
-                      placeholder="e.g. Live Q&A circle"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="session-format">Format</Label>
-                    <Select
-                      value={sessionForm.format}
-                      onValueChange={(value) => setSessionForm((prev) => ({ ...prev, format: value }))}
-                    >
-                      <SelectTrigger id="session-format">
-                        <SelectValue placeholder="Select format" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sessionFormats.map((format) => (
-                          <SelectItem key={format} value={format}>
-                            {format}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="session-date">Date</Label>
-                    <Input
-                      id="session-date"
-                      value={sessionForm.date}
-                      onChange={(event) => setSessionForm((prev) => ({ ...prev, date: event.target.value }))}
-                      placeholder="e.g. Apr 30, 2024"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="session-time">Time</Label>
-                    <Input
-                      id="session-time"
-                      value={sessionForm.time}
-                      onChange={(event) => setSessionForm((prev) => ({ ...prev, time: event.target.value }))}
-                      placeholder="e.g. 7:00 PM GMT"
-                    />
-                  </div>
-                  <Button type="submit" className="rounded-full">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Schedule session
-                  </Button>
-                </form>
-              </div>
-
-              <form className="space-y-3 rounded-2xl border border-border/50 bg-background/80 p-4" onSubmit={handleAddResource}>
-                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-foreground">
-                  <BadgeCheck className="h-4 w-4" /> Upload resource
-                </h3>
-                <div className="grid gap-2">
-                  <Label htmlFor="resource-title">Resource title</Label>
-                  <Input
-                    id="resource-title"
-                    value={resourceForm.title}
-                    onChange={(event) => setResourceForm((prev) => ({ ...prev, title: event.target.value }))}
-                    placeholder="e.g. Workbook PDF"
-                    required
-                  />
+            {selectedCourse ? (
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-background/80 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="border-primary/30 text-primary">
+                    {selectedCourse.phase}
+                  </Badge>
+                  <Badge variant="outline" className={selectedCourse.isVisibleToStudents ? "border-emerald-200 text-emerald-600" : "border-border/70"}>
+                    {selectedCourse.isVisibleToStudents ? "Visible to students" : "Hidden draft"}
+                  </Badge>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="resource-type">Type</Label>
-                  <Select
-                    value={resourceForm.type}
-                    onValueChange={(value) => setResourceForm((prev) => ({ ...prev, type: value }))}
+                <p className="text-lg font-semibold text-foreground">{selectedCourse.title}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedCourse.cohort || "No cohort"} • {selectedCourse.instructor || "Instructor TBD"}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" className="rounded-full" onClick={() => handleToggleVisibility(selectedCourse)}>
+                    {selectedCourse.isVisibleToStudents ? <><EyeOff className="mr-2 h-4 w-4" /> Hide</> : <><Eye className="mr-2 h-4 w-4" /> Publish</>}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full text-red-600 hover:bg-red-50"
+                    onClick={() => handleDeleteCourse(selectedCourse)}
                   >
-                    <SelectTrigger id="resource-type">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {resourceTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Trash2 className="mr-2 h-4 w-4" /> Archive
+                  </Button>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="resource-size">File size (optional)</Label>
-                  <Input
-                    id="resource-size"
-                    value={resourceForm.size}
-                    onChange={(event) => setResourceForm((prev) => ({ ...prev, size: event.target.value }))}
-                    placeholder="e.g. 4.2 MB"
-                  />
+                <Separator className="bg-border/70" />
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                    <span>Course > Lessons > Sessions > Resources</span>
+                    <PanelRight className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-muted-foreground">
+                    {Math.round(courseProgress * 100)}% of content is ready for students. Drag cards on the board to move faster.
+                  </p>
+                  {nextLesson ? (
+                    <p className="rounded-xl bg-white/80 p-3 text-foreground shadow-sm">
+                      Next up: <span className="font-semibold">{nextLesson.title}</span> ({nextLesson.status})
+                    </p>
+                  ) : (
+                    <p className="rounded-xl bg-white/80 p-3 text-muted-foreground shadow-sm">No upcoming lessons yet.</p>
+                  )}
                 </div>
-                <Button type="submit" className="rounded-full">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add resource
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Create a course to start organizing lessons and sessions.</p>
+            )}
 
-          <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl">Live overview</CardTitle>
-              <CardDescription>Snapshot of sessions and resources synced with the student preview.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-2xl border border-border/40 bg-background/70 p-4">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                  <span>Upcoming sessions</span>
-                  <Badge variant="outline" className="border-primary/30 text-primary">
-                    {selectedCourse.sessions.length}
-                  </Badge>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                <span>Quick actions</span>
+                <LayoutList className="h-4 w-4 text-primary" />
+              </div>
+              <div className="grid gap-2">
+                <Button variant="secondary" className="justify-between rounded-xl" onClick={() => setLessonDialogOpen(true)}>
+                  <span className="flex items-center gap-2"><BookOpenCheck className="h-4 w-4" /> Add lesson</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button variant="secondary" className="justify-between rounded-xl" onClick={() => setSessionDialogOpen(true)}>
+                  <span className="flex items-center gap-2"><CalendarClock className="h-4 w-4" /> Schedule session</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button variant="secondary" className="justify-between rounded-xl" onClick={() => setResourceDialogOpen(true)}>
+                  <span className="flex items-center gap-2"><BadgeCheck className="h-4 w-4" /> Upload resource</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {selectedCourse && (
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-gradient-to-br from-white via-background to-primary/5 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                  <Sparkles className="h-4 w-4 text-primary" /> Student preview
                 </div>
-                <div className="mt-3 space-y-3">
-                  {selectedCourse.sessions.length ? (
-                    selectedCourse.sessions.map((session) => (
-                      <div key={session.id} className="rounded-xl border border-border/40 bg-white/80 p-3 text-sm">
-                        <p className="font-semibold text-foreground">{session.title}</p>
-                        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                          {session.format} • {session.date}
-                          {session.time ? ` • ${session.time}` : ""}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No live sessions scheduled yet.</p>
+                <p className="text-lg font-semibold text-foreground">{selectedCourse.title}</p>
+                <p className="text-sm text-muted-foreground">What learners will see next:</p>
+                <div className="flex flex-col gap-2 text-sm">
+                  {selectedCourse.lessons.slice(0, 2).map((lesson) => (
+                    <div key={lesson.id} className="rounded-xl border border-border/50 bg-white/90 p-3 shadow-sm">
+                      <p className="font-medium text-foreground">{lesson.title}</p>
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{lesson.status}</p>
+                    </div>
+                  ))}
+                  {!selectedCourse.lessons.length && (
+                    <p className="rounded-xl border border-dashed border-border/60 p-3 text-muted-foreground">
+                      Publish a lesson to populate the preview.
+                    </p>
                   )}
                 </div>
               </div>
-              <div className="rounded-2xl border border-border/40 bg-background/70 p-4">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                  <span>Resources</span>
-                  <Badge variant="outline" className="border-primary/30 text-primary">
-                    {selectedCourse.resources.length}
-                  </Badge>
-                </div>
-                <div className="mt-3 space-y-3">
-                  {selectedCourse.resources.length ? (
-                    selectedCourse.resources.map((resource) => (
-                      <div key={resource.id} className="rounded-xl border border-border/40 bg-white/80 p-3 text-sm">
-                        <p className="font-semibold text-foreground">{resource.title}</p>
-                        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                          {resource.type}
-                          {resource.size ? ` • ${resource.size}` : ""}
-                        </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+          <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <CardTitle className="font-headline text-2xl">Publishing wizard</CardTitle>
+              <CardDescription>Inline previews update as you type—no more waiting on toasts or tables.</CardDescription>
+            </div>
+            <Badge variant="outline" className="border-primary/30 text-primary">
+              Guided steps
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="course" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="course">Course</TabsTrigger>
+                <TabsTrigger value="lessons">Lessons</TabsTrigger>
+                <TabsTrigger value="sessions">Sessions</TabsTrigger>
+                <TabsTrigger value="resources">Resources</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="course" className="space-y-4">
+                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                  <p className="text-sm text-muted-foreground">Create the course shell. The preview updates as you type.</p>
+                  <form className="mt-4 grid gap-3" onSubmit={handleCreateCourse}>
+                    <div className="grid gap-2">
+                      <Label htmlFor="course-title">Course title</Label>
+                      <Input
+                        id="course-title"
+                        value={courseForm.title}
+                        onChange={(event) => setCourseForm((prev) => ({ ...prev, title: event.target.value }))}
+                        placeholder="e.g. Tafsir Essentials"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="course-instructor">Instructor</Label>
+                      <Input
+                        id="course-instructor"
+                        value={courseForm.instructor}
+                        onChange={(event) => setCourseForm((prev) => ({ ...prev, instructor: event.target.value }))}
+                        placeholder="Lead instructor"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="course-cohort">Cohort</Label>
+                        <Input
+                          id="course-cohort"
+                          value={courseForm.cohort}
+                          onChange={(event) => setCourseForm((prev) => ({ ...prev, cohort: event.target.value }))}
+                          placeholder="Cohort name or number"
+                        />
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No downloads stored for this course yet.</p>
-                  )}
+                      <div className="grid gap-2">
+                        <Label htmlFor="course-start">Projected start date</Label>
+                        <Input
+                          id="course-start"
+                          value={courseForm.startDate}
+                          onChange={(event) => setCourseForm((prev) => ({ ...prev, startDate: event.target.value }))}
+                          placeholder="e.g. Jun 3, 2024"
+                        />
+                      </div>
+                    </div>
+                    {courseError ? <p className="text-sm text-destructive">{courseError}</p> : null}
+                    <div className="flex items-center gap-3">
+                      <Button type="submit" className="rounded-full">
+                        <PlusCircle className="mr-2 h-5 w-5" /> Create course
+                      </Button>
+                      <p className="text-xs text-muted-foreground">Changes are reflected instantly in the preview.</p>
+                    </div>
+                  </form>
                 </div>
+                <div className="rounded-2xl border border-dashed border-primary/40 bg-gradient-to-br from-primary/5 via-white to-white p-4">
+                  <p className="text-xs uppercase tracking-[0.3em] text-primary">Preview</p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">{courseForm.title || "Course title"}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {courseForm.instructor || "Instructor TBD"} • {courseForm.cohort || "Cohort"}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">Starts {courseForm.startDate || "when you set a date"}</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="lessons" className="space-y-4">
+                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Draft a lesson, then publish from the modal.</p>
+                      {lessonError ? <p className="text-sm text-destructive">{lessonError}</p> : null}
+                    </div>
+                    <Button size="sm" className="rounded-full" onClick={() => setLessonDialogOpen(true)}>
+                      <BookOpenCheck className="mr-2 h-4 w-4" /> Launch modal
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Lesson preview</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">{lessonForm.title || "Untitled lesson"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Status: {lessonForm.status} {lessonForm.releaseDate ? `• ${lessonForm.releaseDate}` : ""}
+                    </p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      Course visibility: {lessonForm.makeVisible ? "Publish with this lesson" : "Keep hidden"}
+                    </p>
+                  </div>
+                  <div className="space-y-2 rounded-2xl border border-border/60 bg-background/80 p-4">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      <span>Current lessons</span>
+                      <Badge variant="outline" className="border-primary/30 text-primary">
+                        {selectedCourse?.lessons.length ?? 0}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedCourse?.lessons.length ? (
+                        selectedCourse.lessons.map((lesson) => (
+                          <div key={lesson.id} className="rounded-xl border border-border/50 bg-white/80 p-3 text-sm">
+                            <p className="font-medium text-foreground">{lesson.title}</p>
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{lesson.status}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No lessons yet. Use the modal to add your first one.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="sessions" className="space-y-4">
+                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Collect the details, then schedule via the modal.</p>
+                      {sessionError ? <p className="text-sm text-destructive">{sessionError}</p> : null}
+                    </div>
+                    <Button size="sm" className="rounded-full" onClick={() => setSessionDialogOpen(true)}>
+                      <CalendarClock className="mr-2 h-4 w-4" /> Schedule
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Session preview</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">{sessionForm.title || "Live session"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {sessionForm.format} • {sessionForm.date || "Date TBD"} {sessionForm.time ? `• ${sessionForm.time}` : ""}
+                    </p>
+                  </div>
+                  <div className="space-y-2 rounded-2xl border border-border/60 bg-background/80 p-4">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      <span>Upcoming sessions</span>
+                      <Badge variant="outline" className="border-primary/30 text-primary">
+                        {selectedCourse?.sessions.length ?? 0}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedCourse?.sessions.length ? (
+                        selectedCourse.sessions.map((session) => (
+                          <div key={session.id} className="rounded-xl border border-border/50 bg-white/80 p-3 text-sm">
+                            <p className="font-medium text-foreground">{session.title}</p>
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                              {session.format} • {session.date}
+                              {session.time ? ` • ${session.time}` : ""}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No live experiences scheduled yet.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="resources" className="space-y-4">
+                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Use the modal to store resources with inline validation.</p>
+                      {resourceError ? <p className="text-sm text-destructive">{resourceError}</p> : null}
+                    </div>
+                    <Button size="sm" className="rounded-full" onClick={() => setResourceDialogOpen(true)}>
+                      <BadgeCheck className="mr-2 h-4 w-4" /> Upload
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Resource preview</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">{resourceForm.title || "Download title"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {resourceForm.type} {resourceForm.size ? `• ${resourceForm.size}` : ""}
+                    </p>
+                  </div>
+                  <div className="space-y-2 rounded-2xl border border-border/60 bg-background/80 p-4">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      <span>Resources</span>
+                      <Badge variant="outline" className="border-primary/30 text-primary">
+                        {selectedCourse?.resources.length ?? 0}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedCourse?.resources.length ? (
+                        selectedCourse.resources.map((resource) => (
+                          <div key={resource.id} className="rounded-xl border border-border/50 bg-white/80 p-3 text-sm">
+                            <p className="font-medium text-foreground">{resource.title}</p>
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                              {resource.type}
+                              {resource.size ? ` • ${resource.size}` : ""}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No downloads stored for this course yet.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Dialog open={lessonDialogOpen} onOpenChange={setLessonDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add lesson</DialogTitle>
+            <DialogDescription>Publish lessons with consistent validation messaging.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={handlePublishLesson}>
+            <div className="grid gap-2">
+              <Label htmlFor="modal-lesson-title">Lesson title</Label>
+              <Input
+                id="modal-lesson-title"
+                value={lessonForm.title}
+                onChange={(event) => setLessonForm((prev) => ({ ...prev, title: event.target.value }))}
+                placeholder="e.g. Introduction to tajweed"
+                required
+              />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="modal-lesson-release">Release date</Label>
+                <Input
+                  id="modal-lesson-release"
+                  value={lessonForm.releaseDate}
+                  onChange={(event) => setLessonForm((prev) => ({ ...prev, releaseDate: event.target.value }))}
+                  placeholder="e.g. May 10, 2024"
+                />
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : null}
+              <div className="grid gap-2">
+                <Label htmlFor="modal-lesson-status">Status</Label>
+                <Select
+                  value={lessonForm.status}
+                  onValueChange={(value) => setLessonForm((prev) => ({ ...prev, status: value as LessonStatus }))}
+                >
+                  <SelectTrigger id="modal-lesson-status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="ready">Ready</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="modal-lesson-visibility"
+                checked={lessonForm.makeVisible}
+                onCheckedChange={(checked) =>
+                  setLessonForm((prev) => ({ ...prev, makeVisible: checked === true ? true : false }))
+                }
+              />
+              <Label htmlFor="modal-lesson-visibility" className="text-sm text-muted-foreground">
+                Make course visible to students when this lesson publishes
+              </Label>
+            </div>
+            {lessonError ? <p className="text-sm text-destructive">{lessonError}</p> : null}
+            <DialogFooter className="gap-2 sm:justify-between">
+              <Button type="button" variant="outline" onClick={() => setLessonDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                <PlusCircle className="mr-2 h-4 w-4" /> Add lesson
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={sessionDialogOpen} onOpenChange={setSessionDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Schedule session</DialogTitle>
+            <DialogDescription>Confirm details before sending to the calendar.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={handleScheduleSession}>
+            <div className="grid gap-2">
+              <Label htmlFor="modal-session-title">Session title</Label>
+              <Input
+                id="modal-session-title"
+                value={sessionForm.title}
+                onChange={(event) => setSessionForm((prev) => ({ ...prev, title: event.target.value }))}
+                placeholder="e.g. Live Q&A"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="modal-session-format">Format</Label>
+              <Select
+                value={sessionForm.format}
+                onValueChange={(value) => setSessionForm((prev) => ({ ...prev, format: value }))}
+              >
+                <SelectTrigger id="modal-session-format">
+                  <SelectValue placeholder="Select format" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sessionFormats.map((format) => (
+                    <SelectItem key={format} value={format}>
+                      {format}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="modal-session-date">Date</Label>
+                <Input
+                  id="modal-session-date"
+                  value={sessionForm.date}
+                  onChange={(event) => setSessionForm((prev) => ({ ...prev, date: event.target.value }))}
+                  placeholder="e.g. Apr 30, 2024"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="modal-session-time">Time</Label>
+                <Input
+                  id="modal-session-time"
+                  value={sessionForm.time}
+                  onChange={(event) => setSessionForm((prev) => ({ ...prev, time: event.target.value }))}
+                  placeholder="e.g. 7:00 PM GMT"
+                />
+              </div>
+            </div>
+            {sessionError ? <p className="text-sm text-destructive">{sessionError}</p> : null}
+            <DialogFooter className="gap-2 sm:justify-between">
+              <Button type="button" variant="outline" onClick={() => setSessionDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                <PlusCircle className="mr-2 h-4 w-4" /> Schedule session
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resourceDialogOpen} onOpenChange={setResourceDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Upload resource</DialogTitle>
+            <DialogDescription>Attach downloads with clear messaging.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-3" onSubmit={handleAddResource}>
+            <div className="grid gap-2">
+              <Label htmlFor="modal-resource-title">Resource title</Label>
+              <Input
+                id="modal-resource-title"
+                value={resourceForm.title}
+                onChange={(event) => setResourceForm((prev) => ({ ...prev, title: event.target.value }))}
+                placeholder="e.g. Workbook PDF"
+                required
+              />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="modal-resource-type">Type</Label>
+                <Select
+                  value={resourceForm.type}
+                  onValueChange={(value) => setResourceForm((prev) => ({ ...prev, type: value }))}
+                >
+                  <SelectTrigger id="modal-resource-type">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {resourceTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="modal-resource-size">File size (optional)</Label>
+                <Input
+                  id="modal-resource-size"
+                  value={resourceForm.size}
+                  onChange={(event) => setResourceForm((prev) => ({ ...prev, size: event.target.value }))}
+                  placeholder="e.g. 4.2 MB"
+                />
+              </div>
+            </div>
+            {resourceError ? <p className="text-sm text-destructive">{resourceError}</p> : null}
+            <DialogFooter className="gap-2 sm:justify-between">
+              <Button type="button" variant="outline" onClick={() => setResourceDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                <PlusCircle className="mr-2 h-4 w-4" /> Add resource
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
