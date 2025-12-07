@@ -1,13 +1,26 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { CalendarDays, CheckCircle2, Download, Flame, PlayCircle, Sparkles, Timer } from "lucide-react"
+import {
+  BadgeCheck,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Download,
+  Flame,
+  FolderDown,
+  MessageCircle,
+  Radio,
+  Sparkles,
+  Timer,
+} from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Separator } from "@/components/ui/separator"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { toast } from "@/hooks/use-toast"
 
 import {
@@ -20,10 +33,13 @@ import {
   useAcademyData,
 } from "../_components/academy-data-context"
 
-type Milestone = {
-  label: string
-  value: number
-  target: number
+type TimelineItem = {
+  id: string
+  title: string
+  badge: string
+  meta: string
+  type: "lesson" | "live" | "resource"
+  cta: string
 }
 
 export default function StudentDashboardPage() {
@@ -31,6 +47,8 @@ export default function StudentDashboardPage() {
   const courses = useMemo(() => state.courses.filter((course) => course.isVisibleToStudents), [state.courses])
 
   const [highlightedCourseId, setHighlightedCourseId] = useState<string>(courses[0]?.id ?? "")
+  const [openCourseId, setOpenCourseId] = useState<string | null>(null)
+  const [timelineScope, setTimelineScope] = useState<"today" | "week">("today")
 
   useEffect(() => {
     if (!courses.find((course) => course.id === highlightedCourseId)) {
@@ -46,31 +64,10 @@ export default function StudentDashboardPage() {
   const nextLesson = activeCourse ? getNextLesson(activeCourse) : undefined
   const upcomingSessions = useMemo(() => getUpcomingSessions(courses).slice(0, 6), [courses])
   const resourceLibrary = useMemo(() => getResourceLibrary(courses), [courses])
-
-  const completedLessons = useMemo(
-    () => courses.reduce((total, course) => total + course.completedLessonIds.length, 0),
-    [courses],
-  )
-  const publishedLessons = useMemo(
-    () => courses.reduce((total, course) => total + getPublishedLessons(course).length, 0),
-    [courses],
-  )
-
-  const streakMilestones: Milestone[] = useMemo(
-    () => [
-      {
-        label: "Lessons completed",
-        value: completedLessons,
-        target: Math.max(publishedLessons, 1),
-      },
-      {
-        label: "Courses in progress",
-        value: courses.length,
-        target: Math.max(courses.length + 2, 1),
-      },
-    ],
-    [completedLessons, publishedLessons, courses.length],
-  )
+  const courseResources = useMemo(() => {
+    if (!openCourseId || !activeCourse) return []
+    return resourceLibrary.filter((resource) => resource.courseTitle === activeCourse.title)
+  }, [resourceLibrary, openCourseId, activeCourse])
 
   function handleMarkComplete(course: Course | undefined, lessonId?: string) {
     if (!course || !lessonId) {
@@ -97,278 +94,481 @@ export default function StudentDashboardPage() {
 
   const hasCourses = courses.length > 0
 
+  const timelineItems = useMemo(() => {
+    const liveItems: TimelineItem[] = upcomingSessions.map((session) => ({
+      id: session.id,
+      title: session.title,
+      badge: session.format,
+      meta: session.date,
+      type: "live",
+      cta: "Add reminder",
+    }))
+
+    const lessonItems: TimelineItem[] = courses.map((course) => {
+      const upcomingLesson = getNextLesson(course)
+      return {
+        id: `${course.id}-lesson`,
+        title: upcomingLesson ? upcomingLesson.title : "Instructor drafting next lesson",
+        badge: course.title,
+        meta: upcomingLesson?.releaseDate ?? "Release TBC",
+        type: "lesson",
+        cta: "Resume",
+      }
+    })
+
+    const resourceItems: TimelineItem[] = resourceLibrary.map((resource) => ({
+      id: resource.id,
+      title: resource.title,
+      badge: resource.courseTitle,
+      meta: `${resource.type}${resource.size ? ` • ${resource.size}` : ""}`,
+      type: "resource",
+      cta: "Download",
+    }))
+
+    const todaySlice = [...lessonItems.slice(0, 2), ...liveItems.slice(0, 1), ...resourceItems.slice(0, 1)]
+    const weekSlice = [...lessonItems, ...liveItems, ...resourceItems].slice(0, 6)
+
+    return timelineScope === "today" ? todaySlice : weekSlice
+  }, [courses, upcomingSessions, resourceLibrary, timelineScope])
+
   return (
-    <div className="container mx-auto max-w-5xl space-y-8 px-6">
-      <div className="rounded-3xl border border-primary/20 bg-white/95 p-10 shadow-xl shadow-primary/10">
-        <Badge variant="outline" className="border-primary/40 text-primary">
-          Synced student preview
-        </Badge>
-        <h1 className="mt-4 font-headline text-4xl font-bold tracking-tight text-foreground">Welcome back, demo learner</h1>
-        <p className="mt-3 text-lg text-muted-foreground">
-          This dashboard mirrors the data managed in the instructor panel. Use it to confirm that course launches, lesson
-          releases, and resources appear exactly as you expect before wiring up Firebase.
-        </p>
-      </div>
+    <div className="flex min-h-screen bg-muted/20">
+      <aside className="sticky top-0 hidden h-screen w-60 flex-col border-r border-border/60 bg-white/90 px-4 py-6 lg:flex">
+        <div className="flex items-center gap-3 rounded-2xl bg-primary/10 px-3 py-2 text-primary">
+          <Sparkles className="h-5 w-5" />
+          <div className="text-sm font-semibold">Student preview</div>
+        </div>
+        <nav className="mt-8 space-y-2">
+          {[{ label: "Courses", icon: BookOpen }, { label: "Timeline", icon: CalendarDays }, { label: "Live", icon: Radio }, { label: "Resources", icon: FolderDown }, { label: "Messages", icon: MessageCircle }].map((item) => (
+            <button
+              key={item.label}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+            >
+              <item.icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <Separator className="my-6" />
+        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground">
+          Switch into instructor view to add lessons, publish live sessions, and upload resources.
+        </div>
+      </aside>
 
-      {hasCourses ? (
-        <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-          <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
-            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle className="font-headline text-2xl">Your courses</CardTitle>
-                <CardDescription>Select a course to review your next lesson and progress.</CardDescription>
-              </div>
-              <Badge variant="outline" className="border-primary/30 text-primary">
-                Student account: student@tareeqalhaqq.com
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Course</TableHead>
-                    <TableHead>Instructor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Progress</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {courses.map((course) => (
-                    <TableRow
-                      key={course.id}
-                      onClick={() => setHighlightedCourseId(course.id)}
-                      className={`cursor-pointer transition-colors ${
-                        highlightedCourseId === course.id ? "bg-primary/10" : "hover:bg-muted/50"
-                      }`}
-                    >
-                      <TableCell className="font-medium text-foreground">{course.title}</TableCell>
-                      <TableCell>{course.instructor}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="border-primary/40 text-primary">
-                          {course.phase === "Active" ? "In progress" : course.phase}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-primary">
-                        {getCourseProgress(course)}%
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {activeCourse ? (
-                <div className="rounded-2xl border border-border/40 bg-background/70 p-4">
-                  <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                    <span>Next lesson</span>
-                    <Badge variant="outline" className="border-primary/30 text-primary">
-                      {activeCourse.phase === "Active" ? "Live" : activeCourse.phase}
-                    </Badge>
-                  </div>
-                  <h3 className="mt-3 font-headline text-xl text-foreground">
-                    {nextLesson ? nextLesson.title : "Waiting for the instructor"}
-                  </h3>
-                  <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4" /> {nextLesson?.releaseDate ?? "Release date to be confirmed"}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <Timer className="h-4 w-4" /> {getCourseProgress(activeCourse)}% complete
-                    </span>
-                  </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <Button
-                      className="rounded-full"
-                      onClick={() => handleMarkComplete(activeCourse, nextLesson?.id)}
-                    >
-                      <CheckCircle2 className="mr-2 h-4 w-4" /> Mark lesson complete
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="rounded-full"
-                      onClick={() =>
-                        toast({
-                          title: "Message sent",
-                          description: "Instructor messaging will connect through Firebase when available.",
-                        })
-                      }
-                    >
-                      Message instructor
-                    </Button>
-                  </div>
+      <div className="flex-1">
+        <div className="border-b border-border/60 bg-white/80 px-6 py-4 backdrop-blur">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Today</p>
+              <h1 className="font-headline text-3xl font-bold text-foreground">Welcome back, demo learner</h1>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-primary/5 p-1 text-sm">
+              {(["today", "week"] as const).map((range) => (
+                <Button
+                  key={range}
+                  size="sm"
+                  variant={timelineScope === range ? "default" : "ghost"}
+                  className="rounded-full"
+                  onClick={() => setTimelineScope(range)}
+                >
+                  {range === "today" ? "Today" : "This week"}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {timelineItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-white/90 p-3 shadow-sm shadow-primary/5"
+              >
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                  <Badge variant="outline" className="border-primary/30 text-primary">
+                    {item.type === "live" ? "Live" : item.type === "resource" ? "Download" : "Lesson"}
+                  </Badge>
+                  <span>{item.badge}</span>
                 </div>
-              ) : null}
-            </CardContent>
-          </Card>
+                <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" /> {item.meta}
+                  </span>
+                  <Button
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() =>
+                      item.type === "resource"
+                        ? handleDownload(item.title)
+                        : toast({
+                            title: `${item.cta} queued`,
+                            description: "These actions will sync to Firebase when connected.",
+                          })
+                    }
+                  >
+                    {item.cta}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-          <div className="grid gap-6">
+        <main className="space-y-8 px-6 py-8">
+          {hasCourses ? (
+            <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Courses</p>
+                    <h2 className="font-headline text-2xl">Choose where to focus</h2>
+                  </div>
+                  <Badge variant="outline" className="border-primary/30 text-primary">
+                    Student account: student@tareeqalhaqq.com
+                  </Badge>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {courses.map((course) => (
+                    <Card
+                      key={course.id}
+                      className={`group relative overflow-hidden border border-border/60 shadow-md shadow-primary/5 transition ${highlightedCourseId === course.id ? "ring-2 ring-primary/60" : "hover:border-primary/40"}`}
+                    >
+                      <button
+                        className="flex h-full w-full flex-col text-left"
+                        onClick={() => {
+                          setHighlightedCourseId(course.id)
+                          setOpenCourseId(course.id)
+                        }}
+                      >
+                        <div className="relative h-28 bg-gradient-to-r from-primary/80 via-primary/70 to-primary/40">
+                          <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-primary">
+                            {course.cohort}
+                          </div>
+                          <div className="absolute bottom-4 left-4 rounded-full bg-black/20 px-3 py-1 text-xs text-white">
+                            {course.phase === "Active" ? "In progress" : course.phase}
+                          </div>
+                        </div>
+                        <CardHeader className="space-y-1 pb-2">
+                          <CardTitle className="font-headline text-xl">{course.title}</CardTitle>
+                          <CardDescription>{course.instructor}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3 pt-0">
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <span>{getCourseProgress(course)}% complete</span>
+                            <Badge variant="outline" className="border-primary/40 text-primary">
+                              {course.phase}
+                            </Badge>
+                          </div>
+                          <Progress value={getCourseProgress(course)} />
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Next lesson</span>
+                            <span className="flex items-center gap-1">
+                              <Timer className="h-4 w-4" /> {getNextLesson(course)?.title ?? "Waiting for instructor"}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </button>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+                <CardHeader className="flex items-start justify-between gap-3">
+                  <div>
+                    <CardTitle className="font-headline text-xl">Focus mode</CardTitle>
+                    <CardDescription>
+                      Keep the active course front and center with quick lesson controls and instructor messaging.
+                    </CardDescription>
+                  </div>
+                  <BadgeCheck className="h-6 w-6 text-primary" />
+                </CardHeader>
+                {activeCourse ? (
+                  <CardContent className="space-y-4">
+                    <div className="overflow-hidden rounded-2xl bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40 p-5 text-white shadow-inner">
+                      <p className="text-xs uppercase tracking-[0.3em] text-white/80">Active course</p>
+                      <h3 className="mt-1 font-headline text-2xl font-semibold">{activeCourse.title}</h3>
+                      <p className="text-sm text-white/80">Guided by {activeCourse.instructor}</p>
+                      <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                        <Badge variant="outline" className="border-white/50 bg-white/10 text-white">
+                          Cohort {activeCourse.cohort}
+                        </Badge>
+                        <Badge variant="outline" className="border-white/50 bg-white/10 text-white">
+                          {activeCourse.phase}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-border/50 bg-background/70 p-4">
+                      <div className="flex items-center justify-between text-sm font-semibold text-foreground">
+                        <span>Lesson list</span>
+                        <span className="text-muted-foreground">{getPublishedLessons(activeCourse).length} published</span>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {getPublishedLessons(activeCourse).map((lesson) => (
+                          <div
+                            key={lesson.id}
+                            className="flex items-center justify-between rounded-xl border border-border/40 bg-white/80 px-3 py-2 text-sm"
+                          >
+                            <span className="flex items-center gap-2">
+                              <CheckCircle2
+                                className={`h-4 w-4 ${activeCourse.completedLessonIds.includes(lesson.id) ? "text-primary" : "text-muted-foreground"}`}
+                              />
+                              {lesson.title}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{lesson.releaseDate ?? "Date TBC"}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <Button className="rounded-full" onClick={() => handleMarkComplete(activeCourse, nextLesson?.id)}>
+                          <CheckCircle2 className="mr-2 h-4 w-4" /> Mark next lesson complete
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="rounded-full"
+                          onClick={() =>
+                            toast({
+                              title: "Message sent",
+                              description: "Instructor messaging will connect through Firebase when available.",
+                            })
+                          }
+                        >
+                          <MessageCircle className="mr-2 h-4 w-4" /> Message instructor
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                ) : (
+                  <CardContent className="text-sm text-muted-foreground">
+                    Select a course to enter focus mode.
+                  </CardContent>
+                )}
+              </Card>
+            </div>
+          ) : (
             <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
               <CardHeader>
-                <CardTitle className="font-headline text-xl">Momentum</CardTitle>
-                <CardDescription>These numbers update as you progress through published lessons.</CardDescription>
+                <CardTitle className="font-headline text-2xl">No courses yet</CardTitle>
+                <CardDescription>
+                  Ask your instructor to publish a course from the admin workspace. It will appear here immediately once created.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {streakMilestones.map((milestone) => (
-                  <div key={milestone.label} className="rounded-2xl border border-border/40 bg-background/70 p-4">
-                    <div className="flex items-center justify-between text-sm font-semibold text-foreground">
-                      <span>{milestone.label}</span>
-                      <span>
-                        {milestone.value}/{milestone.target}
-                      </span>
-                    </div>
-                    <Progress value={Math.min((milestone.value / milestone.target) * 100, 100)} />
-                  </div>
-                ))}
-                <div className="rounded-2xl border border-primary/40 bg-primary/5 p-4 text-sm text-primary">
-                  <Sparkles className="mb-2 h-4 w-4" />
-                  Complete newly published lessons to unlock surprise rewards once Firebase achievements go live.
+            </Card>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+            <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+              <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle className="font-headline text-2xl">Upcoming sessions</CardTitle>
+                  <CardDescription>All events are populated from the instructor control center.</CardDescription>
                 </div>
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() =>
+                    toast({
+                      title: "Calendar sync coming soon",
+                      description: "Calendar exports will connect to Firebase once the integration is ready.",
+                    })
+                  }
+                >
+                  Sync to calendar
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {upcomingSessions.length ? (
+                  upcomingSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-background/80 p-4 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                          <span>{session.courseTitle}</span>
+                          <Badge variant="outline" className="border-primary/30 text-primary">
+                            {session.format}
+                          </Badge>
+                        </div>
+                        <p className="text-base font-semibold text-foreground">{session.title}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <CalendarDays className="h-4 w-4" />
+                          {session.date}
+                          {session.time ? ` • ${session.time}` : ""}
+                        </div>
+                      </div>
+                      <Button
+                        className="self-start rounded-full"
+                        onClick={() =>
+                          toast({
+                            title: "Reminder saved",
+                            description: "Notifications will trigger automatically once Firebase Cloud Messaging is live.",
+                          })
+                        }
+                      >
+                        Add reminder
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    There are no live sessions planned yet. When the instructor schedules one, it will show up here.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
             <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
               <CardHeader>
-                <CardTitle className="font-headline text-xl">Quick actions</CardTitle>
-                <CardDescription>Interactive buttons that call the same logic the production app will use.</CardDescription>
+                <CardTitle className="font-headline text-xl">Resource library</CardTitle>
+                <CardDescription>Downloads flow directly from the instructor&apos;s uploads.</CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-3">
-                <Button
-                  className="justify-start gap-3 rounded-full"
-                  onClick={() => handleMarkComplete(activeCourse, nextLesson?.id)}
-                >
-                  <CheckCircle2 className="h-5 w-5" /> Mark latest lesson complete
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-start gap-3 rounded-full"
-                  onClick={() =>
-                    toast({
-                      title: "Feedback requested",
-                      description: "Instructors will respond through Firebase messaging once connected.",
-                    })
-                  }
-                >
-                  <Flame className="h-5 w-5 text-primary" /> Request instructor feedback
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-start gap-3 rounded-full"
-                  onClick={() =>
-                    toast({
-                      title: "Question queued",
-                      description: "Live Q&A submissions will sync to the backend integration soon.",
-                    })
-                  }
-                >
-                  <PlayCircle className="h-5 w-5 text-primary" /> Submit a question for the live Q&amp;A
-                </Button>
+              <CardContent className="space-y-3">
+                {resourceLibrary.length ? (
+                  resourceLibrary.map((resource) => (
+                    <div
+                      key={resource.id}
+                      className="flex items-center justify-between rounded-2xl border border-border/40 bg-background/70 p-4"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{resource.title}</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                          {resource.type} • {resource.courseTitle}
+                          {resource.size ? ` • ${resource.size}` : ""}
+                        </p>
+                      </div>
+                      <Button variant="outline" className="rounded-full" onClick={() => handleDownload(resource.title)}>
+                        <Download className="mr-2 h-4 w-4" /> Get resource
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Resources uploaded in the admin workspace will appear here for quick download.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
-        </div>
-      ) : (
-        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
-          <CardHeader>
-            <CardTitle className="font-headline text-2xl">No courses yet</CardTitle>
-            <CardDescription>
-              Ask your instructor to publish a course from the admin workspace. It will appear here immediately once created.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+        </main>
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
-          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <CardTitle className="font-headline text-2xl">Upcoming sessions</CardTitle>
-              <CardDescription>All events are populated from the instructor control center.</CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              className="rounded-full"
-              onClick={() =>
-                toast({
-                  title: "Calendar sync coming soon",
-                  description: "Calendar exports will connect to Firebase once the integration is ready.",
-                })
-              }
-            >
-              Sync to calendar
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {upcomingSessions.length ? (
-              upcomingSessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-background/80 p-4 md:flex-row md:items-center md:justify-between"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                      <span>{session.courseTitle}</span>
-                      <Badge variant="outline" className="border-primary/30 text-primary">
-                        {session.format}
-                      </Badge>
-                    </div>
-                    <p className="text-base font-semibold text-foreground">{session.title}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CalendarDays className="h-4 w-4" />
-                      {session.date}
-                      {session.time ? ` • ${session.time}` : ""}
-                    </div>
-                  </div>
+      <Sheet open={!!openCourseId} onOpenChange={(open) => !open && setOpenCourseId(null)}>
+        <SheetContent className="w-full overflow-y-auto border-l border-border/60 sm:max-w-xl">
+          {openCourseId && activeCourse ? (
+            <div className="space-y-6">
+              <SheetHeader>
+                <SheetTitle className="font-headline text-2xl">{activeCourse.title}</SheetTitle>
+                <SheetDescription className="flex items-center gap-2 text-sm">
+                  Guided by {activeCourse.instructor}
+                  <Badge variant="outline" className="border-primary/40 text-primary">
+                    {activeCourse.phase}
+                  </Badge>
+                </SheetDescription>
+              </SheetHeader>
+
+              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                  <span>Next lesson</span>
+                  <Badge variant="outline" className="border-primary/30 text-primary">
+                    {activeCourse.phase === "Active" ? "Live" : activeCourse.phase}
+                  </Badge>
+                </div>
+                <h3 className="mt-2 font-headline text-xl text-foreground">
+                  {nextLesson ? nextLesson.title : "Waiting for the instructor"}
+                </h3>
+                <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" /> {nextLesson?.releaseDate ?? "Release date to be confirmed"}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Timer className="h-4 w-4" /> {getCourseProgress(activeCourse)}% complete
+                  </span>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Button className="rounded-full" onClick={() => handleMarkComplete(activeCourse, nextLesson?.id)}>
+                    <CheckCircle2 className="mr-2 h-4 w-4" /> Mark lesson complete
+                  </Button>
                   <Button
-                    className="self-start rounded-full"
+                    variant="outline"
+                    className="rounded-full"
                     onClick={() =>
                       toast({
-                        title: "Reminder saved",
-                        description: "Notifications will trigger automatically once Firebase Cloud Messaging is live.",
+                        title: "Message sent",
+                        description: "Instructor messaging will connect through Firebase when available.",
                       })
                     }
                   >
-                    Add reminder
+                    Message instructor
                   </Button>
                 </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                There are no live sessions planned yet. When the instructor schedules one, it will show up here.
-              </p>
-            )}
-          </CardContent>
-        </Card>
+              </div>
 
-        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
-          <CardHeader>
-            <CardTitle className="font-headline text-xl">Resource library</CardTitle>
-            <CardDescription>Downloads flow directly from the instructor&apos;s uploads.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {resourceLibrary.length ? (
-              resourceLibrary.map((resource) => (
-                <div
-                  key={resource.id}
-                  className="flex items-center justify-between rounded-2xl border border-border/40 bg-background/70 p-4"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{resource.title}</p>
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                      {resource.type} • {resource.courseTitle}
-                      {resource.size ? ` • ${resource.size}` : ""}
-                    </p>
-                  </div>
-                  <Button variant="outline" className="rounded-full" onClick={() => handleDownload(resource.title)}>
-                    <Download className="mr-2 h-4 w-4" /> Get resource
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-foreground">Shortcuts</h4>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Button variant="outline" className="justify-start rounded-xl" onClick={() => handleMarkComplete(activeCourse, nextLesson?.id)}>
+                    <CheckCircle2 className="mr-2 h-4 w-4 text-primary" /> Catch up on lessons
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="justify-start rounded-xl"
+                    onClick={() =>
+                      toast({
+                        title: "Live access queued",
+                        description: "Live session links will appear here when scheduled.",
+                      })
+                    }
+                  >
+                    <Radio className="mr-2 h-4 w-4 text-primary" /> Join live
+                  </Button>
+                  <Button variant="outline" className="justify-start rounded-xl" onClick={() => handleDownload("Top resources")}>
+                    <FolderDown className="mr-2 h-4 w-4 text-primary" /> Download pack
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="justify-start rounded-xl"
+                    onClick={() =>
+                      toast({
+                        title: "Feedback requested",
+                        description: "Instructors will respond through Firebase messaging once connected.",
+                      })
+                    }
+                  >
+                    <Flame className="mr-2 h-4 w-4 text-primary" /> Ask for feedback
                   </Button>
                 </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Resources uploaded in the admin workspace will appear here for quick download.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-foreground">Resources</h4>
+                {courseResources.length ? (
+                  courseResources.map((resource) => (
+                    <div
+                      key={resource.id}
+                      className="flex items-center justify-between rounded-2xl border border-border/40 bg-background/70 p-3"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{resource.title}</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                          {resource.type}
+                          {resource.size ? ` • ${resource.size}` : ""}
+                        </p>
+                      </div>
+                      <Button variant="outline" className="rounded-full" onClick={() => handleDownload(resource.title)}>
+                        <Download className="mr-2 h-4 w-4" /> Get resource
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Resources uploaded in the admin workspace will appear here.</p>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
