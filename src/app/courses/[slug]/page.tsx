@@ -316,6 +316,8 @@ const sharedWorkspaceExtensions: Record<string, Partial<Workspace>> = {
   },
 };
 
+export const dynamic = "force-static";
+
 export function generateStaticParams() {
   const catalogSlugs = Object.keys(workspaceCatalog);
   const sharedSlugs = Object.keys(sharedWorkspaceExtensions);
@@ -358,8 +360,8 @@ function CommentThreadView({ comment, depth = 0 }: { comment: CommentThread; dep
   );
 }
 
-export default async function CourseWorkspacePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default function CourseWorkspacePage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   const workspace = getWorkspace(slug);
 
   if (!workspace) {
