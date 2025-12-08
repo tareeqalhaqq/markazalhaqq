@@ -168,8 +168,10 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
   )
 }
 
+export const dynamic = "force-dynamic"
+
 export default async function CoursesPage() {
-  const courses = await getPublishedCourses()
+  const { courses, error: loadError } = await getPublishedCourses()
   const lastUpdated = courses.reduce<Date | null>((latest, course) => {
     const current = coerceDate(course.updatedAt ?? null)
     if (!current) return latest
@@ -180,6 +182,7 @@ export default async function CoursesPage() {
   }, null)
 
   const hasCourses = courses.length > 0
+  const showEmptyState = !hasCourses && !loadError
 
   return (
     <div className="space-y-section pb-section">
@@ -218,7 +221,17 @@ export default async function CoursesPage() {
           ) : null}
         </div>
 
-        {!hasCourses ? (
+        {loadError ? (
+          <Alert variant="destructive" className="mt-6">
+            <AlertTitle>We couldn&apos;t load courses</AlertTitle>
+            <AlertDescription>
+              Live data from Firestore is temporarily unavailable (often because required indexes are still being created).
+              We&apos;ll display the catalog as soon as it becomes reachable.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {showEmptyState ? (
           <Alert className="mt-6 border-amber-200 bg-amber-50 text-amber-900">
             <AlertTitle>Courses are on the way</AlertTitle>
             <AlertDescription>
