@@ -1,0 +1,3 @@
+/_next/static/*   /_next/static/:splat   200
+/_next/image*     /_next/image/:splat    200
+/*                /                      200
