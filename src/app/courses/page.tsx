@@ -187,10 +187,8 @@ export default async function CoursesPage() {
         eyebrow="Academy library"
         title="Courses curated for serious seekers"
         description="Every course below is powered directly from the academy database so published updates appear instantly."
-        actions={[
-          { label: "View all courses", href: "#catalog", primary: true },
-          { label: "How we teach", href: "#pillars" },
-        ]}
+        primaryAction={{ label: "View all courses", href: "#catalog" }}
+        secondaryAction={{ label: "How we teach", href: "#pillars" }}
       />
 
       <Section id="pillars">
