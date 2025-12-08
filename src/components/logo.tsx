@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 type LogoProps = {
   className?: string;
@@ -6,14 +6,12 @@ type LogoProps = {
 
 export function Logo({ className }: LogoProps) {
   return (
-    <Image
-      src="/logo-placeholder.svg"
-      alt="Markaz al-Haqq logo placeholder"
-      width={160}
-      height={48}
-      sizes="160px"
-      className={className}
-      priority
-    />
+    <div
+      role="img"
+      aria-label="Markaz al-Haqq"
+      className={cn("inline-block h-12 w-[160px]", className)}
+    >
+      <span className="sr-only">Markaz al-Haqq</span>
+    </div>
   );
 }
