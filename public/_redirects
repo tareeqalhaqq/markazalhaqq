@@ -1,3 +1,4 @@
 /_next/static/*   /_next/static/:splat   200
 /_next/image*     /_next/image/:splat    200
+https://academy.tareeqalhaqq.org/*   /academy/:splat    301
 /*                /                      200
