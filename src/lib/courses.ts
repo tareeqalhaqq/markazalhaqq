@@ -17,6 +17,8 @@ import type { AcademyCourse } from "./academy-data"
 
 export type Course = AcademyCourse & { id: string; updatedAt?: Timestamp | Date | string | null }
 
+export type PublishedCoursesResult = { courses: Course[]; error?: string }
+
 function mapCourse(snapshot: QueryDocumentSnapshot | DocumentSnapshot): Course {
   const data = snapshot.data() as AcademyCourse
   return { id: snapshot.id, ...data }
@@ -37,22 +39,24 @@ function coerceDate(value: Timestamp | Date | string | null | undefined) {
   return null
 }
 
-export async function getPublishedCourses(): Promise<Course[]> {
+export async function getPublishedCourses(): Promise<PublishedCoursesResult> {
   const coursesQuery = query(collection(db, "courses"), where("status", "in", ["active", "upcoming"]))
 
   try {
     const snapshot = await getDocs(coursesQuery)
-    return snapshot.docs
-      .map((doc) => mapCourse(doc))
-      .sort((a, b) => {
-        const aDate = coerceDate(a.updatedAt)?.getTime() ?? 0
-        const bDate = coerceDate(b.updatedAt)?.getTime() ?? 0
-        return bDate - aDate
-      })
+    return {
+      courses: snapshot.docs
+        .map((doc) => mapCourse(doc))
+        .sort((a, b) => {
+          const aDate = coerceDate(a.updatedAt)?.getTime() ?? 0
+          const bDate = coerceDate(b.updatedAt)?.getTime() ?? 0
+          return bDate - aDate
+        }),
+    }
   } catch (error) {
     const firestoreError = error as FirestoreError
     console.error("Failed to fetch published courses", firestoreError)
-    return []
+    return { courses: [], error: firestoreError.message }
   }
 }
 
