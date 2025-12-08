@@ -1,2 +1,4 @@
-# Exclude Next.js build cache to keep assets under the Workers size limit
-.next/cache/
+# Exclude build cache and pack files from asset uploads
+.next/cache
+.next/cache/**
+**/*.pack
