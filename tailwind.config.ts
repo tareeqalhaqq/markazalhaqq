@@ -16,6 +16,20 @@ export default {
       },
     },
     extend: {
+      spacing: {
+        gutter: '1.5rem',
+        section: '5.5rem',
+        'section-lg': '6.75rem',
+        'section-sm': '4rem',
+        card: '1.25rem',
+      },
+      fontSize: {
+        'display-3': ['3.75rem', {lineHeight: '1.05', letterSpacing: '-0.035em'}],
+        'display-2': ['3rem', {lineHeight: '1.08', letterSpacing: '-0.03em'}],
+        'display-1': ['2.4rem', {lineHeight: '1.1', letterSpacing: '-0.02em'}],
+        lead: ['1.125rem', {lineHeight: '1.75'}],
+        eyebrow: ['0.75rem', {lineHeight: '1.4', letterSpacing: '0.3em'}],
+      },
       fontFamily: {
         body: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         headline: ['"Playfair Display"', 'serif'],
@@ -74,9 +88,18 @@ export default {
         },
       },
       borderRadius: {
+        pill: '999px',
+        section: '2.5rem',
+        card: '1.75rem',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      backgroundImage: {
+        'sok-radial':
+          'radial-gradient(120% 120% at 15% 10%, rgba(99,102,241,0.12) 0%, transparent 55%), radial-gradient(140% 140% at 85% 0%, rgba(234,179,8,0.12) 0%, transparent 60%)',
+        'sok-sheen':
+          'linear-gradient(135deg, rgba(15,23,42,0.03) 0%, rgba(99,102,241,0.07) 50%, rgba(15,23,42,0.02) 100%)',
       },
       keyframes: {
         'accordion-down': {
