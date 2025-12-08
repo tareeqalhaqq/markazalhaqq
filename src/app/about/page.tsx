@@ -1,12 +1,14 @@
-import Image from "next/image";
-import { Sparkles, BookOpenCheck, Users2, HeartHandshake } from "lucide-react";
+import { BookOpenCheck, HeartHandshake, Sparkles, Users2 } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { MarketingHero } from "@/components/marketing/hero"
+import { PillarGrid } from "@/components/marketing/pillar-grid"
+import { Section } from "@/components/marketing/section"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { PlaceHolderImages } from "@/lib/placeholder-images"
+import { cn } from "@/lib/utils"
 
-const aboutImage = PlaceHolderImages.find((img) => img.id === "about-us-image");
+const aboutImage = PlaceHolderImages.find((img) => img.id === "about-us-image")
 
 const pillars = [
   {
@@ -27,7 +29,7 @@ const pillars = [
       "MarkazalHaqq exists to serve the Ummah. Each course is designed to build clarity, character, and action in the lives of our learners.",
     icon: HeartHandshake,
   },
-];
+]
 
 const milestones = [
   {
@@ -48,85 +50,52 @@ const milestones = [
     description:
       "We began building an academy that mirrors in-person circles—organized curricula, accountability, and direct access to our teachers.",
   },
-];
+]
+
+const badgeBase = "rounded-pill px-4 py-1 text-eyebrow font-semibold uppercase tracking-[0.28em]"
 
 export default function AboutPage() {
   return (
-    <div className="bg-background">
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-sky-100 via-white to-sky-200" />
-        <div className="container mx-auto grid gap-12 px-6 py-20 lg:grid-cols-[minmax(0,520px)_1fr] lg:items-center">
-          <div className="space-y-6">
-            <Badge className="bg-primary/10 text-primary">About MarkazalHaqq</Badge>
-            <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-              The official academy of Tareeq Al-Haqq
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              MarkazalHaqq extends the trust of TareeqAlHaqq.org into a guided learning experience. Our goal is to help sincere seekers progress with clarity, companionship, and action.
-            </p>
-            <p className="text-lg text-muted-foreground">
-              We pair carefully sequenced curricula with live mentorship so every student feels supported—whether you are beginning your journey or deepening your scholarship.
-            </p>
-          </div>
-          <div className="relative">
-            {aboutImage && (
-              <div className="relative overflow-hidden rounded-3xl shadow-2xl shadow-primary/20">
-                <Image
-                  src={aboutImage.imageUrl}
-                  alt={aboutImage.description}
-                  data-ai-hint={aboutImage.imageHint}
-                  width={960}
-                  height={640}
-                  sizes="(min-width: 1024px) 540px, 90vw"
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/25" />
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+    <div className="space-y-section pb-section">
+      <MarketingHero
+        badge="About MarkazalHaqq"
+        title="The official academy of Tareeq Al-Haqq"
+        description="MarkazalHaqq extends the trust of TareeqAlHaqq.org into a guided learning experience. Our goal is to help sincere seekers progress with clarity, companionship, and action."
+        primaryAction={{ label: "Explore courses", href: "/courses" }}
+        secondaryAction={{ label: "Meet the instructors", href: "/instructors" }}
+        image={
+          aboutImage
+            ? { src: aboutImage.imageUrl, alt: aboutImage.description, hint: aboutImage.imageHint }
+            : undefined
+        }
+      />
 
-      <section className="container mx-auto px-6 py-20">
-        <div className="mx-auto max-w-3xl text-center">
-          <Sparkles className="mx-auto h-10 w-10 text-primary" />
-          <h2 className="mt-6 font-headline text-3xl font-bold text-foreground sm:text-4xl">Why we launched MarkazalHaqq</h2>
-          <p className="mt-4 text-lg text-muted-foreground">
+      <Section background="gradient">
+        <div className="mx-auto max-w-3xl text-center space-y-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <h2 className="font-headline text-display-1 font-bold text-foreground sm:text-display-2">Why we launched MarkazalHaqq</h2>
+          <p className="text-lead text-muted-foreground">
             Our community needed a place where sincere seekers could move beyond individual lectures and into a purposeful journey. MarkazalHaqq provides that structure while keeping the heart and authenticity of Tareeq Al-Haqq alive.
           </p>
         </div>
 
-        <div className="mt-16 grid gap-6 md:grid-cols-3">
-          {pillars.map((pillar) => (
-            <Card key={pillar.title} className="h-full border-none bg-gradient-to-br from-white via-sky-50 to-white shadow-lg shadow-sky-100">
-              <CardHeader className="space-y-4 text-center">
-                <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <pillar.icon className="h-6 w-6" />
-                </div>
-                <CardTitle className="font-headline text-xl text-foreground">{pillar.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base leading-relaxed text-muted-foreground">
-                  {pillar.description}
-                </CardDescription>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+        <PillarGrid pillars={pillars} align="center" softBackground className="mt-12" />
+      </Section>
 
-      <section className="bg-gradient-to-br from-sky-50 via-white to-sky-100">
-        <div className="container mx-auto px-6 py-20">
-          <h2 className="font-headline text-3xl font-bold text-foreground sm:text-4xl">Our journey so far</h2>
-          <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
+      <Section background="subtle">
+        <div className="rounded-section bg-white/80 p-10 shadow-xl shadow-primary/10 md:p-14">
+          <Badge className={cn(badgeBase, "border border-primary/20 bg-primary/10 text-primary")}>Our journey so far</Badge>
+          <p className="mt-3 max-w-3xl text-lead text-muted-foreground">
             MarkazalHaqq remains rooted in the mission of Tareeq Al-Haqq: cultivating clarity upon the path of the Salaf. Here is how our academy came to life.
           </p>
-          <div className="mt-12 space-y-10">
+          <div className="mt-10 space-y-8">
             {milestones.map((milestone, index) => (
-              <div key={milestone.year} className="relative rounded-3xl bg-white/80 p-8 shadow-xl shadow-primary/10 backdrop-blur">
+              <div key={milestone.year} className="rounded-card bg-white/90 p-8 shadow-md shadow-primary/5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary/70">{milestone.year}</p>
+                    <p className="text-eyebrow font-semibold uppercase tracking-[0.3em] text-primary/70">{milestone.year}</p>
                     <h3 className="mt-2 font-headline text-2xl text-foreground">{milestone.title}</h3>
                   </div>
                   <Separator orientation="vertical" className="hidden h-16 bg-primary/10 sm:block" />
@@ -137,7 +106,7 @@ export default function AboutPage() {
             ))}
           </div>
         </div>
-      </section>
+      </Section>
     </div>
-  );
+  )
 }
