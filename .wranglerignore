@@ -1,0 +1,2 @@
+# Exclude Next.js build cache to keep assets under the Workers size limit
+.next/cache/
