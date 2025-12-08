@@ -1,44 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { FirebaseError } from "firebase/app"
-import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth"
+import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
-import { Activity, CheckCircle2, KeyRound, ShieldCheck } from "lucide-react"
+import { Loader2, Mail } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
-import { auth, db } from "@/lib/firebaseClient"
+import { appleProvider, auth, db, googleProvider } from "@/lib/firebaseClient"
 import { deriveRoleFromProfile, type UserRole } from "@/lib/userRoles"
-
-const securityHighlights = [
-  {
-    icon: ShieldCheck,
-    title: "Dedicated auth boundary",
-    description: "This login lives on an isolated layout so there’s zero overlap with the public marketing experience.",
-  },
-  {
-    icon: KeyRound,
-    title: "Encrypted credentials",
-    description: "Firebase Authentication enforces SSL/TLS and monitors unusual password activity the moment it happens.",
-  },
-  {
-    icon: Activity,
-    title: "Live role sync",
-    description: "If your profile carries the admin tag you’ll bypass the student stack and land in the admin workspace instantly.",
-  },
-]
-
-const checklist = [
-  "Use the username or email issued by the academy team.",
-  "Password resets deliver to the exact identifier typed above.",
-  "Admin-tagged accounts skip student dashboards entirely.",
-]
 
 async function resolveRole(userId: string): Promise<UserRole> {
   const profileRef = doc(db, "users", userId)
@@ -47,7 +25,7 @@ async function resolveRole(userId: string): Promise<UserRole> {
 }
 
 function getDestination(role: UserRole) {
-  return role === "admin" ? "/dashboard/admin" : "/academy"
+  return role === "admin" ? "/dashboard/admin" : "/dashboard/student"
 }
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -57,11 +35,11 @@ function getFriendlyErrorMessage(error: unknown) {
       case "auth/invalid-email":
       case "auth/user-not-found":
       case "auth/wrong-password":
-        return "Those credentials don’t match any Markaz al Haqq profile. Double-check the username and password."
+        return "Those credentials don’t match any academy profile. Double-check the email and password."
       case "auth/too-many-requests":
-        return "Too many attempts in a short time. Please wait a moment and try again."
+        return "Too many attempts. Please wait a moment and try again."
       default:
-        return "We couldn't sign you in. Please try again or contact support if the issue continues."
+        return "We couldn't sign you in. Please try again or contact support."
     }
   }
 
@@ -73,22 +51,15 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isResettingPassword, setIsResettingPassword] = useState(false)
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) {
-        return
-      }
-
+      if (!currentUser) return
       resolveRole(currentUser.uid)
         .then((role) => router.replace(getDestination(role)))
-        .catch((redirectError) => {
-          console.error("Failed to determine role for redirect", redirectError)
-          router.replace("/academy")
-        })
+        .catch(() => router.replace("/dashboard/student"))
     })
 
     return () => unsubscribe()
@@ -100,10 +71,8 @@ export default function LoginPage() {
     setStatusMessage(null)
     setIsSubmitting(true)
 
-    const trimmedIdentifier = username.trim()
-
     try {
-      const credential = await signInWithEmailAndPassword(auth, trimmedIdentifier, password)
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password)
       await ensureAcademyUser(credential.user)
       const role = await resolveRole(credential.user.uid)
       router.push(getDestination(role))
@@ -111,7 +80,6 @@ export default function LoginPage() {
       if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
         setError(getFriendlyErrorMessage(err))
       } else {
-        console.error("Failed to ensure academy user profile", err)
         setError("We couldn't finish preparing your academy profile. Please try again.")
       }
     } finally {
@@ -123,147 +91,143 @@ export default function LoginPage() {
     setError(null)
     setStatusMessage(null)
 
-    if (!username.trim()) {
-      setError("Enter the email or username tied to your Markaz al Haqq account so we can send a reset link.")
+    if (!email.trim()) {
+      setError("Enter the email tied to your academy account so we can send a reset link.")
       return
     }
 
     try {
-      setIsResettingPassword(true)
-      await sendPasswordResetEmail(auth, username.trim())
-      setStatusMessage(`Password reset instructions are on their way to ${username.trim()}. Check your inbox and spam folder.`)
+      await sendPasswordResetEmail(auth, email.trim())
+      setStatusMessage(`Password reset instructions are on their way to ${email.trim()}.`)
     } catch (err) {
       if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
         setError(getFriendlyErrorMessage(err))
       } else {
-        console.error("Failed to send password reset email", err)
-        setError("We couldn't send the reset email. Please try again or contact support.")
+        setError("We couldn't send the reset email. Please try again.")
       }
+    }
+  }
+
+  async function handleProvider(provider: typeof googleProvider) {
+    if (!provider) return
+    setError(null)
+    setStatusMessage(null)
+    setIsSubmitting(true)
+
+    try {
+      const credential = await signInWithPopup(auth, provider)
+      await ensureAcademyUser(credential.user)
+      const role = await resolveRole(credential.user.uid)
+      router.push(getDestination(role))
+    } catch (err) {
+      setError("We couldn't authenticate with that provider. Please try again.")
     } finally {
-      setIsResettingPassword(false)
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="relative min-h-screen bg-slate-950 px-4 py-16 text-slate-100">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_55%)]" aria-hidden />
-      <div className="relative mx-auto w-full max-w-6xl">
-        <div className="grid overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900/70 shadow-2xl shadow-indigo-500/10 lg:grid-cols-[minmax(0,1fr)_420px]">
-          <section className="relative hidden flex-col gap-10 border-r border-white/10 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 p-10 lg:flex">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-indigo-300">Private access</p>
-              <h1 className="mt-4 font-headline text-4xl font-semibold text-white">Academy authentication console</h1>
-              <p className="mt-3 text-base text-slate-300">
-                This side of the platform is intentionally stripped of public content so you can focus on secure entry, nothing else.
-              </p>
-            </div>
-            <div className="space-y-5">
-              {securityHighlights.map((item) => (
-                <div key={item.title} className="flex gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="rounded-2xl bg-white/10 p-3 text-indigo-200">
-                    <item.icon className="h-6 w-6" aria-hidden />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{item.title}</p>
-                    <p className="text-sm text-slate-300">{item.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-3 rounded-3xl border border-white/15 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.3em] text-indigo-300">Before signing in</p>
-              <ul className="space-y-3 text-sm text-slate-200">
-                {checklist.map((item) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-300" aria-hidden />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
+    <div className="min-h-screen bg-slate-50 px-4 py-12">
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 lg:flex-row lg:items-start lg:gap-16">
+        <div className="space-y-4 text-center lg:text-left">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">Sign in</p>
+          <h1 className="font-headline text-4xl font-semibold text-slate-900">Access your Academy account</h1>
+          <p className="max-w-xl text-base text-slate-600">
+            Use your email and password or continue with Google or Apple. Your admin or student dashboard will load based on
+            your role.
+          </p>
+        </div>
 
-          <section className="space-y-6 p-8 sm:p-12">
-            <div className="space-y-3 text-left">
-              <p className="text-xs uppercase tracking-[0.35em] text-indigo-300">Credentials required</p>
-              <h2 className="font-headline text-3xl font-semibold text-white">Sign in to the protected workspace</h2>
-              <p className="text-sm text-slate-300">
-                Only authenticated users may continue. The admin tag automatically unlocks the administrator console; everyone else enters the student academy.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-slate-200">
-              <p className="font-semibold text-white">Need to reset your password?</p>
-              <p className="text-slate-300">
-                Provide the same username or email below so the system can verify you before sending the secure reset link.
-              </p>
-            </div>
-
-            {statusMessage ? (
-              <Alert className="border-emerald-400/40 bg-emerald-400/10 text-emerald-100">
-                <AlertTitle>Status update</AlertTitle>
-                <AlertDescription>{statusMessage}</AlertDescription>
-              </Alert>
-            ) : null}
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader>
+            <CardTitle>Sign in</CardTitle>
+            <CardDescription>Enter your credentials to continue.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {error ? (
-              <Alert variant="destructive" className="border-red-500/40 bg-red-500/10 text-red-100">
+              <Alert variant="destructive">
                 <AlertTitle>Unable to sign in</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             ) : null}
+            {statusMessage ? (
+              <Alert>
+                <AlertTitle>Check your email</AlertTitle>
+                <AlertDescription>{statusMessage}</AlertDescription>
+              </Alert>
+            ) : null}
 
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-slate-200">
-                  Username or email
-                </Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  inputMode="email"
-                  placeholder="you@academy.com"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
+                  id="email"
+                  name="email"
+                  type="email"
                   required
-                  className="border-white/20 bg-slate-950/40 text-white placeholder:text-slate-500"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                 />
               </div>
+
               <div className="space-y-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password" className="text-slate-200">
-                    Password
-                  </Label>
-                  <button
-                    type="button"
-                    onClick={handlePasswordReset}
-                    className="ml-auto text-sm font-medium text-indigo-300 underline-offset-4 hover:underline disabled:opacity-60"
-                    disabled={isResettingPassword}
-                  >
-                    {isResettingPassword ? "Sending reset link…" : "Forgot password?"}
-                  </button>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  required
-                  className="border-white/20 bg-slate-950/40 text-white placeholder:text-slate-500"
                 />
               </div>
-              <Button type="submit" className="w-full rounded-2xl bg-indigo-500 text-white hover:bg-indigo-400" disabled={isSubmitting}>
-                {isSubmitting ? "Verifying…" : "Enter secure area"}
+
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in
+                  </>
+                ) : (
+                  "Sign in"
+                )}
               </Button>
             </form>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
-              Admin tagging is additive—if your Firestore profile includes an <strong className="text-white">admin</strong> tag, this login will skip all student content and grant the elevated workspace immediately.
+            <div className="flex items-center gap-3">
+              <span className="h-px flex-1 bg-slate-200" />
+              <span className="text-xs text-slate-400">or</span>
+              <span className="h-px flex-1 bg-slate-200" />
             </div>
-          </section>
-        </div>
+
+            <div className="space-y-3">
+              <Button variant="outline" className="w-full" onClick={() => handleProvider(googleProvider)} disabled={isSubmitting}>
+                <Mail className="mr-2 h-4 w-4" /> Continue with Google
+              </Button>
+              {appleProvider ? (
+                <Button variant="outline" className="w-full" onClick={() => handleProvider(appleProvider)} disabled={isSubmitting}>
+                  Continue with Apple
+                </Button>
+              ) : null}
+            </div>
+
+            <button
+              type="button"
+              onClick={handlePasswordReset}
+              className="w-full text-left text-sm font-medium text-slate-700 hover:text-slate-900"
+            >
+              Forgot your password?
+            </button>
+          </CardContent>
+          <CardFooter className="flex justify-between text-sm text-slate-600">
+            <span>Do not have an account?</span>
+            <Link href="/signup" className="font-semibold text-slate-900 hover:underline">
+              Sign up
+            </Link>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   )

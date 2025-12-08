@@ -1,6 +1,3 @@
-"use client"
-
-import { useMemo } from "react"
 import Link from "next/link"
 
 import { CallToActionBand } from "@/components/marketing/cta-band"
@@ -11,10 +8,44 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useFirestoreCollection, type FirestoreDocument } from "@/hooks/useFirestoreCollection"
-import { useUserRole } from "@/hooks/useUserRole"
-import type { AcademyCourse } from "@/lib/academy-data"
+import { getPublishedCourses, type Course } from "@/lib/courses"
 import { cn } from "@/lib/utils"
+
+const coursePillars = [
+  {
+    title: "Live cohorts & replays",
+    description: "Every course includes live instruction with replay access so you can revisit the material anytime.",
+  },
+  {
+    title: "Mentor follow-up",
+    description: "Dedicated mentors keep you accountable, answer questions, and help you integrate lessons into your worship.",
+  },
+  {
+    title: "Project-based learning",
+    description: "Expect reflective journals, community briefs, and service projects that translate knowledge into action.",
+  },
+]
+
+const badgeBase = "rounded-pill px-4 py-1 text-eyebrow font-semibold uppercase tracking-[0.28em]"
+
+const statusStyles: Record<Exclude<Course["status"], undefined>, string> = {
+  upcoming: "border-amber-400/40 bg-amber-400/10 text-amber-900",
+  active: "border-emerald-400/40 bg-emerald-400/10 text-emerald-900",
+  completed: "border-blue-400/40 bg-blue-400/10 text-blue-900",
+}
+
+const statusLabels: Record<Exclude<Course["status"], undefined>, string> = {
+  upcoming: "Upcoming",
+  active: "In progress",
+  completed: "Completed",
+}
+
+const gradientPalette = [
+  "from-slate-900 via-indigo-900 to-purple-900",
+  "from-slate-900 via-emerald-900 to-teal-900",
+  "from-slate-900 via-rose-900 to-orange-900",
+  "from-slate-900 via-sky-900 to-cyan-900",
+]
 
 type TimestampLike = { toDate: () => Date }
 
@@ -34,44 +65,6 @@ function coerceDate(value?: string | number | Date | TimestampLike | null) {
   }
   return null
 }
-
-const coursePillars = [
-  {
-    title: "Live cohorts & replays",
-    description: "Every course includes live instruction with replay access so you can revisit the material anytime.",
-  },
-  {
-    title: "Mentor follow-up",
-    description: "Dedicated mentors keep you accountable, answer questions, and help you integrate lessons into your worship.",
-  },
-  {
-    title: "Project-based learning",
-    description: "Expect reflective journals, community briefs, and service projects that translate knowledge into action.",
-  },
-]
-
-const badgeBase = "rounded-pill px-4 py-1 text-eyebrow font-semibold uppercase tracking-[0.28em]"
-
-const statusStyles: Record<Exclude<AcademyCourse["status"], undefined>, string> = {
-  upcoming: "border-amber-400/40 bg-amber-400/10 text-amber-900",
-  active: "border-emerald-400/40 bg-emerald-400/10 text-emerald-900",
-  completed: "border-blue-400/40 bg-blue-400/10 text-blue-900",
-}
-
-const statusLabels: Record<Exclude<AcademyCourse["status"], undefined>, string> = {
-  upcoming: "Upcoming",
-  active: "In progress",
-  completed: "Completed",
-}
-
-const gradientPalette = [
-  "from-slate-900 via-indigo-900 to-purple-900",
-  "from-slate-900 via-emerald-900 to-teal-900",
-  "from-slate-900 via-rose-900 to-orange-900",
-  "from-slate-900 via-sky-900 to-cyan-900",
-]
-
-type CourseDoc = FirestoreDocument<AcademyCourse>
 
 function formatStartDate(value?: string | number | Date | TimestampLike | null) {
   const date = coerceDate(value)
@@ -95,7 +88,7 @@ function formatLessonCount(value?: number) {
   return `${value} ${plural}`
 }
 
-function CourseCard({ course, index }: { course: CourseDoc; index: number }) {
+function CourseCard({ course, index }: { course: Course; index: number }) {
   const gradient = gradientPalette[index % gradientPalette.length]
   const status = course.status ?? "upcoming"
   const statusClass = statusStyles[status]
@@ -159,12 +152,12 @@ function CourseCard({ course, index }: { course: CourseDoc; index: number }) {
         </dl>
       </CardContent>
       <CardFooter className="flex flex-col gap-5 border-t border-slate-200/70 bg-white/90 p-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-slate-500">
-          Live data from the admin workspace – updates appear within seconds of publishing.
-        </div>
+        <div className="text-sm text-slate-500">Live data from the academy workspace – updates appear within seconds of publishing.</div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Button asChild className="rounded-pill px-6">
-            <Link href="/signup">{status === "active" ? "Join current cohort" : "Join waitlist"}</Link>
+            <Link href={course.slug ? `/courses/${course.slug}` : "/signup"}>
+              {status === "active" ? "View course" : "Join waitlist"}
+            </Link>
           </Button>
           <Button asChild variant="outline" className="rounded-pill px-6">
             <Link href="/login">Existing student</Link>
@@ -175,140 +168,80 @@ function CourseCard({ course, index }: { course: CourseDoc; index: number }) {
   )
 }
 
-export default function CoursesPage() {
-  const { data: courses, loading, error } = useFirestoreCollection<AcademyCourse>("courses", {
-    orderByField: "updatedAt",
-    orderDirection: "desc",
-  })
-  const { role } = useUserRole()
-  const isAdmin = role === "admin"
+export default async function CoursesPage() {
+  const courses = await getPublishedCourses()
+  const lastUpdated = courses.reduce<Date | null>((latest, course) => {
+    const current = coerceDate(course.updatedAt ?? null)
+    if (!current) return latest
+    if (!latest || current.getTime() > latest.getTime()) {
+      return current
+    }
+    return latest
+  }, null)
 
   const hasCourses = courses.length > 0
-  const lastUpdated = useMemo(() => {
-    return courses.reduce<Date | null>((latest, course) => {
-      const current = coerceDate(course.updatedAt ?? null)
-      if (!current) return latest
-      if (!latest || current.getTime() > latest.getTime()) {
-        return current
-      }
-      return latest
-    }, null)
-  }, [courses])
 
   return (
     <div className="space-y-section pb-section">
       <MarketingHero
-        alignment="center"
-        badge="Synced from admin workspace"
-        title="Explore the programmes currently staged inside Markaz al Haqq"
-        description="The catalog below is populated straight from Firebase. When administrators add, update, or hide a course, the change appears here immediately—no manual copy/paste."
-        primaryAction={{ label: "Join the waitlist", href: "/signup" }}
-        secondaryAction={{ label: "Existing student", href: "/login" }}
+        eyebrow="Academy library"
+        title="Courses curated for serious seekers"
+        description="Every course below is powered directly from the academy database so published updates appear instantly."
+        actions={[
+          { label: "View all courses", href: "#catalog", primary: true },
+          { label: "How we teach", href: "#pillars" },
+        ]}
       />
 
-      <Section>
-        <div className="space-y-3 text-center">
-          <p className="text-eyebrow font-semibold uppercase tracking-[0.32em] text-muted-foreground">
-            {hasCourses
-              ? `${courses.length} programme${courses.length === 1 ? "" : "s"} ready for enrolment`
-              : "Courses publish automatically once admins create them"}
-          </p>
+      <Section id="pillars">
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          <div className="space-y-3 rounded-3xl border border-slate-200/70 bg-white/90 p-8 shadow-lg shadow-slate-900/5">
+            <p className={badgeBase}>Structured learning</p>
+            <h2 className="font-headline text-3xl font-semibold text-slate-900">What to expect</h2>
+            <p className="text-base text-slate-600">
+              Cohorts, office hours, and community briefs are planned centrally, then synced live to the student dashboards.
+            </p>
+          </div>
+          <PillarGrid pillars={coursePillars} />
+        </div>
+      </Section>
+
+      <Section id="catalog">
+        <div className="flex items-end justify-between gap-4">
+          <div className="space-y-2">
+            <p className={badgeBase}>Live from Firestore</p>
+            <h2 className="font-headline text-3xl font-semibold text-slate-900">Available courses</h2>
+            <p className="text-slate-600">
+              Every entry below comes directly from the academy database — no more hard-coded catalogs.
+            </p>
+          </div>
           {lastUpdated ? (
-            <p className="text-sm text-muted-foreground">Catalog refreshed {formatLastUpdated(lastUpdated)} via Firestore</p>
+            <div className="text-sm text-slate-500">Last updated {formatLastUpdated(lastUpdated)}</div>
           ) : null}
         </div>
 
-        {error ? (
-          <Alert variant="destructive" className="mt-8">
-            <AlertTitle>Unable to load courses</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+        {!hasCourses ? (
+          <Alert className="mt-6 border-amber-200 bg-amber-50 text-amber-900">
+            <AlertTitle>Courses are on the way</AlertTitle>
+            <AlertDescription>
+              The academy team hasn&apos;t published courses yet. Check back soon or join the waitlist to hear first.
+            </AlertDescription>
           </Alert>
-        ) : null}
-
-        <div className="mt-8">
-          {loading ? (
-            <div className="grid gap-8 md:grid-cols-2">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Card key={`skeleton-${index}`} className="h-full animate-pulse rounded-card border border-slate-200/60 bg-white/60">
-                  <div className="h-56 w-full rounded-t-card bg-slate-200/60" />
-                  <CardHeader>
-                    <div className="h-6 w-3/4 rounded-full bg-slate-200" />
-                    <div className="mt-3 h-4 w-full rounded-full bg-slate-200" />
-                    <div className="mt-2 h-4 w-5/6 rounded-full bg-slate-200" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="h-3 rounded-full bg-slate-200" />
-                      <div className="h-3 rounded-full bg-slate-200" />
-                      <div className="h-3 rounded-full bg-slate-200" />
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex flex-col gap-3 border-t border-slate-200/70 bg-white/80 p-6 sm:flex-row">
-                    <div className="h-9 w-full rounded-full bg-slate-200" />
-                    <div className="h-9 w-full rounded-full bg-slate-200" />
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : hasCourses ? (
-            <div className="grid gap-8 md:grid-cols-2">
-              {courses.map((course, index) => (
-                <CourseCard key={course.id} course={course} index={index} />
-              ))}
-            </div>
-          ) : (
-            <Card className="rounded-section border-dashed border-slate-300 bg-white/70">
-              <CardHeader>
-                <CardTitle className="font-headline text-2xl text-slate-800">Courses will appear here</CardTitle>
-                <CardDescription className="text-base text-slate-600">
-                  As soon as an administrator publishes the first course inside the dashboard, it will populate this section without additional development work.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                {isAdmin ? (
-                  <Button asChild className="rounded-pill">
-                    <Link href="/dashboard/admin">Open admin workspace</Link>
-                  </Button>
-                ) : (
-                  <>
-                    <p className="text-sm text-slate-600">
-                      The catalog syncs directly with Firebase—once the admin team adds programmes in the dashboard, they go live here automatically.
-                    </p>
-                    <Button asChild className="rounded-pill">
-                      <Link href="/signup">Join the waitlist</Link>
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </Section>
-
-      <Section background="subtle">
-        <div className="rounded-section bg-white/90 p-12 shadow-xl shadow-indigo-500/5 md:p-16">
-          <div className="grid gap-10 md:grid-cols-[minmax(0,420px)_1fr] md:items-center">
-            <div className="space-y-5">
-              <Badge className={cn(badgeBase, "border border-indigo-200/60 bg-indigo-50 text-indigo-700")}>What every course includes</Badge>
-              <h2 className="font-headline text-display-1 font-semibold text-slate-900 sm:text-display-2">
-                A consistent, elevated learning experience
-              </h2>
-              <p className="text-lead text-slate-600">
-                Whether you join a live cohort or an evergreen lab, your dashboard mirrors the refined aesthetic of sokacademy.com with intuitive navigation and polished resources.
-              </p>
-            </div>
-            <PillarGrid pillars={coursePillars} align="center" className="md:-m-2 md:grid-cols-3" softBackground />
+        ) : (
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            {courses.map((course, index) => (
+              <CourseCard key={course.id} course={course} index={index} />
+            ))}
           </div>
-          <CallToActionBand
-            className="mt-10"
-            badge="Need a tailored recommendation?"
-            title="Tell us about your background"
-            description="Share your background and our team will match you with the right course bundle."
-            primaryAction={{ label: "Start intake form", href: "/signup" }}
-            secondaryAction={{ label: "Course FAQ", href: "/faq" }}
-          />
-        </div>
+        )}
       </Section>
+
+      <CallToActionBand
+        title="Ready to start learning?"
+        description="Create your academy account to access live cohorts, replays, and instructor-led progress tracking."
+        primaryAction={{ label: "Create account", href: "/signup" }}
+        secondaryAction={{ label: "Sign in", href: "/login" }}
+      />
     </div>
   )
 }
