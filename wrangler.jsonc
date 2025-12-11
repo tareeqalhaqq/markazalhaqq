@@ -1,7 +1,9 @@
 {
   "name": "markazalhaqq",
   "compatibility_date": "2025-01-01",
-  "assets": {
-    "directory": "./.next/static"
-  }
+  "build": {
+    "command": "npx @cloudflare/next-on-pages build"
+  },
+  "main": ".vercel/output/static/_worker.js",
+  "pages_build_output_dir": ".vercel/output/static"
 }
