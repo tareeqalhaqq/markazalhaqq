@@ -95,3 +95,14 @@ service cloud.firestore {
 ```
 
 These rules keep course content readable to all signed-in learners while restricting course, module, and lesson edits to admins.
+
+## Deploying to Cloudflare Pages
+
+Generate the static output with the Cloudflare Next.js adapter, then deploy the Pages build output:
+
+```bash
+npx @cloudflare/next-on-pages build
+npm run deploy
+```
+
+The deploy script uses `wrangler pages deploy .vercel/output/static` so Pages deployments use the correct command instead of the Workers-only `wrangler deploy`.
