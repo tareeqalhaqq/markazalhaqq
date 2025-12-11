@@ -106,3 +106,5 @@ npm run deploy
 ```
 
 The deploy script uses `wrangler pages deploy .vercel/output/static` so Pages deployments use the correct command instead of the Workers-only `wrangler deploy`.
+
+If you see the error "Workers-specific command in a Pages project," it means `wrangler deploy` was used by mistake. Switch to `npm run deploy` (which wraps `wrangler pages deploy`) or run `wrangler pages deploy .vercel/output/static` directly after the Next.js adapter build.
