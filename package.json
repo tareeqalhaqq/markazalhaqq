@@ -6,13 +6,13 @@
     "node": ">=20 <23"
   },
   "scripts": {
-    "dev": "next dev --turbopack -p 3000",
+    "dev": "node ./node_modules/next/dist/bin/next dev --turbopack -p 3000",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
-    "build": "next build",
+    "build": "node ./node_modules/next/dist/bin/next build",
     "deploy": "wrangler pages deploy .vercel/output/static",
-    "start": "next start",
-    "lint": "next lint",
+    "start": "node ./node_modules/next/dist/bin/next start",
+    "lint": "node ./node_modules/next/dist/bin/next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
