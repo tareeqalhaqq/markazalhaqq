@@ -12,7 +12,7 @@
     "build": "node ./node_modules/next/dist/bin/next build",
     "cf:build": "npx @cloudflare/next-on-pages build",
     "cf:deploy": "npm run cf:build && wrangler pages deploy .vercel/output/static",
-    "deploy": "wrangler pages deploy .vercel/output/static",
+    "deploy": "npm run cf:deploy",
     "start": "node ./node_modules/next/dist/bin/next start",
     "lint": "node ./node_modules/next/dist/bin/next lint",
     "typecheck": "tsc --noEmit"
