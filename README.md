@@ -98,12 +98,12 @@ These rules keep course content readable to all signed-in learners while restric
 
 ## Deploying to Cloudflare Pages
 
-Generate the static output with the Cloudflare Next.js adapter, then deploy the Pages build output. A single command wraps both steps and guarantees the Pages-specific deploy command is used:
+Generate the static output with the Cloudflare Next.js adapter, then deploy the Pages build output. The default `npm run build` now calls the adapter directly so any build pipeline (including Cloudflare Pages) automatically produces the `.vercel/output` artifacts Cloudflare expects. A single command wraps both steps and guarantees the Pages-specific deploy command is used:
 
 ```bash
 npm run cf:deploy
 ```
 
-`cf:deploy` runs the adapter build (`npx @cloudflare/next-on-pages build`) and then executes `wrangler pages deploy .vercel/output/static` so Pages deployments use the correct command instead of the Workers-only `wrangler deploy`. The default `npm run deploy` script now forwards to `cf:deploy`, so the build and the Pages-friendly deploy command run together.
+`cf:deploy` runs the adapter build (`npm run build`, which shells out to `npx @cloudflare/next-on-pages build`) and then executes `wrangler pages deploy .vercel/output/static` so Pages deployments use the correct command instead of the Workers-only `wrangler deploy`. The default `npm run deploy` script now forwards to `cf:deploy`, so the build and the Pages-friendly deploy command run together.
 
 If you see the error "Workers-specific command in a Pages project," it means `wrangler deploy` was used by mistake. Switch to `npm run cf:deploy` (or at least `npm run deploy`, which wraps `wrangler pages deploy`) or run `wrangler pages deploy .vercel/output/static` directly after the Next.js adapter build.
