@@ -120,7 +120,7 @@ export default function TalibAlIlmPage() {
             <CardHeader>
               <CardTitle className="text-2xl text-foreground">Why seekers love Talib al Ilm</CardTitle>
               <CardDescription className="text-base text-muted-foreground">
-                The programme mirrors the polish of the sokacademy.com-inspired redesign while layering in academy-wide access.
+                The programme mirrors the polish of our redesigned student experience while layering in academy-wide access.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">

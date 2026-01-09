@@ -16,12 +16,12 @@ import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
 import { deriveRoleFromProfile, type UserRole } from "@/lib/userRoles"
 import { supabase } from "@/lib/supabaseClient"
 
-async function resolveRole(userId: string): Promise<UserRole> {
+async function resolveRole(userId: string, email?: string | null): Promise<UserRole> {
   const { data, error } = await supabase.from("users").select("role, tags").eq("id", userId).maybeSingle()
   if (error) {
     console.error("Failed to resolve role", error)
   }
-  return deriveRoleFromProfile(data)
+  return deriveRoleFromProfile(data, email)
 }
 
 function getDestination(role: UserRole) {
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
       hasHandledSession.current = true
       await ensureAcademyUser(data.session.user)
-      const role = await resolveRole(data.session.user.id)
+      const role = await resolveRole(data.session.user.id, data.session.user.email)
       router.replace(getDestination(role))
     }
 
@@ -72,7 +72,7 @@ export default function LoginPage() {
       if (!session?.user || hasHandledSession.current) return
       hasHandledSession.current = true
       await ensureAcademyUser(session.user)
-      const role = await resolveRole(session.user.id)
+      const role = await resolveRole(session.user.id, session.user.email)
       router.replace(getDestination(role))
     })
 
@@ -99,7 +99,7 @@ export default function LoginPage() {
       }
 
       await ensureAcademyUser(data.user)
-      const role = await resolveRole(data.user.id)
+      const role = await resolveRole(data.user.id, data.user.email)
       router.push(getDestination(role))
     } catch (err) {
       console.error("Login failed", err)

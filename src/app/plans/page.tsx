@@ -44,7 +44,7 @@ export default function PlansPage() {
             <p className="text-sm uppercase tracking-[0.3em] text-primary">Signature cohort</p>
             <CardTitle className="mt-3 font-headline text-3xl text-foreground">Current Seerah Cohort</CardTitle>
             <CardDescription className="mt-4 text-base text-muted-foreground">
-              Enrol once and unlock 12 weeks of guided study, mentorship, and lifetime resources. Experience the same polish and flow as the redesigned sokacademy.com interface.
+              Enrol once and unlock 12 weeks of guided study, mentorship, and lifetime resources with a polished, focused learning experience.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-10 px-10 pb-10 lg:grid-cols-[1fr_minmax(0,320px)] lg:items-start">

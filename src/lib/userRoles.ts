@@ -22,14 +22,25 @@ function hasAdminTag(profile: MaybeProfile) {
   return tags.some((tag) => typeof tag === "string" && tag.toLowerCase() === "admin")
 }
 
-export function deriveRoleFromProfile(profile: MaybeProfile): UserRole {
+function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false
+  const domain = email.split("@")[1]?.toLowerCase()
+  return domain === "tareeqalhaqq.org" || domain === "tareeqalhaqq.com"
+}
+
+export function deriveRoleFromProfile(profile: MaybeProfile, email?: string | null): UserRole {
   const { role } = getProfileFields(profile)
-  if (typeof role === "string" && (USER_ROLES as readonly string[]).includes(role)) {
-    return role as UserRole
+
+  if (role === "admin") {
+    return "admin"
   }
 
-  if (hasAdminTag(profile)) {
+  if (hasAdminTag(profile) || isAdminEmail(email)) {
     return "admin"
+  }
+
+  if (typeof role === "string" && (USER_ROLES as readonly string[]).includes(role)) {
+    return role as UserRole
   }
 
   return "user"

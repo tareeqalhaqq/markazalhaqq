@@ -264,7 +264,7 @@ export default function InstructorDashboardPage() {
       title: course.isVisibleToStudents ? "Course hidden" : "Course published",
       description: course.isVisibleToStudents
         ? `${course.title} is hidden from the student dashboard until you're ready to relaunch.`
-        : `${course.title} is now visible to the student preview.`,
+        : `${course.title} is now visible in the student workspace.`,
     })
   }
 
@@ -313,7 +313,7 @@ export default function InstructorDashboardPage() {
             Make real-time updates to your academy
           </h1>
           <p className="text-lg text-muted-foreground">
-            Manage courses, lessons, and learning resources. Changes made here are reflected instantly in the student preview so
+            Manage courses, lessons, and learning resources. Changes made here are reflected instantly in the student workspace so
             you can verify the experience before connecting Firebase.
           </p>
         </div>
@@ -453,7 +453,7 @@ export default function InstructorDashboardPage() {
           <CardHeader className="flex flex-col gap-3">
             <CardTitle className="font-headline text-2xl">Workflow rail</CardTitle>
             <CardDescription>
-              Navigate between course, lesson, session, and resource steps while keeping a live student preview on the right.
+              Navigate between course, lesson, session, and resource steps while keeping a live student workspace on the right.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -546,7 +546,7 @@ export default function InstructorDashboardPage() {
             {selectedCourse && (
               <div className="space-y-3 rounded-2xl border border-border/60 bg-gradient-to-br from-white via-background to-primary/5 p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                  <Sparkles className="h-4 w-4 text-primary" /> Student preview
+                  <Sparkles className="h-4 w-4 text-primary" /> Student workspace
                 </div>
                 <p className="text-lg font-semibold text-foreground">{selectedCourse.title}</p>
                 <p className="text-sm text-muted-foreground">What learners will see next:</p>
@@ -559,7 +559,7 @@ export default function InstructorDashboardPage() {
                   ))}
                   {!selectedCourse.lessons.length && (
                     <p className="rounded-xl border border-dashed border-border/60 p-3 text-muted-foreground">
-                      Publish a lesson to populate the preview.
+                      Publish a lesson to populate the student workspace.
                     </p>
                   )}
                 </div>
@@ -572,7 +572,7 @@ export default function InstructorDashboardPage() {
           <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <CardTitle className="font-headline text-2xl">Publishing wizard</CardTitle>
-              <CardDescription>Inline previews update as you type—no more waiting on toasts or tables.</CardDescription>
+              <CardDescription>Inline updates sync as you type—no more waiting on toasts or tables.</CardDescription>
             </div>
             <Badge variant="outline" className="border-primary/30 text-primary">
               Guided steps
@@ -589,7 +589,7 @@ export default function InstructorDashboardPage() {
 
               <TabsContent value="course" className="space-y-4">
                 <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                  <p className="text-sm text-muted-foreground">Create the course shell. The preview updates as you type.</p>
+                  <p className="text-sm text-muted-foreground">Create the course shell. Updates appear as you type.</p>
                   <form className="mt-4 grid gap-3" onSubmit={handleCreateCourse}>
                     <div className="grid gap-2">
                       <Label htmlFor="course-title">Course title</Label>
@@ -636,7 +636,7 @@ export default function InstructorDashboardPage() {
                       <Button type="submit" className="rounded-full">
                         <PlusCircle className="mr-2 h-5 w-5" /> Create course
                       </Button>
-                      <p className="text-xs text-muted-foreground">Changes are reflected instantly in the preview.</p>
+                      <p className="text-xs text-muted-foreground">Changes are reflected instantly for students.</p>
                     </div>
                   </form>
                 </div>
@@ -664,7 +664,7 @@ export default function InstructorDashboardPage() {
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">
                   <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Lesson preview</p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Lesson view</p>
                     <p className="mt-2 text-lg font-semibold text-foreground">{lessonForm.title || "Untitled lesson"}</p>
                     <p className="text-sm text-muted-foreground">
                       Status: {lessonForm.status} {lessonForm.releaseDate ? `• ${lessonForm.releaseDate}` : ""}
@@ -710,7 +710,7 @@ export default function InstructorDashboardPage() {
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">
                   <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Session preview</p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Session view</p>
                     <p className="mt-2 text-lg font-semibold text-foreground">{sessionForm.title || "Live session"}</p>
                     <p className="text-sm text-muted-foreground">
                       {sessionForm.format} • {sessionForm.date || "Date TBD"} {sessionForm.time ? `• ${sessionForm.time}` : ""}
@@ -756,7 +756,7 @@ export default function InstructorDashboardPage() {
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">
                   <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Resource preview</p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-primary">Resource view</p>
                     <p className="mt-2 text-lg font-semibold text-foreground">{resourceForm.title || "Download title"}</p>
                     <p className="text-sm text-muted-foreground">
                       {resourceForm.type} {resourceForm.size ? `• ${resourceForm.size}` : ""}
