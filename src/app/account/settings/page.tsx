@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react"
 
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore"
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { useAcademyUser } from "@/hooks/useAcademyUser"
-import { db } from "@/lib/firebaseClient"
+import { supabase } from "@/lib/supabaseClient"
 
 type PreferencesState = {
   emailUpdates: boolean
@@ -30,7 +28,7 @@ const timezoneOptions = [
 ]
 
 export default function AccountSettingsPage() {
-  const { firebaseUser, userDoc, loading } = useAcademyUser()
+  const { user, userDoc, loading } = useAcademyUser()
   const [preferences, setPreferences] = useState<PreferencesState>({
     emailUpdates: true,
     sessionReminders: true,
@@ -54,16 +52,23 @@ export default function AccountSettingsPage() {
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!firebaseUser) return
+    if (!user) return
 
     setIsSaving(true)
     setStatus({ type: "idle", message: null })
 
     try {
-      await updateDoc(doc(db, "users", firebaseUser.uid), {
-        preferences,
-        updatedAt: serverTimestamp(),
-      })
+      const { error } = await supabase
+        .from("users")
+        .update({
+          preferences,
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("id", user.id)
+
+      if (error) {
+        throw error
+      }
       setStatus({ type: "success", message: "Notification preferences updated." })
     } catch (error) {
       console.error("Failed to update preferences", error)
@@ -81,7 +86,7 @@ export default function AccountSettingsPage() {
     )
   }
 
-  if (!firebaseUser) {
+  if (!user) {
     return (
       <Alert variant="destructive">
         <AlertTitle>Sign in required</AlertTitle>

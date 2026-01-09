@@ -1,8 +1,6 @@
 "use client"
 
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore"
-
-import { db } from "@/lib/firebaseClient"
+import { supabase } from "@/lib/supabaseClient"
 
 export const USER_ROLES = ["user", "admin"] as const
 export type UserRole = (typeof USER_ROLES)[number]
@@ -38,11 +36,13 @@ export function deriveRoleFromProfile(profile: MaybeProfile): UserRole {
 }
 
 export async function updateUserRole(userId: string, role: UserRole, updatedBy?: string) {
-  const userRef = doc(db, "users", userId)
-
-  await updateDoc(userRef, {
+  const { error } = await supabase.from("users").update({
     role,
-    roleUpdatedAt: serverTimestamp(),
+    roleUpdatedAt: new Date().toISOString(),
     ...(updatedBy ? { roleUpdatedBy: updatedBy } : {}),
-  })
+  }).eq("id", userId)
+
+  if (error) {
+    console.error("Failed to update user role", error)
+  }
 }

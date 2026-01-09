@@ -83,7 +83,7 @@ function CourseProgressBar({ value }: { value: number }) {
 export function AcademyDashboardClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { firebaseUser, courses: assignedCourses, loading: userLoading } = useAcademyUser()
+  const { user, courses: assignedCourses, loading: userLoading } = useAcademyUser()
   const { data: catalogCourses, loading: coursesLoading } = useFirestoreCollection<AcademyCourse>("courses", {
     orderByField: "updatedAt",
     orderDirection: "desc",
@@ -207,7 +207,7 @@ export function AcademyDashboardClient() {
     )
   }
 
-  if (!firebaseUser) {
+  if (!user) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4 text-center">
         <h1 className="text-3xl font-bold">Please log in</h1>
@@ -231,7 +231,7 @@ export function AcademyDashboardClient() {
               </Badge>
               <div>
                 <h1 className="text-3xl font-semibold text-slate-900">
-                  Welcome back, {firebaseUser.displayName || firebaseUser.email}
+                  Welcome back, {user.user_metadata?.full_name || user.email}
                 </h1>
                 <p className="mt-2 text-sm text-slate-600">
                   Your personalised sokacademy-inspired dashboard has been rebuilt for clarity and speed. Track assignments,

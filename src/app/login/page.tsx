@@ -1,12 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-import { FirebaseError } from "firebase/app"
-import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
+import type { AuthError } from "@supabase/supabase-js"
 import { Loader2, Mail } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -15,54 +13,72 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
-import { appleProvider, auth, db, googleProvider } from "@/lib/firebaseClient"
 import { deriveRoleFromProfile, type UserRole } from "@/lib/userRoles"
+import { supabase } from "@/lib/supabaseClient"
 
 async function resolveRole(userId: string): Promise<UserRole> {
-  const profileRef = doc(db, "users", userId)
-  const profileSnapshot = await getDoc(profileRef)
-  return deriveRoleFromProfile(profileSnapshot.data())
+  const { data, error } = await supabase.from("users").select("role, tags").eq("id", userId).maybeSingle()
+  if (error) {
+    console.error("Failed to resolve role", error)
+  }
+  return deriveRoleFromProfile(data)
 }
 
 function getDestination(role: UserRole) {
   return role === "admin" ? "/dashboard/admin" : "/dashboard/student"
 }
 
-function getFriendlyErrorMessage(error: unknown) {
-  if (error instanceof FirebaseError) {
-    switch (error.code) {
-      case "auth/invalid-credential":
-      case "auth/invalid-email":
-      case "auth/user-not-found":
-      case "auth/wrong-password":
-        return "Those credentials don’t match any academy profile. Double-check the email and password."
-      case "auth/too-many-requests":
-        return "Too many attempts. Please wait a moment and try again."
-      default:
-        return "We couldn't sign you in. Please try again or contact support."
-    }
+function getFriendlyErrorMessage(error: AuthError | null) {
+  if (!error) {
+    return null
   }
 
-  return "Something went wrong while signing you in. Please try again."
+  if (error.message.toLowerCase().includes("invalid login credentials")) {
+    return "Those credentials don’t match any academy profile. Double-check the email and password."
+  }
+
+  if (error.message.toLowerCase().includes("email")) {
+    return "Please enter a valid email address."
+  }
+
+  return error.message || "We couldn't sign you in. Please try again or contact support."
 }
 
 export default function LoginPage() {
   const router = useRouter()
+  const hasHandledSession = useRef(false)
   const [error, setError] = useState<string | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const appleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === "true"
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!currentUser) return
-      resolveRole(currentUser.uid)
-        .then((role) => router.replace(getDestination(role)))
-        .catch(() => router.replace("/dashboard/student"))
+    const handleUser = async () => {
+      if (hasHandledSession.current) return
+      const { data } = await supabase.auth.getSession()
+      if (!data.session?.user) return
+
+      hasHandledSession.current = true
+      await ensureAcademyUser(data.session.user)
+      const role = await resolveRole(data.session.user.id)
+      router.replace(getDestination(role))
+    }
+
+    handleUser().catch((err) => console.error("Failed to resolve session", err))
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user || hasHandledSession.current) return
+      hasHandledSession.current = true
+      await ensureAcademyUser(session.user)
+      const role = await resolveRole(session.user.id)
+      router.replace(getDestination(role))
     })
 
-    return () => unsubscribe()
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
   }, [router])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -72,16 +88,22 @@ export default function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      const credential = await signInWithEmailAndPassword(auth, email.trim(), password)
-      await ensureAcademyUser(credential.user)
-      const role = await resolveRole(credential.user.uid)
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      })
+
+      if (signInError || !data.user) {
+        setError(getFriendlyErrorMessage(signInError) ?? "We couldn't sign you in. Please try again.")
+        return
+      }
+
+      await ensureAcademyUser(data.user)
+      const role = await resolveRole(data.user.id)
       router.push(getDestination(role))
     } catch (err) {
-      if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
-        setError(getFriendlyErrorMessage(err))
-      } else {
-        setError("We couldn't finish preparing your academy profile. Please try again.")
-      }
+      console.error("Login failed", err)
+      setError("We couldn't finish preparing your academy profile. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -97,29 +119,40 @@ export default function LoginPage() {
     }
 
     try {
-      await sendPasswordResetEmail(auth, email.trim())
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/login`,
+      })
+
+      if (resetError) {
+        setError(getFriendlyErrorMessage(resetError) ?? "We couldn't send the reset email. Please try again.")
+        return
+      }
+
       setStatusMessage(`Password reset instructions are on their way to ${email.trim()}.`)
     } catch (err) {
-      if (err instanceof FirebaseError && err.code.startsWith("auth/")) {
-        setError(getFriendlyErrorMessage(err))
-      } else {
-        setError("We couldn't send the reset email. Please try again.")
-      }
+      console.error("Password reset failed", err)
+      setError("We couldn't send the reset email. Please try again.")
     }
   }
 
-  async function handleProvider(provider: typeof googleProvider) {
-    if (!provider) return
+  async function handleProvider(provider: "google" | "apple") {
     setError(null)
     setStatusMessage(null)
     setIsSubmitting(true)
 
     try {
-      const credential = await signInWithPopup(auth, provider)
-      await ensureAcademyUser(credential.user)
-      const role = await resolveRole(credential.user.uid)
-      router.push(getDestination(role))
+      const { error: providerError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/login`,
+        },
+      })
+
+      if (providerError) {
+        setError("We couldn't authenticate with that provider. Please try again.")
+      }
     } catch (err) {
+      console.error("OAuth sign-in failed", err)
       setError("We couldn't authenticate with that provider. Please try again.")
     } finally {
       setIsSubmitting(false)
@@ -203,11 +236,11 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-3">
-              <Button variant="outline" className="w-full" onClick={() => handleProvider(googleProvider)} disabled={isSubmitting}>
+              <Button variant="outline" className="w-full" onClick={() => handleProvider("google")} disabled={isSubmitting}>
                 <Mail className="mr-2 h-4 w-4" /> Continue with Google
               </Button>
-              {appleProvider ? (
-                <Button variant="outline" className="w-full" onClick={() => handleProvider(appleProvider)} disabled={isSubmitting}>
+              {appleAuthEnabled ? (
+                <Button variant="outline" className="w-full" onClick={() => handleProvider("apple")} disabled={isSubmitting}>
                   Continue with Apple
                 </Button>
               ) : null}

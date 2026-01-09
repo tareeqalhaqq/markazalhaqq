@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from "react"
 
-import { updateProfile } from "firebase/auth"
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore"
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAcademyUser } from "@/hooks/useAcademyUser"
-import { db } from "@/lib/firebaseClient"
+import { supabase } from "@/lib/supabaseClient"
 
 const placeholders = {
   headline: "Describe your current focus (e.g., Lead student mentor)",
@@ -27,7 +24,7 @@ type ProfileFormState = {
 }
 
 export default function AccountProfilePage() {
-  const { firebaseUser, userDoc, loading } = useAcademyUser()
+  const { user, userDoc, loading } = useAcademyUser()
   const [formState, setFormState] = useState<ProfileFormState>({
     name: "",
     headline: "",
@@ -42,16 +39,16 @@ export default function AccountProfilePage() {
 
   useEffect(() => {
     setFormState({
-      name: userDoc?.displayName ?? firebaseUser?.displayName ?? "",
+      name: userDoc?.displayName ?? (user?.user_metadata?.full_name as string) ?? "",
       headline: (userDoc?.headline as string) ?? "",
       bio: (userDoc?.bio as string) ?? "",
-      photoURL: userDoc?.photoURL ?? firebaseUser?.photoURL ?? "",
+      photoURL: userDoc?.photoURL ?? (user?.user_metadata?.avatar_url as string) ?? "",
     })
-  }, [firebaseUser?.displayName, firebaseUser?.photoURL, userDoc?.bio, userDoc?.displayName, userDoc?.headline, userDoc?.photoURL])
+  }, [user?.user_metadata, userDoc?.bio, userDoc?.displayName, userDoc?.headline, userDoc?.photoURL])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!firebaseUser) {
+    if (!user) {
       return
     }
 
@@ -59,20 +56,28 @@ export default function AccountProfilePage() {
     setStatus({ type: "idle", message: null })
 
     try {
-      const userRef = doc(db, "users", firebaseUser.uid)
-      await Promise.all([
-        updateProfile(firebaseUser, {
-          displayName: formState.name,
-          photoURL: formState.photoURL || undefined,
+      const [authUpdate, profileUpdate] = await Promise.all([
+        supabase.auth.updateUser({
+          data: {
+            full_name: formState.name,
+            avatar_url: formState.photoURL || null,
+          },
         }),
-        updateDoc(userRef, {
-          displayName: formState.name,
-          headline: formState.headline,
-          bio: formState.bio,
-          photoURL: formState.photoURL,
-          updatedAt: serverTimestamp(),
-        }),
+        supabase
+          .from("users")
+          .update({
+            displayName: formState.name,
+            headline: formState.headline,
+            bio: formState.bio,
+            photoURL: formState.photoURL,
+            updatedAt: new Date().toISOString(),
+          })
+          .eq("id", user.id),
       ])
+
+      if (authUpdate.error || profileUpdate.error) {
+        throw authUpdate.error ?? profileUpdate.error
+      }
       setStatus({ type: "success", message: "Profile updated successfully." })
     } catch (error) {
       console.error("Failed to update profile", error)
@@ -90,7 +95,7 @@ export default function AccountProfilePage() {
     )
   }
 
-  if (!firebaseUser) {
+  if (!user) {
     return (
       <Alert variant="destructive">
         <AlertTitle>Sign in required</AlertTitle>
@@ -120,7 +125,7 @@ export default function AccountProfilePage() {
         <CardHeader>
           <CardTitle>Edit profile</CardTitle>
           <CardDescription className="text-slate-400">
-            These updates sync directly with Firebase so future releases and certificates pull the latest information automatically.
+            These updates sync directly with Supabase so future releases and certificates pull the latest information automatically.
           </CardDescription>
         </CardHeader>
         <CardContent>
