@@ -1,41 +1,49 @@
 "use client"
 
-import type { User } from "firebase/auth"
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore"
+import type { User } from "@supabase/supabase-js"
 
-import { db } from "@/lib/firebaseClient"
 import type { UserRole } from "@/lib/userRoles"
+import { supabase } from "@/lib/supabaseClient"
 
 export async function ensureAcademyUser(user: User): Promise<void> {
-  const userRef = doc(db, "users", user.uid)
-  const snapshot = await getDoc(userRef)
   const defaultRole: UserRole = "user"
+  const now = new Date().toISOString()
 
   const baseProfile = {
-    displayName: user.displayName ?? "",
+    id: user.id,
+    displayName: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "",
     email: user.email ?? "",
-    photoURL: user.photoURL ?? "",
-    providerIds: user.providerData.map((provider) => provider.providerId),
-    lastLoginAt: serverTimestamp(),
+    photoURL: user.user_metadata?.avatar_url ?? "",
+    providerIds: user.app_metadata?.providers ?? [],
+    lastLoginAt: now,
+    updatedAt: now,
   }
 
-  if (!snapshot.exists()) {
-    await setDoc(
-      userRef,
-      {
-        ...baseProfile,
-        role: defaultRole,
-        isAcademyStudent: false,
-        academyPlanId: "none",
-        academyRole: "student",
-        createdAt: serverTimestamp(),
-      },
-      { merge: true },
-    )
-    console.log("Created Firestore user doc for", user.uid)
+  const { data: existingProfile, error } = await supabase.from("users").select("id").eq("id", user.id).maybeSingle()
+
+  if (error) {
+    console.error("Failed to look up academy profile", error)
+  }
+
+  if (!existingProfile) {
+    const { error: insertError } = await supabase.from("users").insert({
+      ...baseProfile,
+      role: defaultRole,
+      isAcademyStudent: false,
+      academyPlanId: "none",
+      academyRole: "student",
+      createdAt: now,
+    })
+
+    if (insertError) {
+      console.error("Failed to create academy profile", insertError)
+    }
+
     return
   }
 
-  await setDoc(userRef, baseProfile, { merge: true })
-  console.log("Updated Firestore user doc for", user.uid)
+  const { error: updateError } = await supabase.from("users").update(baseProfile).eq("id", user.id)
+  if (updateError) {
+    console.error("Failed to update academy profile", updateError)
+  }
 }

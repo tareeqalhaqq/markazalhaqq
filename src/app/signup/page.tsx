@@ -1,15 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-import { FirebaseError } from "firebase/app"
-import {
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  updateProfile,
-} from "firebase/auth"
+import type { AuthError } from "@supabase/supabase-js"
 import { Loader2 } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -18,33 +13,59 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ensureAcademyUser } from "@/lib/ensureAcademyUser"
-import { appleProvider, auth, googleProvider } from "@/lib/firebaseClient"
+import { supabase } from "@/lib/supabaseClient"
 
-function getFriendlySignupErrorMessage(error: unknown) {
-  if (error instanceof FirebaseError) {
-    switch (error.code) {
-      case "auth/email-already-in-use":
-        return "That email already has an account. Try logging in instead."
-      case "auth/invalid-email":
-        return "Please enter a valid email address."
-      case "auth/weak-password":
-        return "Please choose a stronger password with at least 6 characters."
-      default:
-        return "We couldn’t create your account. Please try again."
-    }
+function getFriendlySignupErrorMessage(error: AuthError | null) {
+  if (!error) {
+    return null
   }
 
-  return "Something went wrong while creating your account. Please try again."
+  if (error.message.toLowerCase().includes("already")) {
+    return "That email already has an account. Try logging in instead."
+  }
+
+  if (error.message.toLowerCase().includes("password")) {
+    return "Please choose a stronger password with at least 6 characters."
+  }
+
+  if (error.message.toLowerCase().includes("email")) {
+    return "Please enter a valid email address."
+  }
+
+  return error.message || "We couldn’t create your account. Please try again."
 }
 
 export default function SignupPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const appleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === "true"
+
+  useEffect(() => {
+    const handleSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      if (!data.session?.user) return
+
+      await ensureAcademyUser(data.session.user)
+      router.replace("/dashboard/student")
+    }
+
+    handleSession().catch((err) => console.error("Failed to resolve signup session", err))
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user) return
+      await ensureAcademyUser(session.user)
+      router.replace("/dashboard/student")
+    })
+
+    return () => authListener.subscription.unsubscribe()
+  }, [router])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setStatusMessage(null)
     setIsSubmitting(true)
 
     const formData = new FormData(event.currentTarget)
@@ -53,32 +74,58 @@ export default function SignupPage() {
     const password = String(formData.get("password") || "")
 
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email, password)
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      })
 
-      if (fullName) {
-        await updateProfile(credential.user, { displayName: fullName })
+      if (signUpError) {
+        setError(getFriendlySignupErrorMessage(signUpError) ?? "We couldn’t create your account. Please try again.")
+        return
       }
 
-      await ensureAcademyUser(credential.user)
+      if (data.user) {
+        await ensureAcademyUser(data.user)
+      }
+
+      if (!data.session) {
+        setStatusMessage("Check your email to confirm your account, then sign in to continue.")
+        return
+      }
+
       router.push("/dashboard/student")
     } catch (err) {
-      setError(getFriendlySignupErrorMessage(err))
+      console.error("Signup failed", err)
+      setError("Something went wrong while creating your account. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  async function handleProvider(provider: typeof googleProvider) {
-    if (!provider) return
+  async function handleProvider(provider: "google" | "apple") {
     setError(null)
+    setStatusMessage(null)
     setIsSubmitting(true)
 
     try {
-      const credential = await signInWithPopup(auth, provider)
-      await ensureAcademyUser(credential.user)
-      router.push("/dashboard/student")
+      const { error: providerError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/signup`,
+        },
+      })
+
+      if (providerError) {
+        setError(getFriendlySignupErrorMessage(providerError) ?? "We couldn’t create your account. Please try again.")
+      }
     } catch (err) {
-      setError(getFriendlySignupErrorMessage(err))
+      console.error("OAuth signup failed", err)
+      setError("Something went wrong while creating your account. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -106,6 +153,12 @@ export default function SignupPage() {
               <Alert variant="destructive">
                 <AlertTitle>Unable to create account</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            {statusMessage ? (
+              <Alert>
+                <AlertTitle>Check your inbox</AlertTitle>
+                <AlertDescription>{statusMessage}</AlertDescription>
               </Alert>
             ) : null}
 
@@ -143,11 +196,11 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-3">
-              <Button variant="outline" className="w-full" onClick={() => handleProvider(googleProvider)} disabled={isSubmitting}>
+              <Button variant="outline" className="w-full" onClick={() => handleProvider("google")} disabled={isSubmitting}>
                 Continue with Google
               </Button>
-              {appleProvider ? (
-                <Button variant="outline" className="w-full" onClick={() => handleProvider(appleProvider)} disabled={isSubmitting}>
+              {appleAuthEnabled ? (
+                <Button variant="outline" className="w-full" onClick={() => handleProvider("apple")} disabled={isSubmitting}>
                   Continue with Apple
                 </Button>
               ) : null}

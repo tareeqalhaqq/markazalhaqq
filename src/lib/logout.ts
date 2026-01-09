@@ -1,11 +1,9 @@
 "use client"
 
-import { signOut } from "firebase/auth"
-
-import { auth } from "@/lib/firebaseClient"
+import { supabase } from "@/lib/supabaseClient"
 
 export async function logout() {
-  await signOut(auth)
+  await supabase.auth.signOut()
   if (typeof window !== "undefined") {
     window.location.href = "/"
   }

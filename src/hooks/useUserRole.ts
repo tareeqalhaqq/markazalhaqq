@@ -1,11 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { onAuthStateChanged, type User } from "firebase/auth"
-import { doc, onSnapshot } from "firebase/firestore"
+import type { User } from "@supabase/supabase-js"
 
-import { auth, db } from "@/lib/firebaseClient"
 import { deriveRoleFromProfile, type UserRole } from "@/lib/userRoles"
+import { supabase } from "@/lib/supabaseClient"
 
 export type UseUserRoleResult = {
   user: User | null
@@ -19,15 +18,11 @@ export function useUserRole(): UseUserRoleResult {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let unsubscribeProfile: (() => void) | null = null
+    let isMounted = true
 
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const handleUser = async (currentUser: User | null) => {
+      if (!isMounted) return
       setUser(currentUser)
-
-      if (unsubscribeProfile) {
-        unsubscribeProfile()
-        unsubscribeProfile = null
-      }
 
       if (!currentUser) {
         setRole(null)
@@ -36,27 +31,32 @@ export function useUserRole(): UseUserRoleResult {
       }
 
       setLoading(true)
-      const profileRef = doc(db, "users", currentUser.uid)
+      const { data, error } = await supabase.from("users").select("role, tags").eq("id", currentUser.id).maybeSingle()
 
-      unsubscribeProfile = onSnapshot(
-        profileRef,
-        (snapshot) => {
-          const data = snapshot.data()
-          setRole(deriveRoleFromProfile(data))
-          setLoading(false)
-        },
-        () => {
-          setRole("user")
-          setLoading(false)
-        },
-      )
+      if (error) {
+        console.error("Failed to fetch user role", error)
+        setRole("user")
+      } else {
+        setRole(deriveRoleFromProfile(data))
+      }
+      setLoading(false)
+    }
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => handleUser(data.session?.user ?? null))
+      .catch((error) => {
+        console.error("Failed to get session", error)
+        setLoading(false)
+      })
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleUser(session?.user ?? null)
     })
 
     return () => {
-      unsubscribeAuth()
-      if (unsubscribeProfile) {
-        unsubscribeProfile()
-      }
+      isMounted = false
+      authListener.subscription.unsubscribe()
     }
   }, [])
 
