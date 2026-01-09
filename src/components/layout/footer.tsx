@@ -44,8 +44,8 @@ export function Footer() {
               <Link href="/instructors" className="block transition-colors hover:text-white">
                 Meet the instructors
               </Link>
-              <Link href="/dashboard" className="block transition-colors hover:text-white">
-                Student portal preview
+              <Link href="/login" className="block transition-colors hover:text-white">
+                Student portal
               </Link>
             </div>
             <div className="space-y-3">

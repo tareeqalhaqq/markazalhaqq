@@ -108,7 +108,7 @@ export default function Home() {
       <MarketingHero
         badge="Markaz al-Haqq Academy"
         title="A modern learning experience rooted in classical scholarship"
-        description="Step into a curated academy inspired by sokacademy.com—elegant, accessible, and built for seekers who desire both beauty and rigour. Join pathways that weave mentorship, scholarship, and practice together."
+        description="Step into a curated academy—elegant, accessible, and built for seekers who desire both beauty and rigour. Join pathways that weave mentorship, scholarship, and practice together."
         primaryAction={{ label: "Join the waitlist", href: "/signup" }}
         secondaryAction={{ label: "Browse courses", href: "/courses" }}
         stats={stats}
@@ -130,7 +130,7 @@ export default function Home() {
                 Choose the journey that aligns with your goals
               </h2>
               <p className="text-lead text-muted-foreground">
-                Every cohort follows a modern, SOK-inspired learner experience while remaining grounded in our authentic isnad.
+                Every cohort follows a modern learner experience while remaining grounded in our authentic isnad.
               </p>
               <Button asChild variant="ghost" className="rounded-pill px-5 text-primary hover:bg-primary/10">
                 <Link href="/about">Learn about the academy</Link>
@@ -170,7 +170,7 @@ export default function Home() {
             Crafted to feel like a boutique digital campus
           </h2>
           <p className="text-lead text-muted-foreground">
-            We redesigned every touchpoint to mirror the polish of sokacademy.com while preserving the soul of our tradition.
+            We redesigned every touchpoint to deliver a polished experience while preserving the soul of our tradition.
           </p>
         </div>
         <PillarGrid pillars={pillars} align="center" className="mt-12" />

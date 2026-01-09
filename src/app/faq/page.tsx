@@ -26,9 +26,9 @@ const faqs = [
       "All materials are rooted in the Qur'an and authentic Sunnah upon the understanding of the Companions and the righteous early generations.",
   },
   {
-    question: "Can I preview the learning experience?",
+    question: "Can I explore the learning experience?",
     answer:
-      "Yes. After creating an account you'll receive a sample lesson, memorisation trackers, and a walkthrough of our sokacademy-inspired interface.",
+      "Yes. After creating an account you'll receive a sample lesson, memorisation trackers, and a walkthrough of the student experience.",
   },
   {
     question: "What are the fees?",

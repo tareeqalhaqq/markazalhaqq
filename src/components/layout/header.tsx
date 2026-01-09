@@ -18,7 +18,6 @@ import {
   UserRound,
   Settings,
   CreditCard,
-  Cpu,
 } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import * as React from 'react';
@@ -52,7 +51,6 @@ const publicNavLinks: NavLinkConfig[] = [
   { href: '/talib-al-ilm', label: 'Talib al Ilm', icon: Sparkles },
   { href: '/plans', label: 'Plans', icon: DollarSign },
   { href: '/faq', label: 'FAQ', icon: HelpCircle },
-  { href: '/tech-stack', label: 'Tech stack', icon: Cpu },
 ];
 
 const studentNavLinks: NavLinkConfig[] = [
@@ -108,6 +106,11 @@ export function Header() {
   const { user, role } = useUserRole();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isStudentWorkspace = Boolean(user && role === 'user' && (pathname.startsWith('/dashboard/student') || pathname.startsWith('/academy')));
+
+  if (isStudentWorkspace) {
+    return null;
+  }
 
   const userDisplayName = user?.displayName ?? user?.email ?? 'Account';
   const userInitials = React.useMemo(() => {

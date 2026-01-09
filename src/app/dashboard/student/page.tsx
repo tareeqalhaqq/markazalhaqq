@@ -22,6 +22,7 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { toast } from "@/hooks/use-toast"
+import { useUserRole } from "@/hooks/useUserRole"
 
 import {
   getCourseProgress,
@@ -43,6 +44,7 @@ type TimelineItem = {
 }
 
 export default function StudentDashboardPage() {
+  const { user } = useUserRole()
   const { state, markLessonComplete } = useAcademyData()
   const courses = useMemo(() => state.courses.filter((course) => course.isVisibleToStudents), [state.courses])
 
@@ -131,18 +133,34 @@ export default function StudentDashboardPage() {
     return timelineScope === "today" ? todaySlice : weekSlice
   }, [courses, upcomingSessions, resourceLibrary, timelineScope])
 
+  const learnerName = user?.user_metadata?.full_name ?? user?.email ?? "student"
+  const navItems = [
+    { label: "Courses", icon: BookOpen, targetId: "student-courses" },
+    { label: "Timeline", icon: CalendarDays, targetId: "student-timeline" },
+    { label: "Live", icon: Radio, targetId: "student-live" },
+    { label: "Resources", icon: FolderDown, targetId: "student-resources" },
+    { label: "Messages", icon: MessageCircle, targetId: "student-messages" },
+  ]
+
   return (
     <div className="flex min-h-screen bg-muted/20">
       <aside className="sticky top-0 hidden h-screen w-60 flex-col border-r border-border/60 bg-white/90 px-4 py-6 lg:flex">
         <div className="flex items-center gap-3 rounded-2xl bg-primary/10 px-3 py-2 text-primary">
           <Sparkles className="h-5 w-5" />
-          <div className="text-sm font-semibold">Student preview</div>
+          <div className="text-sm font-semibold">Student workspace</div>
         </div>
         <nav className="mt-8 space-y-2">
-          {[{ label: "Courses", icon: BookOpen }, { label: "Timeline", icon: CalendarDays }, { label: "Live", icon: Radio }, { label: "Resources", icon: FolderDown }, { label: "Messages", icon: MessageCircle }].map((item) => (
+          {navItems.map((item) => (
             <button
               key={item.label}
+              type="button"
               className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+              onClick={() => {
+                const section = document.getElementById(item.targetId)
+                if (section) {
+                  section.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+              }}
             >
               <item.icon className="h-5 w-5" />
               <span>{item.label}</span>
@@ -156,11 +174,11 @@ export default function StudentDashboardPage() {
       </aside>
 
       <div className="flex-1">
-        <div className="border-b border-border/60 bg-white/80 px-6 py-4 backdrop-blur">
+        <div id="student-timeline" className="border-b border-border/60 bg-white/80 px-6 py-4 backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Today</p>
-              <h1 className="font-headline text-3xl font-bold text-foreground">Welcome back, demo learner</h1>
+              <h1 className="font-headline text-3xl font-bold text-foreground">Welcome back, {learnerName}</h1>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-primary/5 p-1 text-sm">
               {(["today", "week"] as const).map((range) => (
@@ -215,7 +233,7 @@ export default function StudentDashboardPage() {
 
         <main className="space-y-8 px-6 py-8">
           {hasCourses ? (
-            <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+            <section id="student-courses" className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -223,7 +241,7 @@ export default function StudentDashboardPage() {
                     <h2 className="font-headline text-2xl">Choose where to focus</h2>
                   </div>
                   <Badge variant="outline" className="border-primary/30 text-primary">
-                    Student account: student@tareeqalhaqq.com
+                    Student account: {user?.email ?? "Signed in"}
                   </Badge>
                 </div>
 
@@ -345,9 +363,9 @@ export default function StudentDashboardPage() {
                   </CardContent>
                 )}
               </Card>
-            </div>
+            </section>
           ) : (
-            <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+            <Card id="student-courses" className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">No courses yet</CardTitle>
                 <CardDescription>
@@ -358,7 +376,7 @@ export default function StudentDashboardPage() {
           )}
 
           <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-            <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+            <Card id="student-live" className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
               <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="font-headline text-2xl">Upcoming sessions</CardTitle>
@@ -419,7 +437,7 @@ export default function StudentDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+            <Card id="student-resources" className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
               <CardHeader>
                 <CardTitle className="font-headline text-xl">Resource library</CardTitle>
                 <CardDescription>Downloads flow directly from the instructor&apos;s uploads.</CardDescription>
@@ -451,6 +469,38 @@ export default function StudentDashboardPage() {
               </CardContent>
             </Card>
           </div>
+
+          <Card id="student-messages" className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+            <CardHeader>
+              <CardTitle className="font-headline text-xl">Messages</CardTitle>
+              <CardDescription>Stay connected with instructors and support.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              <Button
+                className="rounded-full"
+                onClick={() =>
+                  toast({
+                    title: "Message queued",
+                    description: "Instructor messaging will connect through Firebase when available.",
+                  })
+                }
+              >
+                <MessageCircle className="mr-2 h-4 w-4" /> Message instructor
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() =>
+                  toast({
+                    title: "Support notified",
+                    description: "Support replies will arrive in your inbox once the integration is live.",
+                  })
+                }
+              >
+                Ask support
+              </Button>
+            </CardContent>
+          </Card>
         </main>
       </div>
 

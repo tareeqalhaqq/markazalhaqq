@@ -8,7 +8,7 @@ const dashboardCards = [
   {
     title: "Instructor workspace",
     description:
-      "Create courses, publish lessons, and share resources. Every action instantly updates the student preview so you can validate the flow before wiring Firebase.",
+      "Create courses, publish lessons, and share resources. Every action instantly updates the student workspace so you can validate the flow before wiring Firebase.",
     href: "/dashboard/instructor",
     badge: "Admin",
   },
@@ -26,7 +26,7 @@ export default function DashboardLandingPage() {
     <div className="container mx-auto max-w-5xl space-y-10 px-6">
       <div className="rounded-3xl border border-primary/20 bg-white/90 p-10 text-center shadow-xl shadow-primary/10">
         <Badge variant="outline" className="border-primary/50 text-primary">
-          Linked preview
+          Linked workspaces
         </Badge>
         <h1 className="mt-4 font-headline text-4xl font-bold tracking-tight text-foreground">
           Explore the connected academy dashboards

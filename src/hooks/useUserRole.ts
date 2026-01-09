@@ -37,7 +37,7 @@ export function useUserRole(): UseUserRoleResult {
         console.error("Failed to fetch user role", error)
         setRole("user")
       } else {
-        setRole(deriveRoleFromProfile(data))
+        setRole(deriveRoleFromProfile(data, currentUser.email))
       }
       setLoading(false)
     }

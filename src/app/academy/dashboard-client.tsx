@@ -234,8 +234,8 @@ export function AcademyDashboardClient() {
                   Welcome back, {user.user_metadata?.full_name || user.email}
                 </h1>
                 <p className="mt-2 text-sm text-slate-600">
-                  Your personalised sokacademy-inspired dashboard has been rebuilt for clarity and speed. Track assignments,
-                  sessions, and resources in one calm space.
+                  Your personalised dashboard is built for clarity and speed. Track assignments, sessions, and resources in one calm
+                  space.
                 </p>
               </div>
             </div>
