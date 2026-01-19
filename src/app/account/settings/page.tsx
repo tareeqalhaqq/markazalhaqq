@@ -1,15 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
+import { useUser } from "@clerk/nextjs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { useAcademyUser } from "@/hooks/useAcademyUser"
-import { supabase } from "@/lib/supabaseClient"
+import { useSupabase } from "@/hooks/useSupabase"
 
 type PreferencesState = {
   emailUpdates: boolean
@@ -28,7 +27,8 @@ const timezoneOptions = [
 ]
 
 export default function AccountSettingsPage() {
-  const { user, userDoc, loading } = useAcademyUser()
+  const { user: clerkUser, isLoaded } = useUser()
+  const supabase = useSupabase()
   const [preferences, setPreferences] = useState<PreferencesState>({
     emailUpdates: true,
     sessionReminders: true,
@@ -40,31 +40,49 @@ export default function AccountSettingsPage() {
     message: null,
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [loadingPreferences, setLoadingPreferences] = useState(true)
 
   useEffect(() => {
-    if (!userDoc) return
-    const docPreferences = (userDoc.preferences as Partial<PreferencesState>) ?? {}
-    setPreferences((prev) => ({
-      ...prev,
-      ...docPreferences,
-    }))
-  }, [userDoc])
+    if (!clerkUser) return
+
+    async function fetchPreferences() {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("preferences")
+          .eq("id", clerkUser?.id)
+          .single()
+
+        if (data?.preferences) {
+          setPreferences(prev => ({
+            ...prev,
+            ...data.preferences
+          }))
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoadingPreferences(false)
+      }
+    }
+    fetchPreferences()
+  }, [clerkUser, supabase])
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!user) return
+    if (!clerkUser) return
 
     setIsSaving(true)
     setStatus({ type: "idle", message: null })
 
     try {
       const { error } = await supabase
-        .from("users")
+        .from("profiles")
         .update({
           preferences,
-          updatedAt: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id)
+        .eq("id", clerkUser.id)
 
       if (error) {
         throw error
@@ -78,7 +96,7 @@ export default function AccountSettingsPage() {
     }
   }
 
-  if (loading) {
+  if (!isLoaded || loadingPreferences) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-slate-300">Loading account preferences…</p>
@@ -86,7 +104,7 @@ export default function AccountSettingsPage() {
     )
   }
 
-  if (!user) {
+  if (!clerkUser) {
     return (
       <Alert variant="destructive">
         <AlertTitle>Sign in required</AlertTitle>

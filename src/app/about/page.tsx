@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { BookOpenCheck, HeartHandshake, Sparkles, Users2 } from "lucide-react"
 
 import { MarketingHero } from "@/components/marketing/hero"

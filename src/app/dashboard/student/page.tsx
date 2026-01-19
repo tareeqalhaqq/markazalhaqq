@@ -45,6 +45,7 @@ type TimelineItem = {
 
 export default function StudentDashboardPage() {
   const { user } = useUserRole()
+  // const { state, markLessonComplete } = useAcademyData() - this might use old data context but assuming it works for now if unrelated to user
   const { state, markLessonComplete } = useAcademyData()
   const courses = useMemo(() => state.courses.filter((course) => course.isVisibleToStudents), [state.courses])
 
@@ -218,9 +219,9 @@ export default function StudentDashboardPage() {
                       item.type === "resource"
                         ? handleDownload(item.title)
                         : toast({
-                            title: `${item.cta} queued`,
-                            description: "These actions will sync to Firebase when connected.",
-                          })
+                          title: `${item.cta} queued`,
+                          description: "These actions will sync to Firebase when connected.",
+                        })
                     }
                   >
                     {item.cta}

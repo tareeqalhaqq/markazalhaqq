@@ -109,8 +109,8 @@ export default function Home() {
         badge="Markaz al-Haqq Academy"
         title="A modern learning experience rooted in classical scholarship"
         description="Step into a curated academy—elegant, accessible, and built for seekers who desire both beauty and rigour. Join pathways that weave mentorship, scholarship, and practice together."
-        primaryAction={{ label: "Join the waitlist", href: "/signup" }}
-        secondaryAction={{ label: "Browse courses", href: "/courses" }}
+        primaryAction={{ label: "Sign In", href: "/sign-in" }}
+        secondaryAction={{ label: "View Plans", href: "/plans" }}
         stats={stats}
         image={
           heroImage
@@ -120,7 +120,7 @@ export default function Home() {
       />
 
       <Section background="subtle">
-        <div className="rounded-section bg-white/90 p-10 shadow-xl shadow-primary/10 md:p-16">
+        <div className="rounded-section bg-secondary/5 p-10 shadow-xl shadow-primary/5 md:p-16 border border-white/5">
           <div className="grid gap-12 lg:grid-cols-[minmax(0,380px)_1fr] lg:items-center">
             <div className="space-y-5">
               <Badge className={cn(badgeBase, "border border-secondary/30 bg-secondary/10 text-secondary")}>
@@ -138,7 +138,7 @@ export default function Home() {
             </div>
             <div className="grid gap-6 md:grid-cols-2">
               {programTracks.map((track) => (
-                <Card key={track.title} className="h-full rounded-card border border-muted bg-white/90 shadow-md">
+                <Card key={track.title} className="h-full rounded-card border border-muted bg-card shadow-md">
                   <CardHeader>
                     <div className="text-eyebrow font-semibold uppercase tracking-[0.3em] text-primary">{track.focus}</div>
                     <CardTitle className="mt-3 font-headline text-2xl text-foreground">{track.title}</CardTitle>
@@ -178,7 +178,7 @@ export default function Home() {
 
       <Section>
         <div className="grid gap-12 lg:grid-cols-[minmax(0,460px)_1fr] lg:items-center">
-          <div className="relative overflow-hidden rounded-section border border-primary/20 bg-white shadow-2xl">
+          <div className="relative overflow-hidden rounded-section border border-primary/20 bg-card shadow-2xl">
             {classroomImage && (
               <Image
                 src={classroomImage.imageUrl}
@@ -186,7 +186,7 @@ export default function Home() {
                 data-ai-hint={classroomImage.imageHint}
                 width={900}
                 height={640}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover opacity-90"
               />
             )}
           </div>
@@ -202,7 +202,7 @@ export default function Home() {
             </p>
             <div className="grid gap-5 sm:grid-cols-2">
               {curriculum.map((course) => (
-                <Card key={course.title} className="rounded-card border border-muted bg-white/90">
+                <Card key={course.title} className="rounded-card border border-muted bg-card">
                   <CardHeader>
                     <CardTitle className="font-headline text-xl text-foreground">{course.title}</CardTitle>
                   </CardHeader>
@@ -229,7 +229,7 @@ export default function Home() {
         </div>
         <div className="mt-12 grid gap-6 md:grid-cols-4">
           {experienceSteps.map((step, index) => (
-            <Card key={step.title} className="rounded-card border border-white/60 bg-white/90 shadow-md">
+            <Card key={step.title} className="rounded-card border border-white/5 bg-card shadow-md">
               <CardHeader>
                 <div className="text-eyebrow font-semibold uppercase tracking-[0.35em] text-primary/80">Step {index + 1}</div>
                 <CardTitle className="mt-2 font-headline text-xl text-foreground">{step.title}</CardTitle>
@@ -245,12 +245,12 @@ export default function Home() {
       </Section>
 
       <Section>
-        <div className="rounded-section bg-gradient-to-br from-slate-900 via-slate-950 to-blue-900 p-12 text-white md:p-16">
+        <div className="rounded-section bg-gradient-to-br from-slate-900 via-slate-950 to-blue-900 p-12 text-white md:p-16 border border-white/10">
           <div className="grid gap-8 md:grid-cols-[minmax(0,420px)_1fr] md:items-center">
             <div className="space-y-6">
               <Badge className={cn(badgeBase, "bg-white/10 text-white/80 border border-white/20")}>Student reflections</Badge>
               <h2 className="font-headline text-display-1 font-semibold text-white sm:text-display-2">
-                "It felt like the digital campus I always wished existed."
+                &quot;It felt like the digital campus I always wished existed.&quot;
               </h2>
               <p className="text-base text-slate-200">{testimonial.quote}</p>
               <p className="text-eyebrow font-semibold uppercase tracking-[0.35em] text-white/60">{testimonial.name}</p>
@@ -292,11 +292,11 @@ export default function Home() {
 
       <Section>
         <CallToActionBand
-          badge="Ready to begin?"
-          title="Secure your place in the next cohort"
-          description="Share your goals, receive tailored updates, and be the first to access the redesigned courses page built for multiple programmes."
-          primaryAction={{ label: "Join the waitlist", href: "/signup" }}
-          secondaryAction={{ label: "View FAQs", href: "/faq" }}
+          badge="Join the Academy"
+          title="Begin your journey of sacred knowledge"
+          description="Sign in to access your dashboard and start your learning path."
+          primaryAction={{ label: "Sign In", href: "/sign-in" }}
+        // secondaryAction={{ label: "View FAQs", href: "/faq" }}
         />
       </Section>
     </div>

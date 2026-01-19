@@ -1,15 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
+import { useUser } from "@clerk/nextjs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useAcademyUser } from "@/hooks/useAcademyUser"
-import { supabase } from "@/lib/supabaseClient"
+import { useSupabase } from "@/hooks/useSupabase"
 
 const placeholders = {
   headline: "Describe your current focus (e.g., Lead student mentor)",
@@ -24,7 +23,8 @@ type ProfileFormState = {
 }
 
 export default function AccountProfilePage() {
-  const { user, userDoc, loading } = useAcademyUser()
+  const { user: clerkUser, isLoaded } = useUser()
+  const supabase = useSupabase()
   const [formState, setFormState] = useState<ProfileFormState>({
     name: "",
     headline: "",
@@ -36,48 +36,75 @@ export default function AccountProfilePage() {
     message: null,
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [loadingProfile, setLoadingProfile] = useState(true)
 
   useEffect(() => {
-    setFormState({
-      name: userDoc?.displayName ?? (user?.user_metadata?.full_name as string) ?? "",
-      headline: (userDoc?.headline as string) ?? "",
-      bio: (userDoc?.bio as string) ?? "",
-      photoURL: userDoc?.photoURL ?? (user?.user_metadata?.avatar_url as string) ?? "",
-    })
-  }, [user?.user_metadata, userDoc?.bio, userDoc?.displayName, userDoc?.headline, userDoc?.photoURL])
+    if (!clerkUser) return
+
+    async function fetchProfile() {
+      try {
+        const { data, error } = await supabase
+          .from("profiles") // Ensure we check 'profiles' table first (new schema) or 'users' if legacy still exists but we should prefer profiles
+          .select("*")
+          .eq("id", clerkUser?.id)
+          .single()
+
+        if (data) {
+          setFormState({
+            name: data.full_name || clerkUser?.fullName || "",
+            headline: data.headline || "",
+            bio: data.bio || "",
+            photoURL: data.avatar_url || clerkUser?.imageUrl || "",
+          })
+        } else {
+          setFormState({
+            name: clerkUser?.fullName || "",
+            headline: "",
+            bio: "",
+            photoURL: clerkUser?.imageUrl || "",
+          })
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoadingProfile(false)
+      }
+    }
+
+    if (clerkUser) {
+      fetchProfile()
+    }
+  }, [clerkUser, supabase])
+
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!user) {
-      return
-    }
+    if (!clerkUser) return
 
     setIsSaving(true)
     setStatus({ type: "idle", message: null })
 
     try {
-      const [authUpdate, profileUpdate] = await Promise.all([
-        supabase.auth.updateUser({
-          data: {
-            full_name: formState.name,
-            avatar_url: formState.photoURL || null,
-          },
-        }),
-        supabase
-          .from("users")
-          .update({
-            displayName: formState.name,
-            headline: formState.headline,
-            bio: formState.bio,
-            photoURL: formState.photoURL,
-            updatedAt: new Date().toISOString(),
-          })
-          .eq("id", user.id),
-      ])
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: clerkUser.id,
+          full_name: formState.name,
+          headline: formState.headline,
+          bio: formState.bio,
+          avatar_url: formState.photoURL,
+          updated_at: new Date().toISOString(),
+          email: clerkUser.primaryEmailAddress?.emailAddress // Ensure email is present
+        })
 
-      if (authUpdate.error || profileUpdate.error) {
-        throw authUpdate.error ?? profileUpdate.error
-      }
+      if (error) throw error
+
+      // Update Clerk as well (optional, but keep it consistent for name/avatar)
+      await clerkUser.update({
+        firstName: formState.name.split(" ")[0],
+        lastName: formState.name.split(" ").slice(1).join(" "),
+      }).catch(e => console.warn("Failed to update Clerk profile", e))
+
       setStatus({ type: "success", message: "Profile updated successfully." })
     } catch (error) {
       console.error("Failed to update profile", error)
@@ -87,7 +114,7 @@ export default function AccountProfilePage() {
     }
   }
 
-  if (loading) {
+  if (!isLoaded || loadingProfile) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-slate-300">Loading account profile…</p>
@@ -95,7 +122,7 @@ export default function AccountProfilePage() {
     )
   }
 
-  if (!user) {
+  if (!clerkUser) {
     return (
       <Alert variant="destructive">
         <AlertTitle>Sign in required</AlertTitle>

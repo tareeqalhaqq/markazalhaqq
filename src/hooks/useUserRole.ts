@@ -1,64 +1,51 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import type { User } from "@supabase/supabase-js"
+import { useUser } from "@clerk/nextjs"
+import { useSupabase } from "@/hooks/useSupabase"
 
-import { deriveRoleFromProfile, type UserRole } from "@/lib/userRoles"
-import { supabase } from "@/lib/supabaseClient"
+export function useUserRole() {
+    const { user: clerkUser, isLoaded } = useUser()
+    const supabase = useSupabase()
+    const [role, setRole] = useState<string | null>(null)
+    const [loading, setLoading] = useState(true)
 
-export type UseUserRoleResult = {
-  user: User | null
-  role: UserRole | null
-  loading: boolean
-}
+    useEffect(() => {
+        if (!isLoaded) return
+        if (!clerkUser) {
+            setRole(null)
+            setLoading(false)
+            return
+        }
 
-export function useUserRole(): UseUserRoleResult {
-  const [user, setUser] = useState<User | null>(null)
-  const [role, setRole] = useState<UserRole | null>(null)
-  const [loading, setLoading] = useState(true)
+        async function fetchRole() {
+            try {
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("app_role")
+                    .eq("id", clerkUser?.id)
+                    .single()
 
-  useEffect(() => {
-    let isMounted = true
+                if (data) {
+                    setRole(data.app_role)
+                } else {
+                    setRole("user") // Default to user if no profile found (or handle error)
+                }
+            } catch (err) {
+                console.error(err)
+                setRole("user")
+            } finally {
+                setLoading(false)
+            }
+        }
 
-    const handleUser = async (currentUser: User | null) => {
-      if (!isMounted) return
-      setUser(currentUser)
+        fetchRole()
+    }, [isLoaded, clerkUser, supabase])
 
-      if (!currentUser) {
-        setRole(null)
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      const { data, error } = await supabase.from("users").select("role, tags").eq("id", currentUser.id).maybeSingle()
-
-      if (error) {
-        console.error("Failed to fetch user role", error)
-        setRole("user")
-      } else {
-        setRole(deriveRoleFromProfile(data, currentUser.email))
-      }
-      setLoading(false)
+    // Return a shape compatible with legacy usage where possible, or updated
+    return {
+        user: clerkUser,
+        role,
+        loading: loading || !isLoaded
     }
-
-    supabase.auth
-      .getSession()
-      .then(({ data }) => handleUser(data.session?.user ?? null))
-      .catch((error) => {
-        console.error("Failed to get session", error)
-        setLoading(false)
-      })
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleUser(session?.user ?? null)
-    })
-
-    return () => {
-      isMounted = false
-      authListener.subscription.unsubscribe()
-    }
-  }, [])
-
-  return { user, role, loading }
 }

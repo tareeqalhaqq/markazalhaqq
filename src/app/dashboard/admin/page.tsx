@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-
+import { useUser } from "@clerk/nextjs" // Import Clerk
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { useUserRole } from "@/hooks/useUserRole"
+import { useSupabase } from "@/hooks/useSupabase" // Use new hook
 import { useFirestoreCollection } from "@/hooks/useFirestoreCollection"
 import {
   createAnnouncement,
@@ -41,7 +41,27 @@ import {
 export default function AdminWorkspacePage() {
   const router = useRouter()
   const { toast } = useToast()
-  const { user, role, loading } = useUserRole()
+  const { user: clerkUser, isLoaded } = useUser()
+  const supabase = useSupabase()
+
+  // We need to fetch role from Supabase profiles
+  const [role, setRole] = useState<string | null>(null)
+  const [loadingRole, setLoadingRole] = useState(true)
+
+  useEffect(() => {
+    if (!clerkUser) return
+    async function fetchRole() {
+      const { data } = await supabase
+        .from("profiles")
+        .select("app_role")
+        .eq("id", clerkUser?.id)
+        .single()
+      setRole(data?.app_role ?? null)
+      setLoadingRole(false)
+    }
+    fetchRole()
+  }, [clerkUser, supabase])
+
   const { data: courses } = useFirestoreCollection<AcademyCourse>("courses", { orderByField: "createdAt" })
   const { data: sessions } = useFirestoreCollection<LiveSession>("liveSessions", { orderByField: "scheduledAt" })
   const { data: resources } = useFirestoreCollection<ResourceLibraryItem>("resources", { orderByField: "createdAt" })
@@ -134,10 +154,11 @@ export default function AdminWorkspacePage() {
   const [updatingQuizId, setUpdatingQuizId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!loading && (!user || role !== "admin")) {
+    if (!isLoaded || loadingRole) return
+    if ((!clerkUser || role !== "admin")) {
       router.replace("/dashboard")
     }
-  }, [loading, role, router, user])
+  }, [isLoaded, loadingRole, role, router, clerkUser])
 
   const overview = useMemo(
     () => [
@@ -152,7 +173,7 @@ export default function AdminWorkspacePage() {
     [announcements.length, courses.length, exams.length, quizzes.length, resources.length, sessions.length, students.length],
   )
 
-  if (loading) {
+  if (!isLoaded || loadingRole) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-muted-foreground">Checking your admin permissions…</p>
@@ -160,7 +181,7 @@ export default function AdminWorkspacePage() {
     )
   }
 
-  if (!user || role !== "admin") {
+  if (!clerkUser || role !== "admin") {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-3 text-center">
         <p className="text-lg font-semibold">Admin access required</p>
