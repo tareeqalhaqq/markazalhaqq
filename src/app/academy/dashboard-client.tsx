@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useAuth } from "@clerk/nextjs"
 
 import { format } from "date-fns"
 import type { Timestamp } from "firebase/firestore"
@@ -32,7 +33,6 @@ import {
   type LiveSession,
   type ResourceLibraryItem,
 } from "@/lib/academy-data"
-import { logout } from "@/lib/logout"
 import { cn } from "@/lib/utils"
 
 const studentTabs = [
@@ -83,6 +83,7 @@ function CourseProgressBar({ value }: { value: number }) {
 export function AcademyDashboardClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { signOut } = useAuth()
   const { user, courses: assignedCourses, loading: userLoading } = useAcademyUser()
   const { data: catalogCourses, loading: coursesLoading } = useFirestoreCollection<AcademyCourse>("courses", {
     orderByField: "updatedAt",
@@ -192,8 +193,8 @@ export function AcademyDashboardClient() {
   async function handleLogout() {
     try {
       setIsLoggingOut(true)
-      await logout()
-      router.push("/login")
+      await signOut()
+      router.push("/sign-in")
     } finally {
       setIsLoggingOut(false)
     }
@@ -213,7 +214,7 @@ export function AcademyDashboardClient() {
         <h1 className="text-3xl font-bold">Please log in</h1>
         <p className="text-muted-foreground">You must sign in to view the student dashboard.</p>
         <Button asChild>
-          <Link href="/login">Go to login</Link>
+          <Link href="/sign-in">Go to login</Link>
         </Button>
       </div>
     )

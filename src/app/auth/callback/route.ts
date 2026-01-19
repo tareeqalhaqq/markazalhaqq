@@ -1,60 +1,68 @@
-import { currentUser } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
-import { createClerkSupabaseClient } from '@/lib/supabase'
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+
+import { createServiceRoleSupabaseClient, extractProfileId } from "@/lib/supabase"
 
 export async function GET() {
-    const authObj = await auth()
-    const { userId } = authObj
-    const user = await currentUser()
+  const { userId } = await auth()
+  const user = await currentUser()
 
-    if (!userId || !user) {
-        return redirect('/sign-in')
-    }
+  if (!userId || !user) {
+    return redirect("/sign-in")
+  }
 
-    const supabase = await createClerkSupabaseClient(authObj)
+  const supabase = createServiceRoleSupabaseClient()
 
-    const email = user.emailAddresses[0]?.emailAddress
-    const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+  const primaryEmail =
+    user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? userId
+  const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || primaryEmail || "New user"
 
-    // 1. Ensure Profile in Supabase
-    const { error: profileError } = await supabase.rpc('ensure_profile', {
-        clerk_id: userId,
-        email: email,
-        full_name: fullName || email, // Fallback to email if name is empty
-    })
+  const { data: ensuredProfile, error: ensureError } = await supabase.rpc("ensure_profile", {
+    clerk_id: userId,
+    email: primaryEmail,
+    name: fullName,
+  })
 
-    if (profileError) {
-        console.error('Error creating profile:', profileError)
-        // Continue anyway, maybe it exists or partial failure. 
-        // Ideally we might show an error, but let's try to proceed.
-    }
+  if (ensureError) {
+    console.error("ensure_profile failed", ensureError)
+  }
 
-    // 2. Check Role and Membership for Routing
-    // Check if admin
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('app_role')
-        .eq('id', userId)
-        .single()
+  const profileId = extractProfileId(ensuredProfile)
 
-    if (profile?.app_role === 'admin') {
-        return redirect('/dashboard')
-    }
+  if (!profileId) {
+    console.error("Supabase ensure_profile did not return a profile id")
+    return redirect("/onboarding")
+  }
 
-    // Check academy membership
-    const { data: memberships } = await supabase
-        .from('academy_memberships')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1)
+  const { data: profileRow, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, app_role")
+    .eq("id", profileId)
+    .single()
 
-    const hasMembership = memberships && memberships.length > 0
+  if (profileError) {
+    console.error("Unable to read profile", profileError)
+  }
 
-    if (hasMembership) {
-        return redirect('/dashboard')
-    } else {
-        // New user or no membership
-        return redirect('/onboarding')
-    }
+  if (profileRow?.app_role === "admin") {
+    return redirect("/admin")
+  }
+
+  const { data: memberships, error: membershipError } = await supabase
+    .from("academy_memberships")
+    .select("id")
+    .eq("profile_id", profileId)
+    .limit(1)
+
+  if (membershipError) {
+    console.error("Unable to check memberships", membershipError)
+  }
+
+  const hasMembership = Array.isArray(memberships) && memberships.length > 0
+
+  if (!hasMembership) {
+    return redirect("/onboarding")
+  }
+
+  return redirect("/dashboard")
 }

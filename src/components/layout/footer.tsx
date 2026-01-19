@@ -44,7 +44,7 @@ export function Footer() {
               <Link href="/instructors" className="block transition-colors hover:text-white">
                 Meet the instructors
               </Link>
-              <Link href="/login" className="block transition-colors hover:text-white">
+              <Link href="/sign-in" className="block transition-colors hover:text-white">
                 Student portal
               </Link>
             </div>
@@ -60,7 +60,7 @@ export function Footer() {
               Receive launch announcements, open lecture invites, and community highlights in your inbox.
             </p>
             <Button asChild className="w-full rounded-full bg-white text-slate-900 hover:bg-slate-200">
-              <Link href="/signup">Sign up today</Link>
+              <Link href="/sign-up">Sign up today</Link>
             </Button>
           </div>
         </div>

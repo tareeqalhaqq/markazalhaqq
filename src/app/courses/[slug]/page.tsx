@@ -85,10 +85,10 @@ export default async function CourseDetailPage({ params }: { params: { slug: str
             <Separator />
             <div className="flex flex-wrap gap-3">
               <Button asChild className="rounded-full px-6">
-                <Link href="/signup">Join this course</Link>
+                <Link href="/sign-up">Join this course</Link>
               </Button>
               <Button asChild variant="outline" className="rounded-full px-6">
-                <Link href="/login">Already enrolled? Sign in</Link>
+                <Link href="/sign-in">Already enrolled? Sign in</Link>
               </Button>
             </div>
           </CardContent>

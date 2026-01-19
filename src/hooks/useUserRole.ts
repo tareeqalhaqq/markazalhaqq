@@ -2,50 +2,79 @@
 
 import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
-import { useSupabase } from "@/hooks/useSupabase"
+
+type ProfileState = {
+  profileId: string | null
+  appRole: string | null
+  hasMembership: boolean
+}
 
 export function useUserRole() {
-    const { user: clerkUser, isLoaded } = useUser()
-    const supabase = useSupabase()
-    const [role, setRole] = useState<string | null>(null)
-    const [loading, setLoading] = useState(true)
+  const { user: clerkUser, isLoaded } = useUser()
+  const [profileState, setProfileState] = useState<ProfileState>({
+    profileId: null,
+    appRole: null,
+    hasMembership: false,
+  })
+  const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        if (!isLoaded) return
-        if (!clerkUser) {
-            setRole(null)
-            setLoading(false)
-            return
-        }
+  useEffect(() => {
+    if (!isLoaded) return
 
-        async function fetchRole() {
-            try {
-                const { data, error } = await supabase
-                    .from("profiles")
-                    .select("app_role")
-                    .eq("id", clerkUser?.id)
-                    .single()
-
-                if (data) {
-                    setRole(data.app_role)
-                } else {
-                    setRole("user") // Default to user if no profile found (or handle error)
-                }
-            } catch (err) {
-                console.error(err)
-                setRole("user")
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchRole()
-    }, [isLoaded, clerkUser, supabase])
-
-    // Return a shape compatible with legacy usage where possible, or updated
-    return {
-        user: clerkUser,
-        role,
-        loading: loading || !isLoaded
+    if (!clerkUser) {
+      setProfileState({ profileId: null, appRole: null, hasMembership: false })
+      setLoading(false)
+      return
     }
+
+    let cancelled = false
+
+    async function fetchProfileState() {
+      setLoading(true)
+      try {
+        const response = await fetch("/api/me", { cache: "no-store" })
+        if (!response.ok) {
+          throw new Error(`Unable to load profile (status ${response.status})`)
+        }
+
+        const data = await response.json()
+        if (cancelled) return
+
+        setProfileState({
+          profileId: data.profileId ?? null,
+          appRole: data.appRole ?? null,
+          hasMembership: Boolean(data.hasMembership),
+        })
+      } catch (error) {
+        console.error(error)
+        if (!cancelled) {
+          setProfileState((current) => ({
+            profileId: current.profileId,
+            appRole: current.appRole ?? "user",
+            hasMembership: current.hasMembership,
+          }))
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchProfileState()
+
+    return () => {
+      cancelled = true
+    }
+  }, [clerkUser, isLoaded])
+
+  const resolvedRole = profileState.appRole ?? "user"
+
+  return {
+    user: clerkUser,
+    role: resolvedRole,
+    profileId: profileState.profileId,
+    hasMembership: profileState.hasMembership,
+    loading: loading || !isLoaded,
+  }
 }
