@@ -232,7 +232,7 @@ export function AcademyDashboardClient() {
               </Badge>
               <div>
                 <h1 className="text-3xl font-semibold text-slate-900">
-                  Welcome back, {user.user_metadata?.full_name || user.email}
+                  Welcome back, {user.fullName ?? user.primaryEmailAddress?.emailAddress}
                 </h1>
                 <p className="mt-2 text-sm text-slate-600">
                   Your personalised dashboard is built for clarity and speed. Track assignments, sessions, and resources in one calm

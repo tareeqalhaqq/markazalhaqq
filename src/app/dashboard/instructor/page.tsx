@@ -503,7 +503,7 @@ export default function InstructorDashboardPage() {
                 <Separator className="bg-border/70" />
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                    <span>Course > Lessons > Sessions > Resources</span>
+                    <span>Course &gt; Lessons &gt; Sessions &gt; Resources</span>
                     <PanelRight className="h-4 w-4 text-primary" />
                   </div>
                   <p className="text-muted-foreground">

@@ -134,7 +134,7 @@ export default function StudentDashboardPage() {
     return timelineScope === "today" ? todaySlice : weekSlice
   }, [courses, upcomingSessions, resourceLibrary, timelineScope])
 
-  const learnerName = user?.user_metadata?.full_name ?? user?.email ?? "student"
+  const learnerName = user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? "student"
   const navItems = [
     { label: "Courses", icon: BookOpen, targetId: "student-courses" },
     { label: "Timeline", icon: CalendarDays, targetId: "student-timeline" },
@@ -242,7 +242,7 @@ export default function StudentDashboardPage() {
                     <h2 className="font-headline text-2xl">Choose where to focus</h2>
                   </div>
                   <Badge variant="outline" className="border-primary/30 text-primary">
-                    Student account: {user?.email ?? "Signed in"}
+                    Student account: {user?.primaryEmailAddress?.emailAddress ?? "Signed in"}
                   </Badge>
                 </div>
 
