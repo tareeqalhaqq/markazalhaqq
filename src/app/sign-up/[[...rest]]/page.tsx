@@ -26,8 +26,7 @@ export default function SignUpPage() {
             routing="path"
             path="/sign-up"
             signInUrl="/sign-in"
-            afterSignInUrl="/auth/callback"
-            afterSignUpUrl="/auth/callback"
+            forceRedirectUrl="/auth/callback"
             appearance={{
               variables: {
                 borderRadius: "12px",

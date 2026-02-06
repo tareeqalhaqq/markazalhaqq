@@ -1,16 +1,17 @@
 import { useSession } from '@clerk/nextjs'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { useMemo } from 'react'
 
-export function useSupabase() {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+export function useSupabase(): SupabaseClient {
     const { session } = useSession()
 
     return useMemo(() => {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
         if (!supabaseUrl || !supabaseAnonKey) {
-            throw new Error("Supabase client requires NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to be set")
+            console.error("useSupabase: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required")
+            return createClient('https://placeholder.supabase.co', 'placeholder')
         }
 
         return createClient(
