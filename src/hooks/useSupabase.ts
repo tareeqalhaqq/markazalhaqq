@@ -10,7 +10,8 @@ export function useSupabase() {
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
         if (!supabaseUrl || !supabaseAnonKey) {
-            throw new Error("Supabase client requires NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to be set")
+            // Return null during build/SSG when env vars aren't available
+            return null
         }
 
         return createClient(

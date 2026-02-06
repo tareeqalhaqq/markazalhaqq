@@ -43,11 +43,12 @@ export default function AccountSettingsPage() {
   const [loadingPreferences, setLoadingPreferences] = useState(true)
 
   useEffect(() => {
-    if (!clerkUser) return
+    if (!clerkUser || !supabase) return
+    const client = supabase
 
     async function fetchPreferences() {
       try {
-        const { data } = await supabase
+        const { data } = await client
           .from("profiles")
           .select("preferences")
           .eq("id", clerkUser?.id)
@@ -70,13 +71,14 @@ export default function AccountSettingsPage() {
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!clerkUser) return
+    if (!clerkUser || !supabase) return
+    const client = supabase
 
     setIsSaving(true)
     setStatus({ type: "idle", message: null })
 
     try {
-      const { error } = await supabase
+      const { error } = await client
         .from("profiles")
         .update({
           preferences,

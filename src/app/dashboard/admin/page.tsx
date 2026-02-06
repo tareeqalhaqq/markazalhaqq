@@ -49,9 +49,10 @@ export default function AdminWorkspacePage() {
   const [loadingRole, setLoadingRole] = useState(true)
 
   useEffect(() => {
-    if (!clerkUser) return
+    if (!clerkUser || !supabase) return
+    const client = supabase
     async function fetchRole() {
-      const { data } = await supabase
+      const { data } = await client
         .from("profiles")
         .select("app_role")
         .eq("id", clerkUser?.id)

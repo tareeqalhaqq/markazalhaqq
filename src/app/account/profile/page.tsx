@@ -39,12 +39,13 @@ export default function AccountProfilePage() {
   const [loadingProfile, setLoadingProfile] = useState(true)
 
   useEffect(() => {
-    if (!clerkUser) return
+    if (!clerkUser || !supabase) return
+    const client = supabase
 
     async function fetchProfile() {
       try {
-        const { data, error } = await supabase
-          .from("profiles") // Ensure we check 'profiles' table first (new schema) or 'users' if legacy still exists but we should prefer profiles
+        const { data, error } = await client
+          .from("profiles")
           .select("*")
           .eq("id", clerkUser?.id)
           .single()
@@ -79,13 +80,14 @@ export default function AccountProfilePage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!clerkUser) return
+    if (!clerkUser || !supabase) return
+    const client = supabase
 
     setIsSaving(true)
     setStatus({ type: "idle", message: null })
 
     try {
-      const { error } = await supabase
+      const { error } = await client
         .from("profiles")
         .upsert({
           id: clerkUser.id,
