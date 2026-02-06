@@ -20,7 +20,13 @@ import {
 } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import * as React from 'react';
-import { SignOutButton } from "@clerk/nextjs";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  SignOutButton,
+} from "@clerk/nextjs";
 
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
@@ -183,26 +189,29 @@ export function Header() {
                   ))}
                 </nav>
                 <div className="mt-auto space-y-3">
-                  {user ? (
+                  <SignedIn>
                     <div className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.imageUrl ?? undefined} alt={userDisplayName} />
+                        <AvatarImage src={user?.imageUrl ?? undefined} alt={userDisplayName} />
                         <AvatarFallback className="bg-white/10 text-xs">{userInitials}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">{userDisplayName}</p>
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      <Button asChild variant="outline" className="w-full rounded-full border-white/10 text-foreground hover:bg-white/5">
-                        <Link href="/sign-in">Login</Link>
+                  </SignedIn>
+                  <SignedOut>
+                    <SignInButton mode="modal">
+                      <Button variant="outline" className="w-full rounded-full border-white/10 text-foreground hover:bg-white/5">
+                        Login
                       </Button>
-                      <Button asChild className="w-full rounded-full">
-                        <Link href="/sign-up">Join the Academy</Link>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <Button className="w-full rounded-full">
+                        Join the Academy
                       </Button>
-                    </>
-                  )}
+                    </SignUpButton>
+                  </SignedOut>
                 </div>
               </div>
             </SheetContent>
@@ -221,12 +230,12 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {user ? (
+          <SignedIn>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 rounded-full px-2 py-1.5 hover:bg-white/5">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.imageUrl ?? undefined} alt={userDisplayName} />
+                    <AvatarImage src={user?.imageUrl ?? undefined} alt={userDisplayName} />
                     <AvatarFallback className="bg-white/10 text-xs">{userInitials}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -262,20 +271,22 @@ export function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <>
+          </SignedIn>
+          <SignedOut>
+            <SignInButton mode="modal">
               <Button
-                asChild
                 variant="ghost"
                 className="hidden rounded-full px-4 text-sm text-white/50 hover:bg-white/5 hover:text-white md:inline-flex"
               >
-                <Link href="/sign-in">Login</Link>
+                Login
               </Button>
-              <Button asChild className="rounded-full px-5 text-sm font-semibold">
-                <Link href="/sign-up">Join</Link>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button className="rounded-full px-5 text-sm font-semibold">
+                Join
               </Button>
-            </>
-          )}
+            </SignUpButton>
+          </SignedOut>
         </div>
       </div>
     </header>
