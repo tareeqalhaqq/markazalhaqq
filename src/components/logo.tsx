@@ -9,9 +9,11 @@ export function Logo({ className }: LogoProps) {
     <div
       role="img"
       aria-label="Markaz al-Haqq"
-      className={cn("inline-block h-12 w-[160px]", className)}
+      className={cn("inline-flex items-center gap-2", className)}
     >
-      <span className="sr-only">Markaz al-Haqq</span>
+      <span className="font-headline text-lg font-semibold tracking-wide text-foreground">
+        Markaz al-Haqq
+      </span>
     </div>
   );
 }

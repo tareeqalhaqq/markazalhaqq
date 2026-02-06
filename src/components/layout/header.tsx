@@ -5,10 +5,8 @@ import {
   Menu,
   BookOpen,
   Users,
-  DollarSign,
   HelpCircle,
   GraduationCap,
-  CalendarClock,
   Sparkles,
   LayoutDashboard,
   MonitorPlay,
@@ -18,6 +16,7 @@ import {
   UserRound,
   Settings,
   CreditCard,
+  LogOut,
 } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import * as React from 'react';
@@ -49,7 +48,6 @@ const publicNavLinks: NavLinkConfig[] = [
   { href: '/about', label: 'About', icon: Users },
   { href: '/instructors', label: 'Instructors', icon: GraduationCap },
   { href: '/talib-al-ilm', label: 'Talib al Ilm', icon: Sparkles },
-  { href: '/plans', label: 'Plans', icon: DollarSign },
   { href: '/faq', label: 'FAQ', icon: HelpCircle },
 ];
 
@@ -59,14 +57,18 @@ const studentNavLinks: NavLinkConfig[] = [
   { href: '/academy?tab=sessions', label: 'Live sessions', icon: MonitorPlay },
   { href: '/academy?tab=resources', label: 'Resources', icon: LibraryBig },
   { href: '/academy?tab=announcements', label: 'Announcements', icon: BellRing },
-  { href: '/academy?tab=exams', label: 'Exams & certifications', icon: ShieldCheck },
-  { href: '/account/profile', label: 'Profile & settings', icon: UserRound },
-  { href: '/account/settings', label: 'Account settings', icon: Settings },
-  { href: '/plans', label: 'Billing', icon: CreditCard },
+  { href: '/academy?tab=exams', label: 'Exams', icon: ShieldCheck },
+];
+
+const instructorNavLinks: NavLinkConfig[] = [
+  { href: '/dashboard/instructor', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/academy?tab=courses', label: 'Courses', icon: GraduationCap },
+  { href: '/academy?tab=sessions', label: 'Live sessions', icon: MonitorPlay },
+  { href: '/academy?tab=resources', label: 'Resources', icon: LibraryBig },
 ];
 
 const adminNavLinks: NavLinkConfig[] = [
-  { href: '/dashboard/admin', label: 'Admin dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/admin', label: 'Admin', icon: LayoutDashboard },
   ...studentNavLinks.filter((link) => link.href !== '/academy?tab=dashboard'),
 ];
 
@@ -90,9 +92,11 @@ function NavLink({
       className={cn(
         'font-medium transition-colors',
         mobile
-          ? 'flex items-center rounded-xl p-2 text-base hover:bg-muted'
-          : 'rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] hover:bg-primary/10',
-        resolvedIsActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+          ? 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-white/5'
+          : 'px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] hover:text-foreground',
+        resolvedIsActive
+          ? mobile ? 'bg-white/5 text-foreground' : 'text-foreground'
+          : 'text-white/50 hover:text-white/80'
       )}
     >
       {children}
@@ -106,7 +110,7 @@ export function Header() {
   const { user, role } = useUserRole();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isStudentWorkspace = Boolean(user && role === 'user' && (pathname.startsWith('/dashboard/student') || pathname.startsWith('/academy')));
+  const isStudentWorkspace = Boolean(user && role === 'student' && (pathname.startsWith('/dashboard/student') || pathname.startsWith('/academy')));
 
   if (isStudentWorkspace) {
     return null;
@@ -123,58 +127,15 @@ export function Header() {
     return userDisplayName.slice(0, 2).toUpperCase();
   }, [userDisplayName]);
 
-  const userMenu = (options?: { className?: string; showLabel?: boolean }) => {
-    if (!user) return null;
-
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              'flex items-center gap-3 rounded-full border-border/70 bg-white/80 px-3 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-white',
-              options?.className
-            )}
-          >
-            <Avatar className="h-9 w-9 border border-border/50 bg-muted">
-              <AvatarImage src={user.imageUrl ?? undefined} alt={userDisplayName} />
-              <AvatarFallback className="text-xs font-semibold uppercase tracking-wide">{userInitials}</AvatarFallback>
-            </Avatar>
-            {options?.showLabel ? <span className="text-left">{userDisplayName}</span> : null}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="space-y-1">
-            <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Signed in as</p>
-            <p className="font-semibold text-foreground">{userDisplayName}</p>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/account/profile">Profile &amp; settings</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/account/settings">Account preferences</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/plans">Billing</Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <SignOutButton>
-              <div className="w-full h-full cursor-pointer">Logout</div>
-            </SignOutButton>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  };
-
   const resolvedNavLinks = React.useMemo(() => {
     if (!user) {
       return publicNavLinks;
     }
     if (role === 'admin') {
       return adminNavLinks;
+    }
+    if (role === 'instructor') {
+      return instructorNavLinks;
     }
     return studentNavLinks;
   }, [user, role]);
@@ -185,71 +146,73 @@ export function Header() {
     if (!link.href.includes('?')) {
       return { ...link, isActive: pathname === link.href };
     }
-
     const [linkPath, queryString] = link.href.split('?');
     const linkParams = new URLSearchParams(queryString);
     if (!linkParams.has('tab')) {
       return { ...link, isActive: pathname === linkPath };
     }
-
     const targetTab = linkParams.get('tab');
     const isActive = pathname === linkPath && activeTab === targetTab;
     return { ...link, isActive };
   });
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-white/80 backdrop-blur-md">
-      <div className="container mx-auto flex max-w-screen-xl items-center justify-between px-6 py-4 md:py-6">
-        <div className="flex flex-1 items-center gap-4">
+    <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-4">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="text-white/60 hover:bg-white/5 hover:text-white md:hidden">
+                <Menu className="h-5 w-5" />
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[320px] bg-white/95 text-foreground">
-              <div className="flex h-full flex-col gap-8 p-4">
+            <SheetContent side="left" className="w-[300px] border-white/[0.06] bg-background">
+              <div className="flex h-full flex-col gap-6 p-4">
                 <SheetClose asChild>
                   <Link href="/" className="flex items-center">
-                    <Logo className="h-6 w-auto" />
+                    <Logo />
                   </Link>
                 </SheetClose>
-                <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-left text-sm text-muted-foreground">
-                  <CalendarClock className="h-5 w-5 text-primary" />
-                  <span className="font-medium uppercase tracking-[0.3em] text-primary">Next intake to be announced</span>
-                </div>
-                <nav className="flex flex-col gap-3">
+                <nav className="flex flex-col gap-1">
                   {navLinksWithActive.map((link) => (
                     <NavLink key={link.href} href={link.href} mobile isActive={link.isActive}>
-                      {link.icon ? <link.icon className="mr-3 h-5 w-5 text-primary/80" /> : null}
+                      {link.icon ? <link.icon className="h-4 w-4 text-white/40" /> : null}
                       {link.label}
                     </NavLink>
                   ))}
                 </nav>
                 <div className="mt-auto space-y-3">
-                  {user
-                    ? userMenu({ className: 'w-full justify-start px-4 py-3 text-base', showLabel: true })
-                    : (
-                      <>
-                        <Button asChild variant="outline" className="w-full rounded-full border-border">
-                          <Link href="/sign-in">Login</Link>
-                        </Button>
-                        <Button asChild className="w-full rounded-full">
-                          <Link href="/sign-up">Join the Academy</Link>
-                        </Button>
-                      </>
-                    )}
+                  {user ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.imageUrl ?? undefined} alt={userDisplayName} />
+                        <AvatarFallback className="bg-white/10 text-xs">{userInitials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">{userDisplayName}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Button asChild variant="outline" className="w-full rounded-full border-white/10 text-foreground hover:bg-white/5">
+                        <Link href="/sign-in">Login</Link>
+                      </Button>
+                      <Button asChild className="w-full rounded-full">
+                        <Link href="/sign-up">Join the Academy</Link>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </SheetContent>
           </Sheet>
-          <Link href="/" className="flex items-center space-x-3">
-            <Logo className="h-8 w-auto" />
+          <Link href="/" className="flex items-center">
+            <Logo />
           </Link>
         </div>
 
-        <nav className="hidden flex-none items-center gap-2 rounded-full border border-border/80 bg-white/80 px-3 py-2 shadow-sm md:flex">
+        <nav className="hidden items-center gap-1 md:flex">
           {navLinksWithActive.map((link) => (
             <NavLink key={link.href} href={link.href} isActive={link.isActive}>
               {link.label}
@@ -257,20 +220,59 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex flex-1 items-center justify-end gap-2">
+        <div className="flex items-center gap-3">
           {user ? (
-            userMenu({ className: 'px-2 py-1.5', showLabel: false })
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2 rounded-full px-2 py-1.5 hover:bg-white/5">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.imageUrl ?? undefined} alt={userDisplayName} />
+                    <AvatarFallback className="bg-white/10 text-xs">{userInitials}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 border-white/[0.06] bg-card">
+                <DropdownMenuLabel className="space-y-1">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">Signed in as</p>
+                  <p className="text-sm font-medium text-foreground">{userDisplayName}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-white/[0.06]" />
+                <DropdownMenuItem asChild className="cursor-pointer text-white/70 focus:bg-white/5 focus:text-foreground">
+                  <Link href="/account/profile" className="flex items-center gap-2">
+                    <UserRound className="h-4 w-4" /> Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer text-white/70 focus:bg-white/5 focus:text-foreground">
+                  <Link href="/account/settings" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" /> Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer text-white/70 focus:bg-white/5 focus:text-foreground">
+                  <Link href="/plans" className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" /> Billing
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/[0.06]" />
+                <DropdownMenuItem asChild className="cursor-pointer text-white/70 focus:bg-white/5 focus:text-foreground">
+                  <SignOutButton>
+                    <div className="flex w-full cursor-pointer items-center gap-2">
+                      <LogOut className="h-4 w-4" /> Sign out
+                    </div>
+                  </SignOutButton>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Button
                 asChild
                 variant="ghost"
-                className="hidden rounded-full px-5 text-muted-foreground hover:text-foreground md:inline-flex"
+                className="hidden rounded-full px-4 text-sm text-white/50 hover:bg-white/5 hover:text-white md:inline-flex"
               >
                 <Link href="/sign-in">Login</Link>
               </Button>
-              <Button asChild className="rounded-full px-5 shadow-[0_20px_30px_-15px_rgba(99,102,241,0.4)]">
-                <Link href="/sign-up">Join the Academy</Link>
+              <Button asChild className="rounded-full px-5 text-sm font-semibold">
+                <Link href="/sign-up">Join</Link>
               </Button>
             </>
           )}

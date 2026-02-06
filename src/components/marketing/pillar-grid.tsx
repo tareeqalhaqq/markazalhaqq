@@ -1,38 +1,31 @@
 import { type LucideIcon } from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 interface PillarGridProps {
   pillars: { title: string; description: string; icon?: LucideIcon }[]
   align?: "left" | "center"
   className?: string
-  softBackground?: boolean
 }
 
-export function PillarGrid({ pillars, align = "left", className, softBackground }: PillarGridProps) {
+export function PillarGrid({ pillars, align = "left", className }: PillarGridProps) {
   return (
     <div className={cn("grid gap-6 md:grid-cols-3", className)}>
       {pillars.map((pillar) => (
-        <Card
+        <div
           key={pillar.title}
-          className={cn(
-            "h-full border bg-white/85 shadow-sm shadow-primary/5 transition hover:-translate-y-1 hover:shadow-xl",
-            softBackground ? "border-transparent bg-gradient-to-br from-white via-indigo-50/70 to-white" : "border-muted",
-          )}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-8 transition hover:border-white/10 hover:bg-white/[0.05]"
         >
-          <CardHeader className={cn("space-y-4", align === "center" && "text-center")}>
+          <div className={cn("space-y-4", align === "center" && "text-center")}>
             {pillar.icon ? (
-              <div className={cn("inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary", align === "center" ? "mx-auto" : undefined)}>
-                <pillar.icon className="h-6 w-6" />
+              <div className={cn("inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary", align === "center" ? "mx-auto" : undefined)}>
+                <pillar.icon className="h-5 w-5" />
               </div>
             ) : null}
-            <CardTitle className="font-headline text-xl text-foreground">{pillar.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription className="text-base leading-relaxed text-muted-foreground">{pillar.description}</CardDescription>
-          </CardContent>
-        </Card>
+            <h3 className="font-headline text-lg font-semibold text-foreground">{pillar.title}</h3>
+            <p className="text-sm leading-relaxed text-white/50">{pillar.description}</p>
+          </div>
+        </div>
       ))}
     </div>
   )

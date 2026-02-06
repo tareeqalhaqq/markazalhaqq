@@ -5,12 +5,6 @@ import { BookOpenCheck, HeartHandshake, Sparkles, Users2 } from "lucide-react"
 import { MarketingHero } from "@/components/marketing/hero"
 import { PillarGrid } from "@/components/marketing/pillar-grid"
 import { Section } from "@/components/marketing/section"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { PlaceHolderImages } from "@/lib/placeholder-images"
-import { cn } from "@/lib/utils"
-
-const aboutImage = PlaceHolderImages.find((img) => img.id === "about-us-image")
 
 const pillars = [
   {
@@ -35,7 +29,7 @@ const pillars = [
 
 const milestones = [
   {
-    year: "2010–2023",
+    year: "2010-2023",
     title: "The legacy of TareeqAlHaqq.org",
     description:
       "Hundreds of lessons, articles, and reminders were published for free, giving Muslims a trusted digital resource for authentic guidance.",
@@ -54,56 +48,44 @@ const milestones = [
   },
 ]
 
-const badgeBase = "rounded-pill px-4 py-1 text-eyebrow font-semibold uppercase tracking-[0.28em]"
-
 export default function AboutPage() {
   return (
-    <div className="space-y-section pb-section">
+    <div className="pb-0">
       <MarketingHero
         badge="About MarkazalHaqq"
         title="The official academy of Tareeq Al-Haqq"
         description="MarkazalHaqq extends the trust of TareeqAlHaqq.org into a guided learning experience. Our goal is to help sincere seekers progress with clarity, companionship, and action."
         primaryAction={{ label: "Explore courses", href: "/courses" }}
         secondaryAction={{ label: "Meet the instructors", href: "/instructors" }}
-        image={
-          aboutImage
-            ? { src: aboutImage.imageUrl, alt: aboutImage.description, hint: aboutImage.imageHint }
-            : undefined
-        }
       />
 
       <Section background="gradient">
         <div className="mx-auto max-w-3xl text-center space-y-4">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Sparkles className="h-6 w-6" />
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Sparkles className="h-5 w-5" />
           </div>
-          <h2 className="font-headline text-display-1 font-bold text-foreground sm:text-display-2">Why we launched MarkazalHaqq</h2>
-          <p className="text-lead text-muted-foreground">
-            Our community needed a place where sincere seekers could move beyond individual lectures and into a purposeful journey. MarkazalHaqq provides that structure while keeping the heart and authenticity of Tareeq Al-Haqq alive.
+          <h2 className="font-headline text-display-1 font-semibold text-foreground sm:text-display-2">Why we launched MarkazalHaqq</h2>
+          <p className="text-lead text-white/50">
+            Our community needed a place where sincere seekers could move beyond individual lectures and into a purposeful journey.
           </p>
         </div>
-
-        <PillarGrid pillars={pillars} align="center" softBackground className="mt-12" />
+        <PillarGrid pillars={pillars} align="center" className="mt-12" />
       </Section>
 
       <Section background="subtle">
-        <div className="rounded-section bg-white/80 p-10 shadow-xl shadow-primary/10 md:p-14">
-          <Badge className={cn(badgeBase, "border border-primary/20 bg-primary/10 text-primary")}>Our journey so far</Badge>
-          <p className="mt-3 max-w-3xl text-lead text-muted-foreground">
-            MarkazalHaqq remains rooted in the mission of Tareeq Al-Haqq: cultivating clarity upon the path of the Salaf. Here is how our academy came to life.
+        <div className="space-y-6">
+          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
+            Our journey so far
+          </span>
+          <p className="max-w-3xl text-lead text-white/50">
+            MarkazalHaqq remains rooted in the mission of Tareeq Al-Haqq: cultivating clarity upon the path of the Salaf.
           </p>
-          <div className="mt-10 space-y-8">
-            {milestones.map((milestone, index) => (
-              <div key={milestone.year} className="rounded-card bg-white/90 p-8 shadow-md shadow-primary/5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="text-eyebrow font-semibold uppercase tracking-[0.3em] text-primary/70">{milestone.year}</p>
-                    <h3 className="mt-2 font-headline text-2xl text-foreground">{milestone.title}</h3>
-                  </div>
-                  <Separator orientation="vertical" className="hidden h-16 bg-primary/10 sm:block" />
-                  <p className="max-w-xl text-base text-muted-foreground">{milestone.description}</p>
-                </div>
-                {index < milestones.length - 1 && <div className="mt-8 h-px w-full bg-primary/10" />}
+          <div className="mt-8 space-y-4">
+            {milestones.map((milestone) => (
+              <div key={milestone.year} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-8">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/70">{milestone.year}</p>
+                <h3 className="mt-2 font-headline text-xl font-semibold text-foreground">{milestone.title}</h3>
+                <p className="mt-3 text-sm text-white/50">{milestone.description}</p>
               </div>
             ))}
           </div>

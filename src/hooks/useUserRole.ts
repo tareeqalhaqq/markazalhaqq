@@ -68,11 +68,11 @@ export function useUserRole() {
     }
   }, [clerkUser, isLoaded])
 
-  const resolvedRole = profileState.appRole ?? "user"
+  const resolvedRole = profileState.appRole ?? "student"
 
   return {
     user: clerkUser,
-    role: resolvedRole,
+    role: resolvedRole as "admin" | "instructor" | "student",
     profileId: profileState.profileId,
     hasMembership: profileState.hasMembership,
     loading: loading || !isLoaded,
