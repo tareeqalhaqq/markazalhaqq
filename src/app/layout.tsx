@@ -17,6 +17,36 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  const body = (
+    <html lang="en" suppressHydrationWarning className="dark">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="bg-background font-body text-foreground antialiased min-h-screen flex flex-col">
+        <div className="pointer-events-none fixed inset-0 -z-10 bg-background" aria-hidden />
+        {clerkPubKey && (
+          <Suspense fallback={null}>
+            <Header />
+          </Suspense>
+        )}
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <Toaster />
+      </body>
+    </html>
+  );
+
+  if (!clerkPubKey) {
+    return body;
+  }
+
   return (
     <ClerkProvider
       appearance={{
@@ -24,25 +54,7 @@ export default function RootLayout({
         variables: { colorPrimary: '#3b82f6' },
       }}
     >
-      <html lang="en" suppressHydrationWarning className="dark">
-        <head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link
-            href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-          />
-        </head>
-        <body className="bg-background font-body text-foreground antialiased min-h-screen flex flex-col">
-          <div className="pointer-events-none fixed inset-0 -z-10 bg-background" aria-hidden />
-          <Suspense fallback={null}>
-            <Header />
-          </Suspense>
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <Toaster />
-        </body>
-      </html>
+      {body}
     </ClerkProvider>
   );
 }
