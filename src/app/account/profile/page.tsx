@@ -1,7 +1,5 @@
-import dynamic from "next/dynamic"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-
-const ProfileClient = dynamic(() => import("./ProfileClient").then((mod) => mod.ProfileClient), { ssr: false })
+import { ProfileClient } from "./ProfileClient"
 
 export default function AccountProfilePage() {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
