@@ -1,10 +1,9 @@
 export const dynamic = 'force-dynamic'
-import Link from "next/link";
+import Link from "next/link"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button"
+import { Section } from "@/components/marketing/section"
+import { MarketingHero } from "@/components/marketing/hero"
 
 const levelCatalogue = [
   {
@@ -14,7 +13,7 @@ const levelCatalogue = [
     courses: [
       "Foundations of Aqidah",
       "Fiqh of Worship essentials",
-      "Arabic for Sacred Texts · Starter pathway",
+      "Arabic for Sacred Texts - Starter pathway",
     ],
     outcomes: [
       "Solidify creedal pillars using classical texts",
@@ -29,7 +28,7 @@ const levelCatalogue = [
     courses: [
       "Aurjuzah Al-Miyyah Immersive",
       "Fiqh of Worship & Daily Living",
-      "Arabic for Sacred Texts · Applied readings",
+      "Arabic for Sacred Texts - Applied readings",
     ],
     outcomes: [
       "Connect prophetic biography events to contemporary life",
@@ -52,7 +51,7 @@ const levelCatalogue = [
       "Craft lesson plans for local study circles",
     ],
   },
-];
+]
 
 const allAccessHighlights = [
   {
@@ -61,13 +60,13 @@ const allAccessHighlights = [
   },
   {
     title: "Universal quiz access",
-    description: "Assessments created in any course workspace—multiple-choice, reflections, or case studies—unlock for members by default.",
+    description: "Assessments created in any course workspace unlock for members by default.",
   },
   {
     title: "Level-based progression",
-    description: "Admins drag-and-drop courses across levels to curate a guided journey from foundations to advanced mastery.",
+    description: "Courses are organized across levels to curate a guided journey from foundations to advanced mastery.",
   },
-];
+]
 
 const adminToolkit = [
   {
@@ -82,170 +81,140 @@ const adminToolkit = [
     title: "Launch spotlight programmes",
     description: "Feature seasonal intensives or new cohorts to the entire Talib al Ilm community with a single toggle.",
   },
-];
+]
 
 export default function TalibAlIlmPage() {
   return (
-    <div className="space-y-20 pb-24">
-      <section className="relative overflow-hidden pt-24">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white via-primary/20 to-secondary/30" aria-hidden />
-        <div className="container mx-auto px-6">
-          <div className="mx-auto max-w-4xl text-center">
-            <Badge className="rounded-full border border-primary/30 bg-primary/10 px-5 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-primary">
-              Talib al Ilm programme
-            </Badge>
-            <h1 className="mt-6 font-headline text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-              One membership unlocking every course, quiz, and cohort experience
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Built for seekers who want structured progression, the Talib al Ilm programme opens the entire Markaz al-Haqq library and organises courses into levels you can tailor for your community.
+    <div className="pb-0">
+      <MarketingHero
+        badge="Talib al Ilm programme"
+        title="One membership unlocking every course, quiz, and cohort experience"
+        description="Built for seekers who want structured progression, the Talib al Ilm programme opens the entire Markaz al-Haqq library and organises courses into levels."
+        primaryAction={{ label: "Join the waitlist", href: "/sign-up" }}
+        secondaryAction={{ label: "Browse courses", href: "/courses" }}
+      />
+
+      {/* All Access Highlights */}
+      <Section padding="default">
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="space-y-4">
+            <h2 className="font-headline text-2xl font-semibold text-foreground">Why seekers love Talib al Ilm</h2>
+            <p className="text-sm text-white/50">
+              The programme mirrors the polish of our redesigned student experience while layering in academy-wide access.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3 text-xs font-semibold uppercase tracking-[0.3em]">
-              <Badge variant="outline" className="rounded-full border-primary/40 px-4 py-1 text-primary">
-                All-access learning
-              </Badge>
-              <Badge variant="outline" className="rounded-full border-primary/40 px-4 py-1 text-primary">
-                Level-based roadmap
-              </Badge>
-              <Badge variant="outline" className="rounded-full border-primary/40 px-4 py-1 text-primary">
-                Admin curation tools
-              </Badge>
+            <div className="mt-6 space-y-4">
+              {allAccessHighlights.map((highlight) => (
+                <div key={highlight.title} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6">
+                  <h3 className="text-sm font-semibold text-foreground">{highlight.title}</h3>
+                  <p className="mt-2 text-sm text-white/50">{highlight.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-8">
+            <h2 className="font-headline text-2xl font-semibold text-foreground">Membership snapshot</h2>
+            <p className="mt-2 text-sm text-white/50">
+              Everything an eager student needs to immerse in sacred knowledge year-round.
+            </p>
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+                <span className="text-sm font-medium text-foreground">Monthly investment</span>
+                <span className="text-lg font-semibold text-primary">$95</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+                <span className="text-sm font-medium text-foreground">Annual commitment</span>
+                <span className="text-lg font-semibold text-primary">$950</span>
+              </div>
+              <p className="text-sm text-white/40">
+                Includes every live cohort, on-demand replay, quiz, workbook, and discussion thread. Scholarships available upon request.
+              </p>
+              <Button asChild className="mt-2 w-full rounded-full font-semibold">
+                <Link href="/sign-up">Join Talib al Ilm waitlist</Link>
+              </Button>
             </div>
           </div>
         </div>
-      </section>
+      </Section>
 
-      <section className="container mx-auto px-6">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
-          <Card className="border border-muted bg-white/85 shadow-xl shadow-primary/5">
-            <CardHeader>
-              <CardTitle className="text-2xl text-foreground">Why seekers love Talib al Ilm</CardTitle>
-              <CardDescription className="text-base text-muted-foreground">
-                The programme mirrors the polish of our redesigned student experience while layering in academy-wide access.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {allAccessHighlights.map((highlight) => (
-                <div key={highlight.title} className="rounded-2xl border border-border/70 bg-white/75 p-5">
-                  <h3 className="text-lg font-semibold text-foreground">{highlight.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{highlight.description}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border border-muted bg-white/85 shadow-xl shadow-primary/5">
-            <CardHeader>
-              <CardTitle className="text-2xl text-foreground">Membership snapshot</CardTitle>
-              <CardDescription className="text-base text-muted-foreground">
-                Everything an eager student needs to immerse in sacred knowledge year-round.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm text-muted-foreground">
-              <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-white/75 px-4 py-3">
-                <span className="font-semibold text-foreground">Monthly investment</span>
-                <span className="text-lg font-bold text-primary">$95</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-white/75 px-4 py-3">
-                <span className="font-semibold text-foreground">Annual commitment</span>
-                <span className="text-lg font-bold text-primary">$950</span>
-              </div>
-              <p>
-                Includes every live cohort, on-demand replay, quiz, workbook, and discussion thread. Scholarships and community sponsorships are available upon request.
-              </p>
-              <Button asChild className="w-full rounded-full">
-                <Link href="/signup">Join Talib al Ilm waitlist</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      <section className="container mx-auto space-y-12 px-6">
-        <div className="max-w-3xl">
-          <h2 className="font-headline text-3xl font-semibold tracking-tight text-foreground">Level-based course organisation</h2>
-          <p className="mt-3 text-base text-muted-foreground">
-            Administrators drag-and-drop courses into levels so students always know the next best step. Levels update instantly across the instructor workspaces and the student dashboard.
+      {/* Level Catalogue */}
+      <Section background="subtle" padding="default">
+        <div className="space-y-4 mb-10">
+          <h2 className="font-headline text-2xl font-semibold text-foreground">Level-based course organisation</h2>
+          <p className="max-w-3xl text-sm text-white/50">
+            Courses are organized into levels so students always know the next best step. Levels update instantly across instructor workspaces and the student dashboard.
           </p>
         </div>
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {levelCatalogue.map((level) => (
-            <Card key={level.level} className="border border-muted bg-white/85 shadow-lg shadow-primary/5">
-              <CardHeader>
-                <CardTitle className="text-lg text-foreground">
-                  <span className="mr-2 text-xs uppercase tracking-[0.35em] text-primary">{level.level}</span>
-                  {level.title}
-                </CardTitle>
-                <CardDescription className="text-sm text-muted-foreground">{level.focus}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <div key={level.level} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">{level.level}</p>
+              <h3 className="mt-1 text-lg font-semibold text-foreground">{level.title}</h3>
+              <p className="mt-2 text-sm text-white/50">{level.focus}</p>
+              <div className="mt-5 space-y-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-primary">Courses included</p>
-                  <ul className="mt-2 space-y-1">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-primary/70">Courses</p>
+                  <ul className="mt-2 space-y-1.5">
                     {level.courses.map((course) => (
-                      <li key={course} className="rounded-xl border border-border/60 bg-white/70 px-3 py-2 text-foreground">
+                      <li key={course} className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-sm text-foreground">
                         {course}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <Separator className="border-dashed" />
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-primary">Outcomes</p>
-                  <ul className="mt-2 space-y-1">
+                <div className="border-t border-white/[0.06] pt-4">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-primary/70">Outcomes</p>
+                  <ul className="mt-2 space-y-1.5">
                     {level.outcomes.map((outcome) => (
-                      <li key={outcome} className="rounded-xl border border-border/60 bg-white/70 px-3 py-2">
+                      <li key={outcome} className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-sm text-white/60">
                         {outcome}
                       </li>
                     ))}
                   </ul>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
-      </section>
+      </Section>
 
-      <section className="container mx-auto px-6">
-        <Card className="border border-muted bg-white/85 shadow-xl shadow-primary/5">
-          <CardHeader>
-            <CardTitle className="text-2xl text-foreground">Admin toolkit</CardTitle>
-            <CardDescription className="text-base text-muted-foreground">
-              Empower your team to manage access, pathway ordering, and spotlight content without touching code.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-3">
-            {adminToolkit.map((item) => (
-              <div key={item.title} className="rounded-2xl border border-border/70 bg-white/75 p-5 text-sm text-muted-foreground">
-                <p className="font-semibold text-foreground">{item.title}</p>
-                <p className="mt-2">{item.description}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
+      {/* Admin Toolkit */}
+      <Section padding="default">
+        <div className="space-y-4 mb-8">
+          <h2 className="font-headline text-2xl font-semibold text-foreground">Admin toolkit</h2>
+          <p className="text-sm text-white/50">
+            Empower your team to manage access, pathway ordering, and spotlight content without touching code.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {adminToolkit.map((item) => (
+            <div key={item.title} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6">
+              <p className="text-sm font-semibold text-foreground">{item.title}</p>
+              <p className="mt-2 text-sm text-white/50">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
 
-      <section className="container mx-auto px-6">
-        <Card className="border border-muted bg-white/85 shadow-lg shadow-primary/5">
-          <CardHeader>
-            <CardTitle className="text-2xl text-foreground">Ready to give your community all-access learning?</CardTitle>
-            <CardDescription className="text-base text-muted-foreground">
-              Pair the Talib al Ilm membership with your existing cohorts or launch it as the flagship experience for your markaz.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-4">
-            <Button asChild className="rounded-full px-6">
-              <Link href="/signup">Start application</Link>
+      {/* CTA */}
+      <Section padding="default">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-10 text-center md:p-14">
+          <h2 className="font-headline text-2xl font-semibold text-foreground sm:text-3xl">
+            Ready to give your community all-access learning?
+          </h2>
+          <p className="mt-4 text-sm text-white/50">
+            Pair the Talib al Ilm membership with your existing cohorts or launch it as the flagship experience for your markaz.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button asChild className="rounded-full px-6 font-semibold">
+              <Link href="/sign-up">Start application</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full px-6">
+            <Button asChild variant="outline" className="rounded-full border-white/10 px-6 text-white/70 hover:bg-white/5 hover:text-white">
               <Link href="/courses">Browse courses</Link>
             </Button>
-            <Button asChild variant="ghost" className="rounded-full px-6 text-primary hover:text-primary">
-              <Link href="/dashboard/instructor">Review instructor tools</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </div>
+      </Section>
     </div>
-  );
+  )
 }

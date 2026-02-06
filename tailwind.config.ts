@@ -97,9 +97,9 @@ export default {
       },
       backgroundImage: {
         'sok-radial':
-          'radial-gradient(120% 120% at 15% 10%, rgba(99,102,241,0.12) 0%, transparent 55%), radial-gradient(140% 140% at 85% 0%, rgba(234,179,8,0.12) 0%, transparent 60%)',
+          'radial-gradient(120% 120% at 15% 10%, rgba(59,130,246,0.08) 0%, transparent 55%), radial-gradient(140% 140% at 85% 0%, rgba(59,130,246,0.04) 0%, transparent 60%)',
         'sok-sheen':
-          'linear-gradient(135deg, rgba(15,23,42,0.03) 0%, rgba(99,102,241,0.07) 50%, rgba(15,23,42,0.02) 100%)',
+          'linear-gradient(135deg, rgba(59,130,246,0.02) 0%, rgba(59,130,246,0.05) 50%, rgba(59,130,246,0.01) 100%)',
       },
       keyframes: {
         'accordion-down': {

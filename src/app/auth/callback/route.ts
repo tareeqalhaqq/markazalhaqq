@@ -44,8 +44,14 @@ export async function GET() {
     console.error("Unable to read profile", profileError)
   }
 
-  if (profileRow?.app_role === "admin") {
-    return redirect("/admin")
+  const role = profileRow?.app_role
+
+  if (role === "admin") {
+    return redirect("/dashboard/admin")
+  }
+
+  if (role === "instructor") {
+    return redirect("/dashboard/instructor")
   }
 
   const { data: memberships, error: membershipError } = await supabase

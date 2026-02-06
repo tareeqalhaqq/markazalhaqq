@@ -1,88 +1,62 @@
 import Link from "next/link"
 import { SignUp } from "@clerk/nextjs"
-import { ArrowLeft, BookOpenCheck, Sparkles } from "lucide-react"
-
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-const highlights = [
-  {
-    title: "Guided onboarding",
-    description: "We route you to onboarding if a membership is not attached yet.",
-    icon: BookOpenCheck,
-  },
-  {
-    title: "Automatic profile sync",
-    description: "Your Clerk account is synced to Supabase the moment you finish signup.",
-    icon: Sparkles,
-  },
-]
+import { ArrowLeft } from "lucide-react"
 
 export default function SignUpPage() {
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-160px)] w-full max-w-6xl items-center justify-center px-4 py-10">
-      <div className="grid w-full gap-8 rounded-3xl border border-border/60 bg-white/90 p-8 shadow-2xl shadow-primary/5 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="space-y-6">
+    <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md space-y-8">
+        <div className="space-y-4 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+            className="inline-flex items-center gap-2 text-sm text-white/40 transition hover:text-white/70"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to home
           </Link>
-          <Badge variant="outline" className="border-primary/40 text-primary">
+          <h1 className="font-headline text-3xl font-semibold text-foreground">
             Create your account
-          </Badge>
-          <div className="space-y-2">
-            <h1 className="font-headline text-4xl font-bold leading-tight text-foreground md:text-5xl">
-              Join Markaz al-Haqq Academy
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Build your learner profile, pick a membership, and unlock the dashboard crafted for your track.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {highlights.map((item) => (
-              <Card key={item.title} className="border border-border/70 bg-muted/40">
-                <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-                  <div className="rounded-full bg-primary/10 p-2 text-primary">
-                    <item.icon className="h-4 w-4" />
-                  </div>
-                  <div className="space-y-1">
-                    <CardTitle className="text-base">{item.title}</CardTitle>
-                    <CardDescription>{item.description}</CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+          </h1>
+          <p className="text-sm text-white/50">
+            Join the academy and start your learning journey.
+          </p>
         </div>
-
-        <Card className="border border-border/70 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl text-white">Create your login</CardTitle>
-            <CardDescription className="text-slate-200">
-              Use your preferred method to sign up. We'll take you straight into onboarding when you're done.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="rounded-2xl bg-white p-4 text-foreground shadow-lg">
-            <SignUp
-              routing="path"
-              path="/sign-up"
-              signInUrl="/sign-in"
-              afterSignInUrl="/auth/callback"
-              afterSignUpUrl="/auth/callback"
-              appearance={{
-                variables: { borderRadius: "14px" },
-                elements: {
-                  card: "shadow-none border-none",
-                  formButtonPrimary:
-                    "bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold",
-                },
-              }}
-            />
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6">
+          <SignUp
+            routing="path"
+            path="/sign-up"
+            signInUrl="/sign-in"
+            afterSignInUrl="/auth/callback"
+            afterSignUpUrl="/auth/callback"
+            appearance={{
+              variables: {
+                borderRadius: "12px",
+                colorBackground: "transparent",
+                colorText: "#f2f2f2",
+                colorTextSecondary: "rgba(255,255,255,0.5)",
+                colorInputBackground: "rgba(255,255,255,0.04)",
+                colorInputText: "#f2f2f2",
+              },
+              elements: {
+                card: "shadow-none border-none bg-transparent",
+                headerTitle: "text-foreground",
+                headerSubtitle: "text-white/50",
+                formButtonPrimary:
+                  "bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold rounded-full",
+                formFieldInput:
+                  "border-white/[0.06] bg-white/[0.04] text-foreground placeholder:text-white/30",
+                formFieldLabel: "text-white/60",
+                footerActionLink: "text-primary hover:text-primary/80",
+                socialButtonsBlockButton:
+                  "border-white/[0.06] bg-white/[0.04] text-foreground hover:bg-white/[0.08]",
+                dividerLine: "bg-white/[0.06]",
+                dividerText: "text-white/30",
+                identityPreviewText: "text-foreground",
+                identityPreviewEditButton: "text-primary",
+              },
+            }}
+          />
+        </div>
       </div>
     </div>
   )

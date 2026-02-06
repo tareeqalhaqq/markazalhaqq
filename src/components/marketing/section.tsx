@@ -14,7 +14,7 @@ interface SectionProps extends HTMLAttributes<HTMLElement> {
 
 const backgroundClassNames: Record<SectionBackground, string> = {
   none: "",
-  subtle: "bg-white/70 backdrop-blur",
+  subtle: "bg-white/[0.02]",
   gradient: "bg-sok-radial",
 }
 

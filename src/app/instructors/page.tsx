@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
-import Link from "next/link";
+import Link from "next/link"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users2, BookOpenCheck, GraduationCap } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import { Users2, BookOpenCheck, GraduationCap } from "lucide-react"
+import { Section } from "@/components/marketing/section"
+import { PillarGrid } from "@/components/marketing/pillar-grid"
+import { MarketingHero } from "@/components/marketing/hero"
 
 const instructorHighlights = [
   {
@@ -25,58 +26,36 @@ const instructorHighlights = [
       "Expect live review sessions, feedback opportunities, and community engagement that keeps you supported between lessons.",
     icon: BookOpenCheck,
   },
-];
+]
 
 export default function InstructorsPage() {
   return (
-    <div className="bg-background">
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-sky-100 via-white to-sky-200" />
-        <div className="container mx-auto px-6 py-16 sm:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <Badge className="bg-primary/10 text-primary">Teaching team</Badge>
-            <h1 className="mt-6 font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-              Guided by trusted instructors
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              The detailed roster will be released as we launch each course. Every teacher is part of the Tareeq Al-Haqq network, ensuring consistency in creed, methodology, and character.
-            </p>
-          </div>
-        </div>
-      </section>
+    <div className="pb-0">
+      <MarketingHero
+        badge="Teaching team"
+        title="Guided by trusted instructors"
+        description="The detailed roster will be released as we launch each course. Every teacher is part of the Tareeq Al-Haqq network, ensuring consistency in creed, methodology, and character."
+        primaryAction={{ label: "Join the waitlist", href: "/sign-up" }}
+        secondaryAction={{ label: "About the academy", href: "/about" }}
+      />
 
-      <section className="container mx-auto grid gap-8 px-6 pb-16 md:grid-cols-3">
-        {instructorHighlights.map((highlight) => (
-          <Card
-            key={highlight.title}
-            className="h-full border-none bg-gradient-to-br from-white via-sky-50 to-white shadow-lg shadow-primary/10"
-          >
-            <CardHeader className="space-y-4 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <highlight.icon className="h-7 w-7" />
-              </div>
-              <CardTitle className="font-headline text-xl text-foreground">{highlight.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base leading-relaxed text-muted-foreground">
-                {highlight.description}
-              </CardDescription>
-            </CardContent>
-          </Card>
-        ))}
-      </section>
+      <Section>
+        <PillarGrid pillars={instructorHighlights} align="center" />
+      </Section>
 
-      <section className="container mx-auto px-6 pb-20">
-        <div className="rounded-3xl bg-white/80 p-10 text-center shadow-xl shadow-primary/15 backdrop-blur">
-          <h2 className="font-headline text-3xl font-bold text-foreground">Instructor roster coming soon</h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            We will publish instructor bios and teaching schedules as we confirm the Seerah cohort timeline. Join the waitlist to receive the announcements first.
+      <Section padding="default">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-10 text-center md:p-14">
+          <h2 className="font-headline text-2xl font-semibold text-foreground sm:text-3xl">
+            Instructor roster coming soon
+          </h2>
+          <p className="mt-4 text-sm text-white/50">
+            We will publish instructor bios and teaching schedules as we confirm the Seerah cohort timeline. Join the waitlist to receive announcements first.
           </p>
-          <Button asChild size="lg" className="mt-6 rounded-full px-8">
-            <Link href="/signup">Join the waitlist</Link>
+          <Button asChild size="lg" className="mt-6 rounded-full px-8 font-semibold">
+            <Link href="/sign-up">Join the waitlist</Link>
           </Button>
         </div>
-      </section>
+      </Section>
     </div>
-  );
+  )
 }
