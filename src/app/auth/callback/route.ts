@@ -54,21 +54,35 @@ export async function GET() {
     return redirect("/dashboard/instructor")
   }
 
-  const { data: memberships, error: membershipError } = await supabase
-    .from("academy_memberships")
-    .select("id")
-    .eq("profile_id", profileId)
-    .limit(1)
+  if (role === "student") {
+    // Check membership or student roster entry
+    const { data: studentEntry } = await supabase
+      .from("students")
+      .select("id")
+      .eq("profile_id", profileId)
+      .limit(1)
 
-  if (membershipError) {
-    console.error("Unable to check memberships", membershipError)
+    const { data: memberships, error: membershipError } = await supabase
+      .from("academy_memberships")
+      .select("id")
+      .eq("profile_id", profileId)
+      .limit(1)
+
+    if (membershipError) {
+      console.error("Unable to check memberships", membershipError)
+    }
+
+    const isEnrolled =
+      (Array.isArray(studentEntry) && studentEntry.length > 0) ||
+      (Array.isArray(memberships) && memberships.length > 0)
+
+    if (!isEnrolled) {
+      return redirect("/onboarding")
+    }
+
+    return redirect("/dashboard/student")
   }
 
-  const hasMembership = Array.isArray(memberships) && memberships.length > 0
-
-  if (!hasMembership) {
-    return redirect("/onboarding")
-  }
-
-  return redirect("/dashboard")
+  // Fallback: no recognized role
+  return redirect("/onboarding")
 }
