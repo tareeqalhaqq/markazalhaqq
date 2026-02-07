@@ -4,8 +4,8 @@ import { NextResponse } from "next/server"
 
 import { createServiceRoleSupabaseClient, extractProfileId } from "@/lib/supabase"
 
-function buildRedirect(path: string) {
-  const headerList = headers()
+async function buildRedirect(path: string) {
+  const headerList = await headers()
   const host = headerList.get("host") ?? "localhost:3000"
   const protocol = headerList.get("x-forwarded-proto") ?? "https"
 
@@ -27,7 +27,7 @@ export async function GET() {
   if (!userId || !user) {
     // Redirect to home instead of /sign-in to prevent redirect loops when
     // the auth middleware or Clerk secret key is misconfigured.
-    return NextResponse.redirect(buildRedirect("/"))
+    return NextResponse.redirect(await buildRedirect("/"))
   }
 
   let supabase: ReturnType<typeof createServiceRoleSupabaseClient>
@@ -37,7 +37,7 @@ export async function GET() {
   } catch (error) {
     console.error("[auth/callback] Supabase client creation failed:", error)
     // Supabase is misconfigured — send user to onboarding as a safe fallback
-    return NextResponse.redirect(buildRedirect("/onboarding"))
+    return NextResponse.redirect(await buildRedirect("/onboarding"))
   }
 
   const primaryEmail =
@@ -58,7 +58,7 @@ export async function GET() {
 
   if (!profileId) {
     console.error("Supabase ensure_profile did not return a profile id")
-    return NextResponse.redirect(buildRedirect("/onboarding"))
+    return NextResponse.redirect(await buildRedirect("/onboarding"))
   }
 
   const { data: profileRow, error: profileError } = await supabase
@@ -74,11 +74,11 @@ export async function GET() {
   const role = profileRow?.app_role
 
   if (role === "admin") {
-    return NextResponse.redirect(buildRedirect("/dashboard/admin"))
+    return NextResponse.redirect(await buildRedirect("/dashboard/admin"))
   }
 
   if (role === "instructor") {
-    return NextResponse.redirect(buildRedirect("/dashboard/instructor"))
+    return NextResponse.redirect(await buildRedirect("/dashboard/instructor"))
   }
 
   if (role === "student") {
@@ -104,12 +104,12 @@ export async function GET() {
       (Array.isArray(memberships) && memberships.length > 0)
 
     if (!isEnrolled) {
-      return NextResponse.redirect(buildRedirect("/onboarding"))
+      return NextResponse.redirect(await buildRedirect("/onboarding"))
     }
 
-    return NextResponse.redirect(buildRedirect("/dashboard/student"))
+    return NextResponse.redirect(await buildRedirect("/dashboard/student"))
   }
 
   // Fallback: no recognized role
-  return NextResponse.redirect(buildRedirect("/onboarding"))
+  return NextResponse.redirect(await buildRedirect("/onboarding"))
 }
