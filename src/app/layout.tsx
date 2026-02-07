@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
-import { Header } from '@/components/layout/header';
+import { ClientHeader } from '@/components/layout/client-header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -30,7 +30,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background font-body text-foreground antialiased min-h-screen flex flex-col">
         <div className="pointer-events-none fixed inset-0 -z-10 bg-background" aria-hidden />
-        <Header />
+        <ClientHeader />
         <main className="flex-1">{children}</main>
         <Footer />
         <Toaster />
