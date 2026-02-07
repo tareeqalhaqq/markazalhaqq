@@ -304,7 +304,7 @@ export default function InstructorDashboardPage() {
 
   return (
     <div className="container mx-auto max-w-6xl space-y-8 px-6">
-      <div className="flex flex-col gap-6 rounded-3xl border border-primary/20 bg-white/95 p-10 shadow-xl shadow-primary/10">
+      <div className="flex flex-col gap-6 rounded-3xl border border-primary/20 bg-card p-10 shadow-xl shadow-primary/10">
         <div className="flex flex-col gap-3">
           <Badge variant="outline" className="w-fit border-primary/40 text-primary">
             Instructor control center
@@ -318,7 +318,7 @@ export default function InstructorDashboardPage() {
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-none bg-gradient-to-br from-primary/10 via-white to-white shadow-md shadow-primary/20">
+          <Card className="border-none bg-gradient-to-br from-primary/10 via-card to-card shadow-md shadow-primary/20">
             <CardHeader className="space-y-1">
               <CardTitle className="text-sm font-semibold uppercase tracking-[0.3em] text-primary/80">
                 Visible courses
@@ -332,9 +332,9 @@ export default function InstructorDashboardPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none bg-gradient-to-br from-emerald-100 via-white to-white shadow-md shadow-emerald-100/60">
+          <Card className="border-none bg-gradient-to-br from-emerald-900/30 via-card to-card shadow-md shadow-emerald-900/20">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-700">
+              <CardTitle className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-400">
                 Published lessons
               </CardTitle>
             </CardHeader>
@@ -346,9 +346,9 @@ export default function InstructorDashboardPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none bg-gradient-to-br from-amber-100 via-white to-white shadow-md shadow-amber-100/60">
+          <Card className="border-none bg-gradient-to-br from-amber-900/30 via-card to-card shadow-md shadow-amber-900/20">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-700">
+              <CardTitle className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400">
                 Awaiting release
               </CardTitle>
             </CardHeader>
@@ -360,9 +360,9 @@ export default function InstructorDashboardPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-none bg-gradient-to-br from-slate-200 via-white to-white shadow-md shadow-slate-200/60">
+          <Card className="border-none bg-gradient-to-br from-secondary via-card to-card shadow-md shadow-secondary/60">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-700">
+              <CardTitle className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground">
                 Hidden drafts
               </CardTitle>
             </CardHeader>
@@ -377,7 +377,7 @@ export default function InstructorDashboardPage() {
         </div>
       </div>
 
-      <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+      <Card className="border border-border/60 bg-card shadow-md shadow-primary/5">
         <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <CardTitle className="font-headline text-2xl">Roadmap board</CardTitle>
@@ -417,7 +417,7 @@ export default function InstructorDashboardPage() {
                           onDragStart={() => handleCourseDragStart(course.id)}
                           onDragEnd={handleCourseDragEnd}
                           onClick={() => setSelectedCourseId(course.id)}
-                          className={`cursor-grab rounded-xl border bg-white/90 p-3 text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                          className={`cursor-grab rounded-xl border bg-secondary/50 p-3 text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
                             selectedCourse?.id === course.id ? "border-primary/40 ring-1 ring-primary/30" : "border-border/60"
                           }`}
                         >
@@ -449,7 +449,7 @@ export default function InstructorDashboardPage() {
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.1fr]">
-        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+        <Card className="border border-border/60 bg-card shadow-md shadow-primary/5">
           <CardHeader className="flex flex-col gap-3">
             <CardTitle className="font-headline text-2xl">Workflow rail</CardTitle>
             <CardDescription>
@@ -494,7 +494,7 @@ export default function InstructorDashboardPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-full text-red-600 hover:bg-red-50"
+                    className="rounded-full text-red-400 hover:bg-red-900/20"
                     onClick={() => handleDeleteCourse(selectedCourse)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" /> Archive
@@ -507,14 +507,14 @@ export default function InstructorDashboardPage() {
                     <PanelRight className="h-4 w-4 text-primary" />
                   </div>
                   <p className="text-muted-foreground">
-                    {Math.round(courseProgress * 100)}% of content is ready for students. Drag cards on the board to move faster.
+                    {courseProgress}% of content is ready for students. Drag cards on the board to move faster.
                   </p>
                   {nextLesson ? (
-                    <p className="rounded-xl bg-white/80 p-3 text-foreground shadow-sm">
+                    <p className="rounded-xl bg-secondary/40 p-3 text-foreground shadow-sm">
                       Next up: <span className="font-semibold">{nextLesson.title}</span> ({nextLesson.status})
                     </p>
                   ) : (
-                    <p className="rounded-xl bg-white/80 p-3 text-muted-foreground shadow-sm">No upcoming lessons yet.</p>
+                    <p className="rounded-xl bg-secondary/40 p-3 text-muted-foreground shadow-sm">No upcoming lessons yet.</p>
                   )}
                 </div>
               </div>
@@ -544,7 +544,7 @@ export default function InstructorDashboardPage() {
             </div>
 
             {selectedCourse && (
-              <div className="space-y-3 rounded-2xl border border-border/60 bg-gradient-to-br from-white via-background to-primary/5 p-4 shadow-sm">
+              <div className="space-y-3 rounded-2xl border border-border/60 bg-gradient-to-br from-card via-background to-primary/5 p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
                   <Sparkles className="h-4 w-4 text-primary" /> Student workspace
                 </div>
@@ -552,7 +552,7 @@ export default function InstructorDashboardPage() {
                 <p className="text-sm text-muted-foreground">What learners will see next:</p>
                 <div className="flex flex-col gap-2 text-sm">
                   {selectedCourse.lessons.slice(0, 2).map((lesson) => (
-                    <div key={lesson.id} className="rounded-xl border border-border/50 bg-white/90 p-3 shadow-sm">
+                    <div key={lesson.id} className="rounded-xl border border-border/50 bg-secondary/50 p-3 shadow-sm">
                       <p className="font-medium text-foreground">{lesson.title}</p>
                       <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{lesson.status}</p>
                     </div>
@@ -568,7 +568,7 @@ export default function InstructorDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+        <Card className="border border-border/60 bg-card shadow-md shadow-primary/5">
           <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <CardTitle className="font-headline text-2xl">Publishing wizard</CardTitle>
@@ -640,7 +640,7 @@ export default function InstructorDashboardPage() {
                     </div>
                   </form>
                 </div>
-                <div className="rounded-2xl border border-dashed border-primary/40 bg-gradient-to-br from-primary/5 via-white to-white p-4">
+                <div className="rounded-2xl border border-dashed border-primary/40 bg-gradient-to-br from-primary/5 via-card to-card p-4">
                   <p className="text-xs uppercase tracking-[0.3em] text-primary">Preview</p>
                   <p className="mt-2 text-lg font-semibold text-foreground">{courseForm.title || "Course title"}</p>
                   <p className="text-sm text-muted-foreground">
@@ -663,7 +663,7 @@ export default function InstructorDashboardPage() {
                   </div>
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
+                  <div className="rounded-2xl border border-dashed border-primary/40 bg-secondary/40 p-4 shadow-sm">
                     <p className="text-xs uppercase tracking-[0.3em] text-primary">Lesson view</p>
                     <p className="mt-2 text-lg font-semibold text-foreground">{lessonForm.title || "Untitled lesson"}</p>
                     <p className="text-sm text-muted-foreground">
@@ -683,7 +683,7 @@ export default function InstructorDashboardPage() {
                     <div className="space-y-2">
                       {selectedCourse?.lessons.length ? (
                         selectedCourse.lessons.map((lesson) => (
-                          <div key={lesson.id} className="rounded-xl border border-border/50 bg-white/80 p-3 text-sm">
+                          <div key={lesson.id} className="rounded-xl border border-border/50 bg-secondary/40 p-3 text-sm">
                             <p className="font-medium text-foreground">{lesson.title}</p>
                             <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{lesson.status}</p>
                           </div>
@@ -709,7 +709,7 @@ export default function InstructorDashboardPage() {
                   </div>
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
+                  <div className="rounded-2xl border border-dashed border-primary/40 bg-secondary/40 p-4 shadow-sm">
                     <p className="text-xs uppercase tracking-[0.3em] text-primary">Session view</p>
                     <p className="mt-2 text-lg font-semibold text-foreground">{sessionForm.title || "Live session"}</p>
                     <p className="text-sm text-muted-foreground">
@@ -726,7 +726,7 @@ export default function InstructorDashboardPage() {
                     <div className="space-y-2">
                       {selectedCourse?.sessions.length ? (
                         selectedCourse.sessions.map((session) => (
-                          <div key={session.id} className="rounded-xl border border-border/50 bg-white/80 p-3 text-sm">
+                          <div key={session.id} className="rounded-xl border border-border/50 bg-secondary/40 p-3 text-sm">
                             <p className="font-medium text-foreground">{session.title}</p>
                             <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                               {session.format} • {session.date}
@@ -755,7 +755,7 @@ export default function InstructorDashboardPage() {
                   </div>
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-2xl border border-dashed border-primary/40 bg-white/80 p-4 shadow-sm">
+                  <div className="rounded-2xl border border-dashed border-primary/40 bg-secondary/40 p-4 shadow-sm">
                     <p className="text-xs uppercase tracking-[0.3em] text-primary">Resource view</p>
                     <p className="mt-2 text-lg font-semibold text-foreground">{resourceForm.title || "Download title"}</p>
                     <p className="text-sm text-muted-foreground">
@@ -772,7 +772,7 @@ export default function InstructorDashboardPage() {
                     <div className="space-y-2">
                       {selectedCourse?.resources.length ? (
                         selectedCourse.resources.map((resource) => (
-                          <div key={resource.id} className="rounded-xl border border-border/50 bg-white/80 p-3 text-sm">
+                          <div key={resource.id} className="rounded-xl border border-border/50 bg-secondary/40 p-3 text-sm">
                             <p className="font-medium text-foreground">{resource.title}</p>
                             <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                               {resource.type}

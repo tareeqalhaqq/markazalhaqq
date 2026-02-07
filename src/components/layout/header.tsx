@@ -52,19 +52,19 @@ const publicNavLinks: NavLinkConfig[] = [
 ];
 
 const studentNavLinks: NavLinkConfig[] = [
-  { href: '/academy?tab=dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/academy?tab=courses', label: 'Courses', icon: GraduationCap },
-  { href: '/academy?tab=sessions', label: 'Live sessions', icon: MonitorPlay },
-  { href: '/academy?tab=resources', label: 'Resources', icon: LibraryBig },
-  { href: '/academy?tab=announcements', label: 'Announcements', icon: BellRing },
-  { href: '/academy?tab=exams', label: 'Exams', icon: ShieldCheck },
+  { href: '/dashboard/student', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/courses', label: 'Courses', icon: GraduationCap },
+  { href: '/dashboard/student#student-sessions', label: 'Live sessions', icon: MonitorPlay },
+  { href: '/dashboard/student#student-resources', label: 'Resources', icon: LibraryBig },
+  { href: '/dashboard/student#student-announcements', label: 'Announcements', icon: BellRing },
+  { href: '/dashboard/student#student-exams', label: 'Exams', icon: ShieldCheck },
 ];
 
 const instructorNavLinks: NavLinkConfig[] = [
   { href: '/dashboard/instructor', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/academy?tab=courses', label: 'Courses', icon: GraduationCap },
-  { href: '/academy?tab=sessions', label: 'Live sessions', icon: MonitorPlay },
-  { href: '/academy?tab=resources', label: 'Resources', icon: LibraryBig },
+  { href: '/courses', label: 'Courses', icon: GraduationCap },
+  { href: '/dashboard/student#student-sessions', label: 'Live sessions', icon: MonitorPlay },
+  { href: '/dashboard/student#student-resources', label: 'Resources', icon: LibraryBig },
 ];
 
 const adminNavLinks: NavLinkConfig[] = [
@@ -134,10 +134,7 @@ export function Header() {
   }, [user, role]);
 
   const navLinksWithActive = resolvedNavLinks.map((link) => {
-    if (!link.href.includes('?')) {
-      return { ...link, isActive: pathname === link.href };
-    }
-    const [linkPath] = link.href.split('?');
+    const [linkPath] = link.href.split(/[?#]/);
     return { ...link, isActive: pathname === linkPath };
   });
 

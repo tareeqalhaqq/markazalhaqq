@@ -144,8 +144,8 @@ export default function StudentDashboardPage() {
   ]
 
   return (
-    <div className="flex min-h-screen bg-muted/20">
-      <aside className="sticky top-0 hidden h-screen w-60 flex-col border-r border-border/60 bg-white/90 px-4 py-6 lg:flex">
+    <div className="flex min-h-screen">
+      <aside className="sticky top-0 hidden h-screen w-60 flex-col border-r border-border/60 bg-card px-4 py-6 lg:flex">
         <div className="flex items-center gap-3 rounded-2xl bg-primary/10 px-3 py-2 text-primary">
           <Sparkles className="h-5 w-5" />
           <div className="text-sm font-semibold">Student workspace</div>
@@ -175,7 +175,7 @@ export default function StudentDashboardPage() {
       </aside>
 
       <div className="flex-1">
-        <div id="student-timeline" className="border-b border-border/60 bg-white/80 px-6 py-4 backdrop-blur">
+        <div id="student-timeline" className="border-b border-border/60 bg-card/80 px-6 py-4 backdrop-blur">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Today</p>
@@ -199,7 +199,7 @@ export default function StudentDashboardPage() {
             {timelineItems.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-white/90 p-3 shadow-sm shadow-primary/5"
+                className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-card p-3 shadow-sm shadow-primary/5"
               >
                 <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-muted-foreground">
                   <Badge variant="outline" className="border-primary/30 text-primary">
@@ -292,7 +292,7 @@ export default function StudentDashboardPage() {
                 </div>
               </div>
 
-              <Card className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+              <Card className="border border-border/60 bg-card shadow-md shadow-primary/5">
                 <CardHeader className="flex items-start justify-between gap-3">
                   <div>
                     <CardTitle className="font-headline text-xl">Focus mode</CardTitle>
@@ -327,7 +327,7 @@ export default function StudentDashboardPage() {
                         {getPublishedLessons(activeCourse).map((lesson) => (
                           <div
                             key={lesson.id}
-                            className="flex items-center justify-between rounded-xl border border-border/40 bg-white/80 px-3 py-2 text-sm"
+                            className="flex items-center justify-between rounded-xl border border-border/40 bg-secondary/50 px-3 py-2 text-sm"
                           >
                             <span className="flex items-center gap-2">
                               <CheckCircle2
@@ -366,7 +366,7 @@ export default function StudentDashboardPage() {
               </Card>
             </section>
           ) : (
-            <Card id="student-courses" className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+            <Card id="student-courses" className="border border-border/60 bg-card shadow-md shadow-primary/5">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">No courses yet</CardTitle>
                 <CardDescription>
@@ -377,7 +377,7 @@ export default function StudentDashboardPage() {
           )}
 
           <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-            <Card id="student-live" className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+            <Card id="student-live" className="border border-border/60 bg-card shadow-md shadow-primary/5">
               <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle className="font-headline text-2xl">Upcoming sessions</CardTitle>
@@ -438,7 +438,7 @@ export default function StudentDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card id="student-resources" className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+            <Card id="student-resources" className="border border-border/60 bg-card shadow-md shadow-primary/5">
               <CardHeader>
                 <CardTitle className="font-headline text-xl">Resource library</CardTitle>
                 <CardDescription>Downloads flow directly from the instructor&apos;s uploads.</CardDescription>
@@ -471,7 +471,7 @@ export default function StudentDashboardPage() {
             </Card>
           </div>
 
-          <Card id="student-messages" className="border border-border/60 bg-white/95 shadow-md shadow-primary/5">
+          <Card id="student-messages" className="border border-border/60 bg-card shadow-md shadow-primary/5">
             <CardHeader>
               <CardTitle className="font-headline text-xl">Messages</CardTitle>
               <CardDescription>Stay connected with instructors and support.</CardDescription>
