@@ -9,8 +9,18 @@ type ProfileState = {
   hasMembership: boolean
 }
 
+type ClerkUserResult = ReturnType<typeof useUser>
+
+function useSafeClerkUser(): ClerkUserResult {
+  try {
+    return useUser()
+  } catch {
+    return { user: null, isSignedIn: false, isLoaded: true } as ClerkUserResult
+  }
+}
+
 export function useUserRole() {
-  const { user: clerkUser, isLoaded } = useUser()
+  const { user: clerkUser, isLoaded } = useSafeClerkUser()
   const [profileState, setProfileState] = useState<ProfileState>({
     profileId: null,
     appRole: null,
