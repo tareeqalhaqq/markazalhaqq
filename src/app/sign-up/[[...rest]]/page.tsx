@@ -2,6 +2,8 @@ import Link from "next/link"
 import { SignUp } from "@clerk/nextjs"
 import { ArrowLeft } from "lucide-react"
 
+import { SafeAuthForm } from "@/components/auth/safe-auth-form"
+
 export default function SignUpPage() {
   return (
     <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-16">
@@ -22,7 +24,8 @@ export default function SignUpPage() {
           </p>
         </div>
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6">
-          <SignUp
+          <SafeAuthForm>
+            <SignUp
             routing="path"
             path="/sign-up"
             signInUrl="/sign-in"
@@ -54,7 +57,8 @@ export default function SignUpPage() {
                 identityPreviewEditButton: "text-primary",
               },
             }}
-          />
+            />
+          </SafeAuthForm>
         </div>
       </div>
     </div>

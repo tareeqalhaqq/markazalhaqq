@@ -4,14 +4,32 @@ import { redirect } from "next/navigation"
 import { createServiceRoleSupabaseClient, extractProfileId } from "@/lib/supabase"
 
 export async function GET() {
-  const { userId } = await auth()
-  const user = await currentUser()
+  let userId: string | null = null
+  let user: Awaited<ReturnType<typeof currentUser>> = null
 
-  if (!userId || !user) {
-    return redirect("/sign-in")
+  try {
+    const authResult = await auth()
+    userId = authResult.userId
+    user = await currentUser()
+  } catch (error) {
+    console.error("[auth/callback] Failed to verify authentication:", error)
   }
 
-  const supabase = createServiceRoleSupabaseClient()
+  if (!userId || !user) {
+    // Redirect to home instead of /sign-in to prevent redirect loops when
+    // the auth middleware or Clerk secret key is misconfigured.
+    return redirect("/")
+  }
+
+  let supabase: ReturnType<typeof createServiceRoleSupabaseClient>
+
+  try {
+    supabase = createServiceRoleSupabaseClient()
+  } catch (error) {
+    console.error("[auth/callback] Supabase client creation failed:", error)
+    // Supabase is misconfigured — send user to onboarding as a safe fallback
+    return redirect("/onboarding")
+  }
 
   const primaryEmail =
     user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? userId
