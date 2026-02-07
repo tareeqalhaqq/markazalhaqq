@@ -18,7 +18,7 @@ import {
   CreditCard,
   LogOut,
 } from 'lucide-react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import * as React from 'react';
 import { SignOutButton } from "@clerk/nextjs";
 
@@ -109,7 +109,6 @@ function NavLink({
 export function Header() {
   const { user, role } = useUserRole();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const userDisplayName = user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'Account';
   const userInitials = React.useMemo(() => {
     if (!userDisplayName) return 'U';
@@ -134,20 +133,12 @@ export function Header() {
     return studentNavLinks;
   }, [user, role]);
 
-  const activeTab = pathname === '/academy' ? searchParams?.get('tab') ?? 'dashboard' : null;
-
   const navLinksWithActive = resolvedNavLinks.map((link) => {
     if (!link.href.includes('?')) {
       return { ...link, isActive: pathname === link.href };
     }
-    const [linkPath, queryString] = link.href.split('?');
-    const linkParams = new URLSearchParams(queryString);
-    if (!linkParams.has('tab')) {
-      return { ...link, isActive: pathname === linkPath };
-    }
-    const targetTab = linkParams.get('tab');
-    const isActive = pathname === linkPath && activeTab === targetTab;
-    return { ...link, isActive };
+    const [linkPath] = link.href.split('?');
+    return { ...link, isActive: pathname === linkPath };
   });
 
   return (

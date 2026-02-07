@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Suspense } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import { Header } from '@/components/layout/header';
@@ -31,11 +30,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background font-body text-foreground antialiased min-h-screen flex flex-col">
         <div className="pointer-events-none fixed inset-0 -z-10 bg-background" aria-hidden />
-        {clerkPubKey && (
-          <Suspense fallback={null}>
-            <Header />
-          </Suspense>
-        )}
+        {clerkPubKey && <Header />}
         <main className="flex-1">{children}</main>
         <Footer />
         <Toaster />
