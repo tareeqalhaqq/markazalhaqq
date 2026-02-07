@@ -30,7 +30,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background font-body text-foreground antialiased min-h-screen flex flex-col">
         <div className="pointer-events-none fixed inset-0 -z-10 bg-background" aria-hidden />
-        {clerkPubKey && <Header />}
+        <Header />
         <main className="flex-1">{children}</main>
         <Footer />
         <Toaster />
