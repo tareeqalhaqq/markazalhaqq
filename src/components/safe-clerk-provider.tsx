@@ -29,10 +29,17 @@ class ClerkErrorBoundary extends React.Component<
   }
 }
 
-export function SafeClerkProvider({ children }: { children: React.ReactNode }) {
+export function SafeClerkProvider({
+  children,
+  publishableKey,
+}: {
+  children: React.ReactNode;
+  publishableKey?: string;
+}) {
   return (
     <ClerkErrorBoundary fallback={children}>
       <ClerkProvider
+        publishableKey={publishableKey}
         appearance={{
           baseTheme: dark,
           variables: { colorPrimary: '#3b82f6' },

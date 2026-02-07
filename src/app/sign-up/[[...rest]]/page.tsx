@@ -4,9 +4,10 @@ import { ArrowLeft } from "lucide-react"
 
 import { SafeAuthForm } from "@/components/auth/safe-auth-form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { getClerkPublishableKey } from "@/lib/clerk"
 
 export default function SignUpPage() {
-  const hasClerkKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+  const hasClerkKey = Boolean(getClerkPublishableKey())
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-16">
@@ -67,8 +68,8 @@ export default function SignUpPage() {
             <Alert variant="destructive">
               <AlertTitle>Clerk configuration required</AlertTitle>
               <AlertDescription>
-                Add a NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable to
-                enable sign up.
+                Add a NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (or CLERK_PUBLISHABLE_KEY)
+                environment variable to enable sign up.
               </AlertDescription>
             </Alert>
           )}
