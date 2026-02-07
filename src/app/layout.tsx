@@ -4,6 +4,7 @@ import { SafeClerkProvider } from '@/components/safe-clerk-provider';
 import { ClientHeader } from '@/components/layout/client-header';
 import { Footer } from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
+import { getClerkPublishableKey } from '@/lib/clerk';
 
 export const metadata: Metadata = {
   title: 'Markaz al-Haqq Academy',
@@ -15,7 +16,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const clerkPubKey = getClerkPublishableKey();
 
   const content = (
     <>
@@ -39,7 +40,9 @@ export default function RootLayout({
       </head>
       <body className="bg-background font-body text-foreground antialiased min-h-screen flex flex-col">
         {clerkPubKey ? (
-          <SafeClerkProvider>{content}</SafeClerkProvider>
+          <SafeClerkProvider publishableKey={clerkPubKey}>
+            {content}
+          </SafeClerkProvider>
         ) : (
           content
         )}
