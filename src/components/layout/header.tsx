@@ -110,12 +110,6 @@ export function Header() {
   const { user, role } = useUserRole();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isStudentWorkspace = Boolean(user && role === 'student' && (pathname.startsWith('/dashboard/student') || pathname.startsWith('/academy')));
-
-  if (isStudentWorkspace) {
-    return null;
-  }
-
   const userDisplayName = user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'Account';
   const userInitials = React.useMemo(() => {
     if (!userDisplayName) return 'U';
