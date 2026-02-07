@@ -21,7 +21,7 @@ const milestones = [
 
 export default function OnboardingPage() {
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 rounded-3xl border border-border/60 bg-white/90 px-6 py-10 shadow-2xl shadow-primary/5">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8 rounded-3xl border border-border/60 bg-card px-6 py-10 shadow-2xl shadow-primary/5">
       <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-6">
           <Badge variant="outline" className="border-primary/40 text-primary">
@@ -37,7 +37,7 @@ export default function OnboardingPage() {
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <Card className="border border-primary/30 bg-gradient-to-br from-primary/10 via-white to-white shadow-lg shadow-primary/10">
+            <Card className="border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card shadow-lg shadow-primary/10">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl text-foreground">View membership plans</CardTitle>
                 <CardDescription className="text-muted-foreground">
@@ -69,7 +69,7 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        <Card className="h-fit border border-border/60 bg-white/90 shadow-xl">
+        <Card className="h-fit border border-border/60 bg-card shadow-xl">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl text-foreground">Onboarding checklist</CardTitle>
             <CardDescription className="text-muted-foreground">

@@ -24,7 +24,7 @@ const dashboardCards = [
 export default function DashboardLandingPage() {
   return (
     <div className="container mx-auto max-w-5xl space-y-10 px-6">
-      <div className="rounded-3xl border border-primary/20 bg-white/90 p-10 text-center shadow-xl shadow-primary/10">
+      <div className="rounded-3xl border border-primary/20 bg-card p-10 text-center shadow-xl shadow-primary/10">
         <Badge variant="outline" className="border-primary/50 text-primary">
           Linked workspaces
         </Badge>
@@ -39,7 +39,7 @@ export default function DashboardLandingPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         {dashboardCards.map((card) => (
-          <Card key={card.title} className="flex h-full flex-col border-primary/10 bg-white/90 shadow-lg shadow-primary/10">
+          <Card key={card.title} className="flex h-full flex-col border-primary/10 bg-card shadow-lg shadow-primary/10">
             <CardHeader className="space-y-2">
               <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 <span>Workspace</span>

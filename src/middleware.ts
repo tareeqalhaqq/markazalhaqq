@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import type { NextFetchEvent, NextRequest } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
     '/',
@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
     '/sign-up(.*)',
     '/plans',
     '/courses',
+    '/courses/(.*)',
     '/about',
     '/instructors',
     '/talib-al-ilm',
@@ -22,7 +23,7 @@ const clerkHandler = clerkMiddleware(async (auth, request) => {
     }
 })
 
-export default async function middleware(request: NextRequest, event: any) {
+export default async function middleware(request: NextRequest, event: NextFetchEvent) {
     try {
         return await clerkHandler(request, event)
     } catch (error) {
