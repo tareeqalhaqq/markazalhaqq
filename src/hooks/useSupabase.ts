@@ -22,9 +22,9 @@ export function useSupabase(): SupabaseClient {
                     fetch: async (url, options = {}) => {
                         let clerkToken: string | null = null
                         try {
-                            clerkToken = await session?.getToken({ template: 'supabase' })
+                            clerkToken = (await session?.getToken({ template: 'supabase' })) ?? null
                             if (!clerkToken) {
-                                clerkToken = await session?.getToken()
+                                clerkToken = (await session?.getToken()) ?? null
                             }
                         } catch (error) {
                             console.error("useSupabase: unable to fetch Clerk token", error)
