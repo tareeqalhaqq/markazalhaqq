@@ -314,7 +314,7 @@ export default function InstructorDashboardPage() {
           </h1>
           <p className="text-lg text-muted-foreground">
             Manage courses, lessons, and learning resources. Changes made here are reflected instantly in the student workspace so
-            you can verify the experience before connecting Firebase.
+            you can verify the experience before connecting Supabase.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

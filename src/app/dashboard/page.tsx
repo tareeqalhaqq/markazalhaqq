@@ -8,7 +8,7 @@ const dashboardCards = [
   {
     title: "Instructor workspace",
     description:
-      "Create courses, publish lessons, and share resources. Every action instantly updates the student workspace so you can validate the flow before wiring Firebase.",
+      "Create courses, publish lessons, and share resources. Every action instantly updates the student workspace so you can validate the flow before wiring Supabase.",
     href: "/dashboard/instructor",
     badge: "Admin",
   },
@@ -33,7 +33,7 @@ export default function DashboardLandingPage() {
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
           Manage everything from one place. The instructor tools feed directly into the student view so you can test the product
-          experience while you prepare the Firebase integration.
+          experience while you prepare the Supabase integration.
         </p>
       </div>
 
