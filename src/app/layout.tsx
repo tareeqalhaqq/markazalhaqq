@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: 'A dedicated academy and hub for authentic Islamic knowledge.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: Readonly<{
