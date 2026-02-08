@@ -8,7 +8,7 @@ export default function AccountProfilePage() {
       <Alert variant="destructive">
         <AlertTitle>Clerk configuration required</AlertTitle>
         <AlertDescription>
-          Add a NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (or CLERK_PUBLISHABLE_KEY)
+          Add a NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
           environment variable to enable profile management.
         </AlertDescription>
       </Alert>

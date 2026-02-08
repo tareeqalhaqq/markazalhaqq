@@ -1,6 +1,3 @@
 export function getClerkPublishableKey(): string | undefined {
-  return (
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
-    process.env.CLERK_PUBLISHABLE_KEY
-  )
+  return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 }
