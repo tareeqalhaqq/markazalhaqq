@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { useSupabase } from "@/hooks/useSupabase" // Use new hook
-import { useFirestoreCollection } from "@/hooks/useFirestoreCollection"
+import { useSupabaseCollection } from "@/hooks/useSupabaseCollection"
 import {
   createAnnouncement,
   createCourse,
@@ -37,6 +37,15 @@ import {
   type ResourceLibraryItem,
   type StudentProfile,
 } from "@/lib/academy-data"
+import type {
+  Announcement as SupabaseAnnouncement,
+  Course as SupabaseCourse,
+  Exam as SupabaseExam,
+  LiveSession as SupabaseLiveSession,
+  Quiz as SupabaseQuiz,
+  Resource as SupabaseResource,
+  Student as SupabaseStudent,
+} from "@/lib/supabase-types"
 
 export default function AdminWorkspacePage() {
   const router = useRouter()
@@ -62,13 +71,13 @@ export default function AdminWorkspacePage() {
     fetchRole()
   }, [clerkUser, supabase])
 
-  const { data: courses } = useFirestoreCollection<AcademyCourse>("courses", { orderByField: "createdAt" })
-  const { data: sessions } = useFirestoreCollection<LiveSession>("liveSessions", { orderByField: "scheduledAt" })
-  const { data: resources } = useFirestoreCollection<ResourceLibraryItem>("resources", { orderByField: "createdAt" })
-  const { data: announcements } = useFirestoreCollection<Announcement>("announcements", { orderByField: "createdAt" })
-  const { data: exams } = useFirestoreCollection<ExamOrCertification>("exams", { orderByField: "createdAt" })
-  const { data: students } = useFirestoreCollection<StudentProfile>("students", { orderByField: "createdAt" })
-  const { data: quizzes } = useFirestoreCollection<Quiz>("quizzes", { orderByField: "createdAt" })
+  const { data: courses } = useSupabaseCollection<SupabaseCourse>(supabase, "courses", { orderBy: "created_at" })
+  const { data: sessions } = useSupabaseCollection<SupabaseLiveSession>(supabase, "live_sessions", { orderBy: "scheduled_at" })
+  const { data: resources } = useSupabaseCollection<SupabaseResource>(supabase, "resources", { orderBy: "created_at" })
+  const { data: announcements } = useSupabaseCollection<SupabaseAnnouncement>(supabase, "announcements", { orderBy: "created_at" })
+  const { data: exams } = useSupabaseCollection<SupabaseExam>(supabase, "exams", { orderBy: "created_at" })
+  const { data: students } = useSupabaseCollection<SupabaseStudent>(supabase, "students", { orderBy: "created_at" })
+  const { data: quizzes } = useSupabaseCollection<SupabaseQuiz>(supabase, "quizzes", { orderBy: "created_at" })
 
   const [courseForm, setCourseForm] = useState({
     title: "",
@@ -194,7 +203,8 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingCourse(true)
     try {
-      await createCourse({
+      if (!clerkUser) throw new Error("Missing Clerk user")
+      await createCourse(supabase, {
         title: courseForm.title,
         instructor: courseForm.instructor,
         level: courseForm.level,
@@ -203,7 +213,7 @@ export default function AdminWorkspacePage() {
         startDate: courseForm.startDate || undefined,
         lessonCount: courseForm.lessonCount ? Number(courseForm.lessonCount) : undefined,
         completedLessons: courseForm.completedLessons ? Number(courseForm.completedLessons) : undefined,
-      })
+      }, clerkUser.id)
       toast({ title: "Course created", description: `${courseForm.title} is now in the catalog.` })
       setCourseForm({
         title: "",
@@ -227,14 +237,15 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingSession(true)
     try {
-      await createLiveSession({
+      if (!clerkUser) throw new Error("Missing Clerk user")
+      await createLiveSession(supabase, {
         title: sessionForm.title,
         courseTitle: sessionForm.courseTitle,
         presenter: sessionForm.presenter,
         scheduledAt: sessionForm.scheduledAt || new Date().toISOString(),
         format: sessionForm.format || "Live",
         link: sessionForm.link || undefined,
-      })
+      }, clerkUser.id)
       toast({ title: "Session scheduled", description: sessionForm.title })
       setSessionForm({ title: "", courseTitle: "", presenter: "", scheduledAt: "", format: "", link: "" })
     } catch (error) {
@@ -249,7 +260,8 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingResource(true)
     try {
-      await createResource({ ...resourceForm })
+      if (!clerkUser) throw new Error("Missing Clerk user")
+      await createResource(supabase, { ...resourceForm }, clerkUser.id)
       toast({ title: "Resource added", description: resourceForm.title })
       setResourceForm({ title: "", courseTitle: "", type: "PDF", embedUrl: "", downloadUrl: "" })
     } catch (error) {
@@ -264,12 +276,13 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingAnnouncement(true)
     try {
-      await createAnnouncement({
+      if (!clerkUser) throw new Error("Missing Clerk user")
+      await createAnnouncement(supabase, {
         title: announcementForm.title,
         body: announcementForm.body,
         audience: announcementForm.audience,
         publishedAt: announcementForm.publishedAt || new Date().toISOString(),
-      })
+      }, clerkUser.id)
       toast({ title: "Announcement published", description: announcementForm.title })
       setAnnouncementForm({ title: "", body: "", audience: "All students", publishedAt: "" })
     } catch (error) {
@@ -284,13 +297,14 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingExam(true)
     try {
-      await createExamOrCertification({
+      if (!clerkUser) throw new Error("Missing Clerk user")
+      await createExamOrCertification(supabase, {
         title: examForm.title,
         courseTitle: examForm.courseTitle,
         status: examForm.status,
         availableOn: examForm.availableOn || new Date().toISOString(),
         proctored: examForm.proctored,
-      })
+      }, clerkUser.id)
       toast({ title: "Assessment queued", description: examForm.title })
       setExamForm({ title: "", courseTitle: "", status: "Scheduled", availableOn: "", proctored: false })
     } catch (error) {
@@ -305,7 +319,7 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingTeacher(true)
     try {
-      await createTeacherProfile(teacherForm)
+      await createTeacherProfile(supabase, teacherForm)
       toast({ title: "Teacher profile created", description: teacherForm.fullName })
       setTeacherForm({ fullName: "", email: "", specialty: "" })
     } catch (error) {
@@ -320,7 +334,7 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingStudent(true)
     try {
-      await upsertStudentProfile({ ...studentForm, enrollmentStatus: studentForm.enrollmentStatus as StudentProfile["enrollmentStatus"] })
+      await upsertStudentProfile(supabase, { ...studentForm, enrollmentStatus: studentForm.enrollmentStatus as StudentProfile["enrollmentStatus"] })
       toast({ title: "Student saved", description: `${studentForm.fullName || studentForm.email} added to roster.` })
       setStudentForm({
         fullName: "",
@@ -343,7 +357,7 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingStudentRemoval(true)
     try {
-      await removeStudentProfile(studentRemovalEmail)
+      await removeStudentProfile(supabase, studentRemovalEmail)
       toast({ title: "Student removed", description: studentRemovalEmail })
       setStudentRemovalEmail("")
     } catch (error) {
@@ -359,7 +373,7 @@ export default function AdminWorkspacePage() {
     if (!courseStatusForm.courseId) return
     setSavingCourseStatus(true)
     try {
-      await updateCourse(courseStatusForm.courseId, {
+      await updateCourse(supabase, courseStatusForm.courseId, {
         status: courseStatusForm.status as AcademyCourse["status"],
         isLive: courseStatusForm.isLive,
       })
@@ -377,7 +391,7 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingModule(true)
     try {
-      await createCourseModule(moduleForm.courseId, {
+      await createCourseModule(supabase, moduleForm.courseId, {
         title: moduleForm.title,
         order: Number(moduleForm.order) || 0,
         summary: moduleForm.summary,
@@ -396,7 +410,7 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingLesson(true)
     try {
-      await createCourseLesson(lessonForm.courseId, lessonForm.moduleId, {
+      await createCourseLesson(supabase, lessonForm.courseId, lessonForm.moduleId, {
         title: lessonForm.title,
         order: Number(lessonForm.order) || 0,
         content: lessonForm.content,
@@ -416,7 +430,8 @@ export default function AdminWorkspacePage() {
     event.preventDefault()
     setSavingQuiz(true)
     try {
-      await createQuiz({
+      if (!clerkUser) throw new Error("Missing Clerk user")
+      await createQuiz(supabase, {
         title: quizForm.title,
         courseTitle: quizForm.courseTitle,
         section: quizForm.section,
@@ -424,7 +439,7 @@ export default function AdminWorkspacePage() {
         questionCount: quizForm.questionCount ? Number(quizForm.questionCount) : undefined,
         isTimed: quizForm.isTimed,
         instructions: quizForm.instructions,
-      })
+      }, clerkUser.id)
       toast({ title: "Quiz created", description: quizForm.title })
       setQuizForm({ title: "", courseTitle: "", section: "", status: "draft", questionCount: "", isTimed: false, instructions: "" })
     } catch (error) {
@@ -438,7 +453,7 @@ export default function AdminWorkspacePage() {
   async function handleQuizStatusChange(quizId: string, nextStatus: Quiz["status"]) {
     setUpdatingQuizId(quizId)
     try {
-      await updateQuiz(quizId, { status: nextStatus })
+      await updateQuiz(supabase, quizId, { status: nextStatus })
       toast({ title: "Quiz updated", description: `Quiz marked as ${nextStatus}.` })
     } catch (error) {
       console.error("Failed to update quiz", error)
@@ -451,7 +466,7 @@ export default function AdminWorkspacePage() {
   async function handleQuizDelete(quizId: string) {
     setUpdatingQuizId(quizId)
     try {
-      await deleteQuiz(quizId)
+      await deleteQuiz(supabase, quizId)
       toast({ title: "Quiz removed" })
     } catch (error) {
       console.error("Failed to delete quiz", error)
@@ -466,7 +481,7 @@ export default function AdminWorkspacePage() {
         <p className="text-xs uppercase tracking-[0.3em] text-primary">Admin workspace</p>
         <h1 className="text-3xl font-bold">Orchestrate the academy</h1>
         <p className="text-muted-foreground">
-          Create courses, push announcements, attach resources, and seed live sessions directly into Firestore.
+          Create courses, push announcements, attach resources, and seed live sessions directly into Supabase.
         </p>
       </div>
 
@@ -578,7 +593,7 @@ export default function AdminWorkspacePage() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Removing a record does not delete the Firebase Auth user; it only cleans the students collection.
+                  Removing a record does not delete the Clerk user; it only removes the student roster entry.
                 </p>
               </div>
               <Button type="submit" disabled={savingStudentRemoval}>
@@ -693,7 +708,7 @@ export default function AdminWorkspacePage() {
                   id="course-id"
                   value={courseStatusForm.courseId}
                   onChange={(event) => setCourseStatusForm((prev) => ({ ...prev, courseId: event.target.value }))}
-                  placeholder="Firestore doc id"
+                  placeholder="Supabase course id"
                   required
                 />
               </div>
@@ -865,7 +880,7 @@ export default function AdminWorkspacePage() {
                   id="module-course"
                   value={moduleForm.courseId}
                   onChange={(event) => setModuleForm((prev) => ({ ...prev, courseId: event.target.value }))}
-                  placeholder="Firestore doc id"
+                  placeholder="Supabase course id"
                   required
                 />
               </div>
@@ -916,7 +931,7 @@ export default function AdminWorkspacePage() {
                   id="lesson-course"
                   value={lessonForm.courseId}
                   onChange={(event) => setLessonForm((prev) => ({ ...prev, courseId: event.target.value }))}
-                  placeholder="Firestore doc id"
+                  placeholder="Supabase course id"
                   required
                 />
               </div>
@@ -926,7 +941,7 @@ export default function AdminWorkspacePage() {
                   id="lesson-module"
                   value={lessonForm.moduleId}
                   onChange={(event) => setLessonForm((prev) => ({ ...prev, moduleId: event.target.value }))}
-                  placeholder="Module doc id"
+                  placeholder="Supabase module id"
                   required
                 />
               </div>
@@ -1282,8 +1297,8 @@ export default function AdminWorkspacePage() {
           </div>
           <Alert>
             <AlertDescription>
-              Need to revoke access or update roles? Use the Firestore <Badge>users</Badge> collection and toggle the <code>role</code>
-              field between <strong>user</strong> and <strong>admin</strong>.
+              Need to revoke access or update roles? Update the <Badge>profiles</Badge> table and set <code>app_role</code>
+              to <strong>student</strong>, <strong>instructor</strong>, or <strong>admin</strong>.
             </AlertDescription>
           </Alert>
         </CardContent>

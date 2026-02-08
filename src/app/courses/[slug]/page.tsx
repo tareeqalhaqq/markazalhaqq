@@ -29,8 +29,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
     notFound()
   }
 
-  const startDate = formatDate(course.startDate)
-  const updatedAt = formatDate(course.updatedAt ?? null)
+  const startDate = formatDate(course.start_date)
+  const updatedAt = formatDate(course.updated_at ?? null)
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 space-y-10">
@@ -60,15 +60,15 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">Instructor</p>
-            <p className="mt-1 text-sm text-foreground">{course.instructor || "Assigned soon"}</p>
+            <p className="mt-1 text-sm text-foreground">{course.instructor_name || "Assigned soon"}</p>
           </div>
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">Lessons</p>
-            <p className="mt-1 text-sm text-foreground">{course.lessonCount ? `${course.lessonCount} planned` : "Coming soon"}</p>
+            <p className="mt-1 text-sm text-foreground">{course.lesson_count ? `${course.lesson_count} planned` : "Coming soon"}</p>
           </div>
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">Live access</p>
-            <p className="mt-1 text-sm text-foreground">{course.isLive ? "Includes live cohorts" : "Schedule announced per course"}</p>
+            <p className="mt-1 text-sm text-foreground">{course.is_live ? "Includes live cohorts" : "Schedule announced per course"}</p>
           </div>
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">Level</p>

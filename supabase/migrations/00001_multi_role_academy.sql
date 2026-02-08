@@ -99,7 +99,7 @@ create table if not exists public.courses (
   title           text not null,
   slug            text unique,
   description     text not null default '',
-  level           text,                            -- Beginner / Intermediate / Advanced
+  level           text,
   status          text not null default 'upcoming'
                   check (status in ('upcoming','active','completed','archived')),
   cover_image     text,
@@ -115,11 +115,9 @@ create table if not exists public.courses (
 
 alter table public.courses enable row level security;
 
--- Anyone authenticated can read published courses
 create policy "courses_select" on public.courses
   for select using (true);
 
--- Admins can do everything
 create policy "courses_admin_all" on public.courses
   for all using (
     exists (
@@ -128,7 +126,6 @@ create policy "courses_admin_all" on public.courses
     )
   );
 
--- Instructors can insert and update their own courses
 create policy "courses_instructor_insert" on public.courses
   for insert with check (
     exists (
@@ -180,8 +177,10 @@ create policy "modules_instructor_manage" on public.course_modules
     exists (
       select 1 from public.courses c
       where c.id = course_id
-        and (c.instructor_id = public.requesting_user_id()
-             or c.created_by = public.requesting_user_id())
+        and (
+          c.instructor_id = public.requesting_user_id()
+          or c.created_by = public.requesting_user_id()
+        )
     )
   );
 
@@ -207,7 +206,6 @@ create index if not exists lessons_module_idx on public.course_lessons (module_i
 
 alter table public.course_lessons enable row level security;
 
--- Students only see published lessons
 create policy "lessons_select_published" on public.course_lessons
   for select using (
     status = 'published'
@@ -231,13 +229,15 @@ create policy "lessons_instructor_manage" on public.course_lessons
     exists (
       select 1 from public.courses c
       where c.id = course_id
-        and (c.instructor_id = public.requesting_user_id()
-             or c.created_by = public.requesting_user_id())
+        and (
+          c.instructor_id = public.requesting_user_id()
+          or c.created_by = public.requesting_user_id()
+        )
     )
   );
 
 -- ============================================================================
--- 6. ENROLLMENTS  (links students to courses -- the "student roster per course")
+-- 6. ENROLLMENTS  (links students to courses -- the "course roster")
 -- ============================================================================
 create table if not exists public.enrollments (
   id              uuid primary key default gen_random_uuid(),
@@ -255,11 +255,9 @@ create index if not exists enrollments_course_idx  on public.enrollments (course
 
 alter table public.enrollments enable row level security;
 
--- Students see their own enrollments
 create policy "enrollments_select_own" on public.enrollments
   for select using (profile_id = public.requesting_user_id());
 
--- Admins & instructors can see all enrollments (the roster)
 create policy "enrollments_staff_select" on public.enrollments
   for select using (
     exists (
@@ -269,7 +267,6 @@ create policy "enrollments_staff_select" on public.enrollments
     )
   );
 
--- Admins can do everything
 create policy "enrollments_admin_all" on public.enrollments
   for all using (
     exists (
@@ -278,14 +275,15 @@ create policy "enrollments_admin_all" on public.enrollments
     )
   );
 
--- Instructors can manage enrollments for their own courses
 create policy "enrollments_instructor_manage" on public.enrollments
   for all using (
     exists (
       select 1 from public.courses c
       where c.id = course_id
-        and (c.instructor_id = public.requesting_user_id()
-             or c.created_by = public.requesting_user_id())
+        and (
+          c.instructor_id = public.requesting_user_id()
+          or c.created_by = public.requesting_user_id()
+        )
     )
   );
 
@@ -322,7 +320,7 @@ create policy "progress_staff_select" on public.lesson_progress
   );
 
 -- ============================================================================
--- 8. STUDENTS ROSTER  (admin-managed student directory, may or may not have a profile)
+-- 8. STUDENTS ROSTER  (admin-managed student directory)
 -- ============================================================================
 create table if not exists public.students (
   id                  uuid primary key default gen_random_uuid(),
@@ -341,11 +339,9 @@ create table if not exists public.students (
 
 alter table public.students enable row level security;
 
--- Students can see their own record
 create policy "students_select_own" on public.students
   for select using (profile_id = public.requesting_user_id());
 
--- Admins & instructors see all students (the roster)
 create policy "students_staff_all" on public.students
   for all using (
     exists (
@@ -373,11 +369,9 @@ create table if not exists public.teachers (
 
 alter table public.teachers enable row level security;
 
--- Anyone can see active teachers (public instructor page)
 create policy "teachers_select" on public.teachers
   for select using (true);
 
--- Admins can manage teachers
 create policy "teachers_admin_all" on public.teachers
   for all using (
     exists (
@@ -434,9 +428,9 @@ create table if not exists public.resources (
   course_id       uuid references public.courses(id) on delete set null,
   title           text not null,
   course_title    text,
-  resource_type   text not null default 'PDF',    -- PDF, Audio, Video, Link
-  file_path       text,                            -- Supabase Storage path
-  file_url        text,                            -- external or signed URL
+  resource_type   text not null default 'PDF',
+  file_path       text,
+  file_url        text,
   embed_url       text,
   download_url    text,
   file_size       text,
@@ -474,7 +468,7 @@ create table if not exists public.announcements (
   id            uuid primary key default gen_random_uuid(),
   title         text not null,
   body          text not null,
-  audience      text not null default 'all',      -- all, students, instructors
+  audience      text not null default 'all',
   published_at  timestamptz not null default now(),
   created_by    text not null references public.profiles(id),
   created_at    timestamptz not null default now()
@@ -543,7 +537,6 @@ create table if not exists public.quizzes (
 
 alter table public.quizzes enable row level security;
 
--- Students only see live quizzes
 create policy "quizzes_select" on public.quizzes
   for select using (
     status = 'live'
@@ -674,7 +667,6 @@ begin
 end;
 $$;
 
--- Apply to every table that has updated_at
 do $$
 declare
   tbl text;
@@ -704,7 +696,6 @@ values
   ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
--- Avatars: anyone can read, authenticated users can upload their own
 create policy "avatars_select" on storage.objects
   for select using (bucket_id = 'avatars');
 
@@ -714,7 +705,6 @@ create policy "avatars_insert" on storage.objects
     and (storage.foldername(name))[1] = public.requesting_user_id()
   );
 
--- Course materials: authenticated users can read, admin/instructor can upload
 create policy "materials_select" on storage.objects
   for select using (
     bucket_id = 'course-materials'
@@ -744,7 +734,6 @@ create policy "materials_delete" on storage.objects
 -- 19. VIEWS  (convenient read-only projections)
 -- ============================================================================
 
--- Student roster view with enrollment counts
 create or replace view public.student_roster as
 select
   s.*,
@@ -754,7 +743,6 @@ left join public.enrollments e
   on e.profile_id = s.profile_id and e.status = 'active'
 group by s.id;
 
--- Course roster view with enrollment counts
 create or replace view public.course_roster as
 select
   c.*,
@@ -764,7 +752,3 @@ from public.courses c
 left join public.enrollments e on e.course_id = c.id and e.status = 'active'
 left join public.teachers t   on t.profile_id = c.instructor_id
 group by c.id, t.full_name;
-
--- ============================================================================
--- Done.  Run this in the Supabase SQL Editor or via `supabase db push`.
--- ============================================================================

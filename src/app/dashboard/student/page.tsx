@@ -91,7 +91,7 @@ export default function StudentDashboardPage() {
   function handleDownload(resourceTitle: string) {
     toast({
       title: `Preparing ${resourceTitle}`,
-      description: "Downloads will link to Firebase storage once connected.",
+      description: "Downloads will link to Supabase storage once connected.",
     })
   }
 
@@ -220,7 +220,7 @@ export default function StudentDashboardPage() {
                         ? handleDownload(item.title)
                         : toast({
                           title: `${item.cta} queued`,
-                          description: "These actions will sync to Firebase when connected.",
+                          description: "These actions will sync to Supabase when connected.",
                         })
                     }
                   >
@@ -349,7 +349,7 @@ export default function StudentDashboardPage() {
                           onClick={() =>
                             toast({
                               title: "Message sent",
-                              description: "Instructor messaging will connect through Firebase when available.",
+                              description: "Instructor messaging will connect through Supabase when available.",
                             })
                           }
                         >
@@ -389,7 +389,7 @@ export default function StudentDashboardPage() {
                   onClick={() =>
                     toast({
                       title: "Calendar sync coming soon",
-                      description: "Calendar exports will connect to Firebase once the integration is ready.",
+                      description: "Calendar exports will connect to Supabase once the integration is ready.",
                     })
                   }
                 >
@@ -422,7 +422,7 @@ export default function StudentDashboardPage() {
                         onClick={() =>
                           toast({
                             title: "Reminder saved",
-                            description: "Notifications will trigger automatically once Firebase Cloud Messaging is live.",
+                            description: "Notifications will trigger automatically once Supabase notifications are live.",
                           })
                         }
                       >
@@ -482,7 +482,7 @@ export default function StudentDashboardPage() {
                 onClick={() =>
                   toast({
                     title: "Message queued",
-                    description: "Instructor messaging will connect through Firebase when available.",
+                    description: "Instructor messaging will connect through Supabase when available.",
                   })
                 }
               >
@@ -547,7 +547,7 @@ export default function StudentDashboardPage() {
                     onClick={() =>
                       toast({
                         title: "Message sent",
-                        description: "Instructor messaging will connect through Firebase when available.",
+                        description: "Instructor messaging will connect through Supabase when available.",
                       })
                     }
                   >
@@ -583,7 +583,7 @@ export default function StudentDashboardPage() {
                     onClick={() =>
                       toast({
                         title: "Feedback requested",
-                        description: "Instructors will respond through Firebase messaging once connected.",
+                        description: "Instructors will respond through Supabase messaging once connected.",
                       })
                     }
                   >
