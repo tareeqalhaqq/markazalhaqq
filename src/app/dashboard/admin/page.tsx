@@ -1085,7 +1085,7 @@ export default function AdminWorkspacePage() {
                       <div className="space-y-1">
                         <p className="font-semibold">{quiz.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {quiz.courseTitle} · {quiz.section || "General"} · {quiz.questionCount ?? 0} questions
+                          {quiz.course_title ?? "General"} · {quiz.section || "General"} · {quiz.question_count ?? 0} questions
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
