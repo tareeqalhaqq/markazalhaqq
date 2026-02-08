@@ -20,7 +20,15 @@ export function useSupabase(): SupabaseClient {
             {
                 global: {
                     fetch: async (url, options = {}) => {
-                        const clerkToken = await session?.getToken({ template: 'supabase' })
+                        let clerkToken: string | null = null
+                        try {
+                            clerkToken = await session?.getToken({ template: 'supabase' })
+                            if (!clerkToken) {
+                                clerkToken = await session?.getToken()
+                            }
+                        } catch (error) {
+                            console.error("useSupabase: unable to fetch Clerk token", error)
+                        }
                         const headers = new Headers(options?.headers)
                         if (clerkToken) {
                             headers.set('Authorization', `Bearer ${clerkToken}`)
